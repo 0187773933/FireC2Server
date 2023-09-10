@@ -17,7 +17,6 @@ import (
 )
 
 func GetFormattedTimeString() ( result string ) {
-	// location , _ := time.LoadLocation( "America/New_York" )
 	location , _ := tz.LoadLocation( "America/New_York" )
 	time_object := time.Now().In( location )
 	month_name := strings.ToUpper( time_object.Format( "Jan" ) )

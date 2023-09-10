@@ -35,3 +35,24 @@ func ServeLoginPage( context *fiber.Ctx ) ( error ) {
 // 	// fmt.Println( "Sending -->" , url_key[ 1 ] , x_path )
 // 	return context.SendFile( ui_html_pages[ url_key[ 1 ] ] )
 // }
+
+func ( s *Server ) LogRequest( context *fiber.Ctx ) ( error ) {
+	time_string := utils.GetFormattedTimeString()
+	ip_address := context.Get( "x-forwarded-for" )
+	if ip_address == "" { ip_address = context.IP() }
+	log_message := fmt.Sprintf( "%s === %s === %s === %s" , time_string , ip_address , context.Method() , context.Path() )
+	fmt.Println( log_message )
+	return context.Next()
+}
+
+func ( s *Server ) Log( message string ) {
+	time_string := utils.GetFormattedTimeString()
+	log_message := fmt.Sprintf( "%s === %s" , time_string , message )
+	fmt.Println( log_message )
+}
+
+func ( s *Server ) Printf( format_string string , args ...interface{} ) {
+	time_string := utils.GetFormattedTimeString()
+	sent_format := fmt.Sprintf( format_string , args... )
+	fmt.Printf( "%s === %s" , time_string , sent_format )
+}

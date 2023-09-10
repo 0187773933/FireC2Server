@@ -30,11 +30,11 @@ func main() {
 	config_file_path := "./config.yaml"
 	if len( os.Args ) > 1 { config_file_path , _ = filepath.Abs( os.Args[ 1 ] ) }
 	config := utils.ParseConfig( config_file_path )
-	fmt.Printf( "Loaded Config File From : %s\n" , config_file_path )
 
 	SetupCloseHandler()
 	// utils.GenerateNewKeys()
 	s = server.New( config )
+	s.Printf( "Loaded Config File From : %s\n" , config_file_path )
 	s.Start()
 
 }
