@@ -6,6 +6,7 @@ type ConfigFile struct {
 	ServerLiveUrl string `yaml:"server_live_url"`
 	ServerPort string `yaml:"server_port"`
 	ServerAPIKey string `yaml:"server_api_key"`
+	ServerLoginUrlPrefix string `yaml:"server_login_url_prefix"`
 	ServerCookieName string `yaml:"server_cookie_name"`
 	ServerCookieSecret string `yaml:"server_cookie_secret"`
 	ServerCookieAdminSecretMessage string `yaml:"server_cookie_admin_secret_message"`

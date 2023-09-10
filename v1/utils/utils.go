@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"os"
 	"fmt"
+	"sync"
 	"time"
 	"strings"
 	"unicode"
+	"bufio"
 	tz "4d63.com/tz"
 	"encoding/json"
 	// "strings"
@@ -67,4 +70,54 @@ func GenerateNewKeys() {
 	fmt.Printf( "\tServer API Key === %s\n" , server_api_key )
 	fmt.Printf( "\tAdmin Username === %s\n" , admin_username )
 	fmt.Printf( "\tAdmin Password === %s\n\n" , admin_password )
+}
+
+func WriteLoginURLPrefixWG( wg *sync.WaitGroup , server_login_url_prefix string ) {
+	file, _ := os.OpenFile( "./v1/server/html/login.html" , os.O_RDWR , 0 )
+	reader := bufio.NewReader( file )
+	line_number := 1
+	var lines []string
+	for {
+		line, err := reader.ReadString('\n')
+		if line_number == 17 {
+			x_line := fmt.Sprintf( "\t\t\t\t\t<form id=\"form-login\" action=\"/%s\" onSubmit=\"return on_submit();\" method=\"post\">\n" , server_login_url_prefix )
+			lines = append(lines, x_line)
+		} else {
+			lines = append(lines, line)
+		}
+
+		if err != nil { break; }
+		line_number++
+	}
+	file.Seek( 0 , 0 )
+	file.Truncate( 0 )
+	for _ , line := range lines {
+		file.WriteString( line )
+	}
+	file.Close()
+	wg.Done()
+}
+func WriteLoginURLPrefix( server_login_url_prefix string ) {
+	file, _ := os.OpenFile( "./v1/server/html/login.html" , os.O_RDWR , 0 )
+	defer file.Close()
+	reader := bufio.NewReader( file )
+	line_number := 1
+	var lines []string
+	for {
+		line, err := reader.ReadString('\n')
+		if line_number == 17 {
+			x_line := fmt.Sprintf( "\t\t\t\t\t<form id=\"form-login\" action=\"/%s\" onSubmit=\"return on_submit();\" method=\"post\">\n" , server_login_url_prefix )
+			lines = append(lines, x_line)
+		} else {
+			lines = append(lines, line)
+		}
+
+		if err != nil { break; }
+		line_number++
+	}
+	file.Seek( 0 , 0 )
+	file.Truncate( 0 )
+	for _ , line := range lines {
+		file.WriteString( line )
+	}
 }

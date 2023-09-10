@@ -34,7 +34,7 @@ func main() {
 	SetupCloseHandler()
 	// utils.GenerateNewKeys()
 	s = server.New( config )
-	s.Printf( "Loaded Config File From : %s\n" , config_file_path )
+	fmt.Printf( "Loaded Config File From : %s\n" , config_file_path )
 	s.Start()
 
 }

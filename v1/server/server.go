@@ -5,6 +5,7 @@ import (
 	"time"
 	fiber "github.com/gofiber/fiber/v2"
 	fiber_cookie "github.com/gofiber/fiber/v2/middleware/encryptcookie"
+	fiber_cors "github.com/gofiber/fiber/v2/middleware/cors"
 	favicon "github.com/gofiber/fiber/v2/middleware/favicon"
 	types "github.com/0187773933/FireC2Server/v1/types"
 	bolt_api "github.com/boltdb/bolt"
@@ -25,7 +26,7 @@ func ( s *Server ) SetupRoutes() {
 
 func ( s *Server ) Start() {
 	s.Printf( "Listening on http://localhost:%s\n" , s.Config.ServerPort )
-	s.Printf( "Admin Login @ http://localhost:%s/admin/login\n" , s.Config.ServerPort )
+	s.Printf( "Admin Login @ http://localhost:%s/%s\n" , s.Config.ServerPort , s.Config.ServerLoginUrlPrefix )
 	s.Printf( "Admin Username === %s\n" , s.Config.AdminUsername )
 	s.Printf( "Admin Password === %s\n" , s.Config.AdminPassword )
 	s.Printf( "Admin API Key === %s\n" , s.Config.ServerAPIKey )

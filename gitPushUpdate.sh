@@ -1,4 +1,10 @@
 #!/bin/bash
+
+FILE="./v1/server/html/login.html"
+NEW_LINE="\t\t\t\t\t<form id=\"form-login\" action=\"/ok???\" onSubmit=\"return on_submit();\" method=\"post\">"
+awk -v n=17 -v s="$NEW_LINE" '(NR == n) {$0 = s} 1' $FILE > temp.txt
+mv temp.txt $FILE
+
 function is_int() { return $(test "$@" -eq "$@" > /dev/null 2>&1); }
 ssh-add -D
 git init

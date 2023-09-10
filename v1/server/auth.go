@@ -15,13 +15,15 @@ func validate_login_credentials( context *fiber.Ctx ) ( result bool ) {
 	if uploaded_username != GlobalServer.Config.AdminUsername { fmt.Println( "username not correct" ); return }
 	uploaded_password := context.FormValue( "password" )
 	if uploaded_password == "" { fmt.Println( "password empty" ); return }
+	fmt.Println( "uploaded_username ===" , uploaded_username )
+	fmt.Println( "uploaded_password ===" , uploaded_password )
 	password_matches := bcrypt.CompareHashAndPassword( []byte( uploaded_password ) , []byte( GlobalServer.Config.AdminPassword ) )
 	if password_matches != nil { fmt.Println( "bcrypted password doesn't match" ); return }
 	result = true
 	return
 }
 
-func Logout( context *fiber.Ctx ) ( error ) {
+func HandleLogout( context *fiber.Ctx ) ( error ) {
 	context.Cookie( &fiber.Cookie{
 		Name: GlobalServer.Config.ServerCookieName ,
 		Value: "" ,
