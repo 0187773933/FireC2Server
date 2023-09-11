@@ -20,4 +20,5 @@ type ConfigFile struct {
 	StreamDeckServerAPIKey string `yaml:"stream_deck_server_api_key"`
 	ADBPath string `yaml:"adb_path"`
 	ADBSerial string `yaml:"adb_serial"`
+	TVBrand string `yaml:"tv_brand"`
 }

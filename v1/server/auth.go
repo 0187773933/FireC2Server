@@ -90,3 +90,26 @@ func validate_admin( context *fiber.Ctx ) ( result bool ) {
 	}
 	return
 }
+
+func validate_admin_mw( context *fiber.Ctx ) ( error ) {
+	admin_cookie := context.Cookies( GlobalServer.Config.ServerCookieName )
+	if admin_cookie != "" {
+		admin_cookie_value := encryption.SecretBoxDecrypt( GlobalServer.Config.BoltDBEncryptionKey , admin_cookie )
+		if admin_cookie_value == GlobalServer.Config.ServerCookieAdminSecretMessage {
+			return context.Next()
+		}
+	}
+	admin_api_key_header := context.Get( "key" )
+	if admin_api_key_header != "" {
+		if admin_api_key_header == GlobalServer.Config.ServerAPIKey {
+			return context.Next()
+		}
+	}
+	admin_api_key_query := context.Query( "k" )
+	if admin_api_key_query != "" {
+		if admin_api_key_query == GlobalServer.Config.ServerAPIKey {
+			return context.Next()
+		}
+	}
+	return context.Status( fiber.StatusUnauthorized ).SendString( "why" )
+}

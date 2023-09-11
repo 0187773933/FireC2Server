@@ -33,6 +33,7 @@ func main() {
 
 	SetupCloseHandler()
 	// utils.GenerateNewKeys()
+	utils.WriteLoginURLPrefix( config.ServerLoginUrlPrefix )
 	s = server.New( config )
 	fmt.Printf( "Loaded Config File From : %s\n" , config_file_path )
 	s.Start()

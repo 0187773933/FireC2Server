@@ -11,7 +11,7 @@ import (
 var public_limiter = rate_limiter.New( rate_limiter.Config{
 	Max: 6 ,
 	Expiration: 1 * time.Second ,
-	KeyGenerator: func(c *fiber.Ctx) string {
+	KeyGenerator: func( c *fiber.Ctx ) string {
 		return c.Get( "x-forwarded-for" )
 	} ,
 	LimitReached: func( c *fiber.Ctx ) error {
@@ -46,7 +46,7 @@ func ( s *Server ) SetupPublicRoutes() {
 	s.FiberApp.Get( "/" , public_limiter , RenderHomePage )
 	s.FiberApp.Get( fmt.Sprintf( "/%s" , s.Config.ServerLoginUrlPrefix ) , public_limiter , RenderLoginPage )
 	s.FiberApp.Post( fmt.Sprintf( "/%s" , s.Config.ServerLoginUrlPrefix ) , auth_limiter , HandleLogin )
-	s.FiberApp.Post( fmt.Sprintf( "/%s/logout" , s.Config.ServerLoginUrlPrefix ) , auth_limiter , HandleLogout )
+	s.FiberApp.Get( fmt.Sprintf( "/%s/logout" , s.Config.ServerLoginUrlPrefix ) , auth_limiter , HandleLogout )
 }
 
 func RenderHomePage( context *fiber.Ctx ) ( error ) {

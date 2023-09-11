@@ -9,6 +9,7 @@ import (
 	favicon "github.com/gofiber/fiber/v2/middleware/favicon"
 	types "github.com/0187773933/FireC2Server/v1/types"
 	bolt_api "github.com/boltdb/bolt"
+	state "github.com/0187773933/FireC2Server/v1/state"
 )
 
 var GlobalServer *Server
@@ -17,11 +18,12 @@ type Server struct {
 	FiberApp *fiber.App `yaml:"fiber_app"`
 	Config types.ConfigFile `yaml:"config"`
 	DB *bolt_api.DB `yaml:"-"`
+	State *state.State `yaml:"state"`
 }
 
 func ( s *Server ) SetupRoutes() {
-	// admin_routes.RegisterRoutes( s.FiberApp , &s.Config )
 	s.SetupPublicRoutes()
+	s.SetupAdminRoutes()
 }
 
 func ( s *Server ) Start() {
@@ -39,6 +41,7 @@ func New( config types.ConfigFile ) ( server Server ) {
 	GlobalServer = &server
 	db , _ := bolt_api.Open( config.BoltDBPath , 0600 , &bolt_api.Options{ Timeout: ( 3 * time.Second ) } )
 	server.DB = db
+	server.State = state.New()
 	server.FiberApp.Use( server.LogRequest )
 	server.FiberApp.Use( favicon.New() )
 	server.FiberApp.Use( fiber_cookie.New( fiber_cookie.Config{
