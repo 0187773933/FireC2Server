@@ -1,11 +1,13 @@
-package state
+package media_player
 
 import (
 	"fmt"
+	bolt_api "github.com/boltdb/bolt"
 )
 
 type Twitch struct {
 	Name string `yaml:"name"`
+	DB *bolt_api.DB `yaml:"-"`
 }
 
 func ( t *Twitch ) Play() {

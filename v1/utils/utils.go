@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 	"strings"
+	"strconv"
 	"unicode"
 	"bufio"
 	tz "4d63.com/tz"
@@ -19,14 +20,46 @@ import (
 	encryption "github.com/0187773933/FireC2Server/v1/encryption"
 )
 
+var location , _ = tz.LoadLocation( "America/New_York" )
+var month_map = map[string]time.Month{
+	"JAN": time.January , "FEB": time.February , "MAR": time.March ,
+	"APR": time.April , "MAY": time.May , "JUN": time.June ,
+	"JUL": time.July , "AUG": time.August , "SEP": time.September ,
+	"OCT": time.October , "NOV": time.November , "DEC": time.December ,
+}
+
 func GetFormattedTimeString() ( result string ) {
-	location , _ := tz.LoadLocation( "America/New_York" )
 	time_object := time.Now().In( location )
 	month_name := strings.ToUpper( time_object.Format( "Jan" ) )
 	milliseconds := time_object.Format( ".000" )
 	date_part := fmt.Sprintf( "%02d%s%d" , time_object.Day() , month_name , time_object.Year() )
 	time_part := fmt.Sprintf( "%02d:%02d:%02d%s" , time_object.Hour() , time_object.Minute() , time_object.Second() , milliseconds )
 	result = fmt.Sprintf( "%s === %s" , date_part , time_part )
+	return
+}
+func GetFormattedTimeStringOBJ() ( result_string string , result_time time.Time ) {
+	result_time = time.Now().In( location )
+	month_name := strings.ToUpper( result_time.Format( "Jan" ) )
+	milliseconds := result_time.Format( ".000" )
+	date_part := fmt.Sprintf( "%02d%s%d" , result_time.Day() , month_name , result_time.Year() )
+	time_part := fmt.Sprintf( "%02d:%02d:%02d%s" , result_time.Hour() , result_time.Minute() , result_time.Second() , milliseconds )
+	result_string = fmt.Sprintf( "%s === %s" , date_part , time_part )
+	return
+}
+
+func ParseFormattedTimeString( time_str string ) ( result time.Time ) {
+	parts := strings.Split( time_str , " === " )
+	date_part := parts[ 0 ]
+	day , _ := strconv.Atoi( date_part[ 0 : 2 ] )
+	month_abbr := date_part[ 2 : 5 ]
+	month := month_map[ month_abbr ]
+	year , _ := strconv.Atoi( date_part[ 5 : ] )
+	time_part := parts[ 1 ]
+	hour , _ := strconv.Atoi( time_part[ 0 : 2 ] )
+	minute , _ := strconv.Atoi( time_part[ 3 : 5 ] )
+	second , _ := strconv.Atoi( time_part[ 6 : 8 ] )
+	millisecond , _ := strconv.Atoi( time_part[ 9 : ] )
+	result = time.Date( year , month , day , hour , minute , second , ( millisecond * 1e6 ) , location )
 	return
 }
 

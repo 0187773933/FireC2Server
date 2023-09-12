@@ -1,11 +1,13 @@
-package state
+package media_player
 
 import (
 	"fmt"
+	bolt_api "github.com/boltdb/bolt"
 )
 
 type YouTube struct {
 	Name string `yaml:"youtube"`
+	DB *bolt_api.DB `yaml:"-"`
 }
 
 func ( t *YouTube ) Play() {

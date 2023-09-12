@@ -9,7 +9,7 @@ import (
 	favicon "github.com/gofiber/fiber/v2/middleware/favicon"
 	types "github.com/0187773933/FireC2Server/v1/types"
 	bolt_api "github.com/boltdb/bolt"
-	state "github.com/0187773933/FireC2Server/v1/state"
+	media_player "github.com/0187773933/FireC2Server/v1/media_player"
 )
 
 var GlobalServer *Server
@@ -18,7 +18,7 @@ type Server struct {
 	FiberApp *fiber.App `yaml:"fiber_app"`
 	Config types.ConfigFile `yaml:"config"`
 	DB *bolt_api.DB `yaml:"-"`
-	State *state.State `yaml:"state"`
+	MediaPlayer *media_player.MediaPlayer `yaml:"-"`
 }
 
 func ( s *Server ) SetupRoutes() {
@@ -41,7 +41,11 @@ func New( config types.ConfigFile ) ( server Server ) {
 	GlobalServer = &server
 	db , _ := bolt_api.Open( config.BoltDBPath , 0600 , &bolt_api.Options{ Timeout: ( 3 * time.Second ) } )
 	server.DB = db
-	server.State = state.New()
+	// tx , err := server.DB.Begin( true )
+	// tx.CreateBucketIfNotExists( []byte( "state" ) );
+	// tx.Commit();
+	// fmt.Println( "err ===" , err )
+	server.MediaPlayer = media_player.New( db )
 	server.FiberApp.Use( server.LogRequest )
 	server.FiberApp.Use( favicon.New() )
 	server.FiberApp.Use( fiber_cookie.New( fiber_cookie.Config{
