@@ -45,7 +45,7 @@ func New( config types.ConfigFile ) ( server Server ) {
 	// tx.CreateBucketIfNotExists( []byte( "state" ) );
 	// tx.Commit();
 	// fmt.Println( "err ===" , err )
-	server.MediaPlayer = media_player.New( db )
+	server.MediaPlayer = media_player.New( db , &config )
 	server.FiberApp.Use( server.LogRequest )
 	server.FiberApp.Use( favicon.New() )
 	server.FiberApp.Use( fiber_cookie.New( fiber_cookie.Config{

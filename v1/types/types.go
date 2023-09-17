@@ -18,7 +18,19 @@ type ConfigFile struct {
 	BoltDBEncryptionKey string `yaml:"bolt_db_encryption_key"`
 	StreamDeckServerUrl string `yaml:"stream_deck_server_url"`
 	StreamDeckServerAPIKey string `yaml:"stream_deck_server_api_key"`
-	ADBPath string `yaml:"adb_path"`
-	ADBSerial string `yaml:"adb_serial"`
+	TVWakeOnLan bool `yaml:"tv_wake_on_lan"`
 	TVBrand string `yaml:"tv_brand"`
+	TVIP string `yaml:"tv_ip"`
+	TVWebSocketPort string `yaml:"tv_websocket_port"`
+	TVMAC string `yaml:"tv_mac"`
+	TVDefaultVolume int `yaml:"tv_default_volume"`
+	TVDefaultInput string `yaml:"tv_default_input"`
+	TVLGClientKey string `yaml:"tv_lg_client_key"`
+	TVVizioAuthToken string `yaml:"tv_vizio_auth_token"`
+	TVTimeoutSeconds int `yaml:"tv_timeout_seconds"`
+	ADBPath string `yaml:"adb_path"`
+	ADBConnectionType string `yaml:"adb_connection_type"`
+	ADBSerial string `yaml:"adb_serial"`
+	ADBServerIP string `yaml:"adb_server_ip"`
+	ADBServerPort string `yaml:"adb_server_port"`
 }

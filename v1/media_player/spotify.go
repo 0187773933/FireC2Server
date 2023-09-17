@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"time"
 	"strings"
-	bolt_api "github.com/boltdb/bolt"
+	// bolt_api "github.com/boltdb/bolt"
 	adb_wrapper "ADBWrapper/v1/wrapper"
+	// utils "github.com/0187773933/FireC2Server/v1/utils"
 )
 
-func example_spotify( adb *adb_wrapper.Wrapper ) {
+func enable_shuffle( adb *adb_wrapper.Wrapper ) {
 
-	// TODO : TV Volume Off
-	// adb.SetVolumePercent( 0 )
+}
+
+func playlist_with_shuffle( adb *adb_wrapper.Wrapper ) {
 	adb.StopAllApps()
 	adb.Brightness( 0 )
 	adb.CloseAppName( "com.spotify.tv.android" )
@@ -20,11 +22,6 @@ func example_spotify( adb *adb_wrapper.Wrapper ) {
 	adb.OpenURI( playlist_uri )
 
 	// Enable Shuffle
-	// time.Sleep( 10 * time.Second )
-	// ( 0 , 0 ) = Top-Left
-	// adb.Screenshot( "./screenshots/spotify/shuffle_off.png" , 735 , 925 , 35 , 45 )
-
-	// adb.PressKeyName( "KEYCODE_ENTER" )
 	adb.WaitOnScreen( "./screenshots/spotify/playing.png" , ( 10 * time.Second ) , 945 , 925 , 30 , 30 )
 	fmt.Println( "Ready" )
 	time.Sleep( 1 * time.Second )
@@ -49,57 +46,49 @@ func example_spotify( adb *adb_wrapper.Wrapper ) {
 		adb.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 		time.Sleep( 200 * time.Millisecond )
 		adb.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	} else {
-		// TODO : Turn TV Volume On
-		// adb.SetVolumePercent( 100 )
 	}
-
-	time.Sleep( 10 * time.Second )
-	adb.OpenURI( fmt.Sprintf( "spotify:playlist:%s:play" , "3UMDmO2YJb8DgUjpSBu8y9" ) )
-	time.Sleep( 500 * time.Millisecond )
-	adb.PressKeyName( "KEYCODE_MEDIA_NEXT" )
 
 }
 
 type Spotify struct {
+	*MediaPlayer
 	Name string `yaml:"name"`
-	DB *bolt_api.DB `yaml:"-"`
+	// DB *bolt_api.DB `yaml:"-"`
 }
 
-func ( t *Spotify ) Play() {
-	fmt.Println( "Spotify playing" )
-	adb := adb_wrapper.ConnectIP(
-		"/usr/local/bin/adb" ,
-		"192.168.4.174" ,
-		"5555" ,
-	)
-	example_spotify( &adb )
+func ( mp *Spotify ) Play() {
+	fmt.Println( "Spotify -->Play()" )
+	fmt.Println( mp.Status )
+	// mp.Set( "active_player_name" , "spotify" )
+	// mp.Set( "active_player_command" , "play" )
+	// mp.Set( "active_player_start_time" , start_time )
+	// playlist_with_shuffle( &mp.ADB )
 }
 
-func ( t *Spotify ) Pause() {
+func ( mp *Spotify ) Pause() {
 	fmt.Println( "Spotify paused" )
 }
 
-func ( t *Spotify ) Stop() {
+func ( mp *Spotify ) Stop() {
 	fmt.Println( "Spotify stopped" )
 }
 
-func ( t *Spotify ) Next() {
+func ( mp *Spotify ) Next() {
 	fmt.Println( "Spotify next" )
 }
 
-func ( t *Spotify ) Previous() {
+func ( mp *Spotify ) Previous() {
 	fmt.Println( "Spotify previous" )
 }
 
-func ( t *Spotify ) Teardown() {
+func ( mp *Spotify ) Teardown() {
 	fmt.Println( "Spotify previous" )
 }
 
-func ( t *Spotify ) Setup() {
+func ( mp *Spotify ) Setup() {
 	fmt.Println( "Spotify previous" )
 }
 
-func ( t *Spotify ) Update() {
+func ( mp *Spotify ) Update() {
 	fmt.Println( "Spotify previous" )
 }

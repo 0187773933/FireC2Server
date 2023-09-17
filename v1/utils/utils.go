@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"unicode"
 	"bufio"
+	"net"
 	tz "4d63.com/tz"
 	"encoding/json"
 	// "strings"
@@ -60,6 +61,12 @@ func ParseFormattedTimeString( time_str string ) ( result time.Time ) {
 	second , _ := strconv.Atoi( time_part[ 6 : 8 ] )
 	millisecond , _ := strconv.Atoi( time_part[ 9 : ] )
 	result = time.Date( year , month , day , hour , minute , second , ( millisecond * 1e6 ) , location )
+	return
+}
+
+
+func StringToInt( input string ) ( result int ) {
+	result , _ = strconv.Atoi( input )
 	return
 }
 
@@ -153,4 +160,22 @@ func WriteLoginURLPrefix( server_login_url_prefix string ) {
 	for _ , line := range lines {
 		file.WriteString( line )
 	}
+}
+
+func WakeOnLan( mac_address string ) {
+	mac_bytes , _ := net.ParseMAC( mac_address )
+	magic_packet := []byte{}
+	for i := 0; i < 6; i++ {
+		magic_packet = append( magic_packet , 0xFF )
+	}
+	for i := 0; i < 16; i++ {
+		magic_packet = append( magic_packet , mac_bytes... )
+	}
+	addr := &net.UDPAddr{
+		IP: net.IPv4bcast ,
+		Port: 9 ,
+	}
+	conn , _ := net.DialUDP( "udp" , nil , addr )
+	defer conn.Close()
+	conn.Write( magic_packet )
 }

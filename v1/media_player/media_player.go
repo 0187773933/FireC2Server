@@ -1,10 +1,14 @@
 package media_player
 
 import (
-	// "fmt"
+	"fmt"
+	"time"
 	// "sync"
 	bolt_api "github.com/boltdb/bolt"
-	// utils "github.com/0187773933/FireC2Server/v1/utils"
+	utils "github.com/0187773933/FireC2Server/v1/utils"
+	types "github.com/0187773933/FireC2Server/v1/types"
+	adb_wrapper "ADBWrapper/v1/wrapper"
+	tv "github.com/0187773933/FireC2Server/v1/tv"
 )
 
 // var mu sync.Mutex
@@ -22,35 +26,58 @@ type Functions interface {
 }
 
 type MediaPlayer struct {
-	ActivePlayerName string `json:"active_player_name"`
-	MediaPlayers map[string]Functions `json:"-"`
+	Config *types.ConfigFile `json:"config"`
 	DB *bolt_api.DB `json:"-"`
+	MediaPlayers map[string]Functions `json:"-"`
+	ADB adb_wrapper.Wrapper `json:"-"`
+	TV *tv.TV `json:"-"`
+	Status Status `json:"status"`
 }
 
-func New( db *bolt_api.DB ) ( result *MediaPlayer ) {
+func New( db *bolt_api.DB , config *types.ConfigFile ) ( result *MediaPlayer ) {
+	fmt.Println( "setting up media-player" )
 	result = &MediaPlayer{
-		MediaPlayers: make( map[string]Functions ) ,
+		Config: config ,
 		DB: db ,
+		MediaPlayers: make( map[string]Functions ) ,
 	}
+	result.ADB = result.ADBConnect()
+	result.TV = tv.New( config )
+	result.Status = result.GetStatus()
+	result.Set( "active_player_name" , "startup" )
+	result.Set( "active_player_start_time" , utils.GetFormattedTimeString() )
+
 	twitch := &Twitch{
 		Name: "twitch" ,
-		DB: db ,
+		MediaPlayer: result ,
 	}
 	result.MediaPlayers[ twitch.Name ] = twitch
 	youtube := &YouTube{
 		Name: "youtube" ,
-		DB: db ,
+		MediaPlayer: result ,
 	}
 	result.MediaPlayers[ youtube.Name ] = youtube
 	spotify := &Spotify{
 		Name: "spotify" ,
-		DB: db ,
+		MediaPlayer: result ,
 	}
 	result.MediaPlayers[ spotify.Name ] = spotify
 	return
 }
 
-func ( s *MediaPlayer ) Run( player_name string , command string ) (result string) {
+
+func ( s *MediaPlayer ) Run( player_name string , command string ) ( result string ) {
+	prepare_commands := map[string]bool {
+		"play": true ,
+		"pause": true ,
+		"stop": true ,
+		"next": true ,
+		"previous": true ,
+	}
+	if prepare_commands[ command ] == true {
+		go s.Prepare()
+		s.Status = s.GetStatus()
+	}
 	if mp , exists := s.MediaPlayers[ player_name ]; exists {
 		switch command {
 			case "play":
@@ -75,6 +102,59 @@ func ( s *MediaPlayer ) Run( player_name string , command string ) (result strin
 		return "Command Executed"
 	}
 	return "Player Not Found"
+}
+
+type Status struct {
+	StartTime string `json:"start_time"`
+	StartTimeOBJ time.Time `json:"-"`
+	PreviousPlayerName string `json:"previous_player_name"`
+	PreviousPlayerCommand string `json:"previous_player_command"`
+	PreviousStartTime string `json:"previous_start_time"`
+	PreviousStartTimeOBJ time.Time `json:"-"`
+	PreviousStartTimeDuration time.Duration `json:"-"`
+	PreviousStartTimeDurationSeconds float64 `json:"previous_start_time_duration_seconds"`
+}
+func ( s *MediaPlayer ) GetStatus() ( result Status ) {
+	fmt.Println( "GetStatus()" )
+	// 1.) Get Previous State Info from DB
+	start_time , start_time_obj := utils.GetFormattedTimeStringOBJ()
+	previous_player_name := s.Get( "active_player_name" )
+	previous_player_command := s.Get( "active_player_command" )
+	previous_start_time := s.Get( "active_player_start_time" )
+	previous_start_time_obj := utils.ParseFormattedTimeString( previous_start_time )
+	previous_start_time_duration := start_time_obj.Sub( previous_start_time_obj )
+	previous_start_time_duration_seconds := previous_start_time_duration.Seconds()
+	result.StartTime = start_time
+	result.StartTimeOBJ = start_time_obj
+	result.PreviousPlayerName = previous_player_name
+	result.PreviousPlayerCommand = previous_player_command
+	result.PreviousStartTime = previous_start_time
+	result.PreviousStartTimeOBJ = previous_start_time_obj
+	result.PreviousStartTimeDuration = previous_start_time_duration
+	result.PreviousStartTimeDurationSeconds = previous_start_time_duration_seconds
+
+	// 2.) Get Current ADB Status Info
+	adb_windows := s.ADB.GetWindowStack()
+	fmt.Println( adb_windows )
+
+	// 3.) TV Get Status
+	tv_status := s.TV.Status()
+	fmt.Println( tv_status )
+	return
+}
+
+func ( s *MediaPlayer ) Prepare() {
+	s.TV.Prepare()
+}
+
+func ( s *MediaPlayer ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
+	if s.Config.ADBConnectionType == "tcp" {
+		connection = adb_wrapper.ConnectIP( s.Config.ADBPath , s.Config.ADBServerIP , s.Config.ADBServerPort )
+	} else if s.Config.ADBConnectionType == "usb" {
+		connection = adb_wrapper.ConnectUSB( s.Config.ADBPath , s.Config.ADBSerial )
+	}
+	s.ADB = connection
+	return
 }
 
 func ( s *MediaPlayer ) Set( key string , value string ) ( result string ) {
