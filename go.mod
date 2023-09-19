@@ -9,6 +9,8 @@ require (
 	github.com/0187773933/VizioController v0.0.0-20201223083155-9d69e0c9b933
 	github.com/boltdb/bolt v1.3.1
 	github.com/gofiber/fiber/v2 v2.49.2
+	github.com/oklog/ulid/v2 v2.1.0
+	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/crypto v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
 )

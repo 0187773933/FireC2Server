@@ -1,9 +1,10 @@
 package media_player
 
 import (
-	"fmt"
 	"time"
 	// "sync"
+	logrus "github.com/sirupsen/logrus"
+	logger "github.com/0187773933/FireC2Server/v1/logger"
 	bolt_api "github.com/boltdb/bolt"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	types "github.com/0187773933/FireC2Server/v1/types"
@@ -13,6 +14,8 @@ import (
 
 // var mu sync.Mutex
 // var active *State
+
+var log *logrus.Logger
 
 type Functions interface {
 	Play()
@@ -35,7 +38,8 @@ type MediaPlayer struct {
 }
 
 func New( db *bolt_api.DB , config *types.ConfigFile ) ( result *MediaPlayer ) {
-	fmt.Println( "setting up media-player" )
+	log = logger.Log
+	log.Debug( "setting up media-player" )
 	result = &MediaPlayer{
 		Config: config ,
 		DB: db ,
@@ -46,7 +50,6 @@ func New( db *bolt_api.DB , config *types.ConfigFile ) ( result *MediaPlayer ) {
 	result.Status = result.GetStatus()
 	result.Set( "active_player_name" , "startup" )
 	result.Set( "active_player_start_time" , utils.GetFormattedTimeString() )
-
 	twitch := &Twitch{
 		Name: "twitch" ,
 		MediaPlayer: result ,
@@ -114,32 +117,40 @@ type Status struct {
 	PreviousStartTimeDuration time.Duration `json:"-"`
 	PreviousStartTimeDurationSeconds float64 `json:"previous_start_time_duration_seconds"`
 }
+
+
+
 func ( s *MediaPlayer ) GetStatus() ( result Status ) {
-	fmt.Println( "GetStatus()" )
+	log.Println( "GetStatus()" )
 	// 1.) Get Previous State Info from DB
 	start_time , start_time_obj := utils.GetFormattedTimeStringOBJ()
 	previous_player_name := s.Get( "active_player_name" )
 	previous_player_command := s.Get( "active_player_command" )
 	previous_start_time := s.Get( "active_player_start_time" )
-	previous_start_time_obj := utils.ParseFormattedTimeString( previous_start_time )
-	previous_start_time_duration := start_time_obj.Sub( previous_start_time_obj )
-	previous_start_time_duration_seconds := previous_start_time_duration.Seconds()
+
 	result.StartTime = start_time
 	result.StartTimeOBJ = start_time_obj
 	result.PreviousPlayerName = previous_player_name
 	result.PreviousPlayerCommand = previous_player_command
 	result.PreviousStartTime = previous_start_time
-	result.PreviousStartTimeOBJ = previous_start_time_obj
-	result.PreviousStartTimeDuration = previous_start_time_duration
-	result.PreviousStartTimeDurationSeconds = previous_start_time_duration_seconds
+
+	if previous_start_time != "" {
+		previous_start_time_obj := utils.ParseFormattedTimeString( previous_start_time )
+		previous_start_time_duration := start_time_obj.Sub( previous_start_time_obj )
+		previous_start_time_duration_seconds := previous_start_time_duration.Seconds()
+		result.PreviousStartTimeOBJ = previous_start_time_obj
+		result.PreviousStartTimeDuration = previous_start_time_duration
+		result.PreviousStartTimeDurationSeconds = previous_start_time_duration_seconds
+	}
 
 	// 2.) Get Current ADB Status Info
 	adb_windows := s.ADB.GetWindowStack()
-	fmt.Println( adb_windows )
+	top_window := adb_windows[ 0 ]
+	log.Println( top_window.Activity )
 
 	// 3.) TV Get Status
 	tv_status := s.TV.Status()
-	fmt.Println( tv_status )
+	log.Println( tv_status )
 	return
 }
 
@@ -159,8 +170,7 @@ func ( s *MediaPlayer ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 
 func ( s *MediaPlayer ) Set( key string , value string ) ( result string ) {
 	s.DB.Update( func( tx *bolt_api.Tx ) error {
-		bucket , err := tx.CreateBucketIfNotExists( []byte( "state" ) )
-		if err != nil { return err }
+		bucket := tx.Bucket( []byte( "state" ) )
 		bucket.Put( []byte( key ) , []byte( value ) )
 		return nil
 	})

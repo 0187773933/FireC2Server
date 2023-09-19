@@ -48,6 +48,23 @@ func GetFormattedTimeStringOBJ() ( result_string string , result_time time.Time 
 	return
 }
 
+func FormatTime( input_time *time.Time ) ( result string ) {
+	time_object := input_time.In( location )
+	month_name := strings.ToUpper( time_object.Format( "Jan" ) )
+	milliseconds := time_object.Format( ".000" )
+	date_part := fmt.Sprintf( "%02d%s%d" , time_object.Day() , month_name , time_object.Year() )
+	time_part := fmt.Sprintf( "%02d:%02d:%02d%s" , time_object.Hour() , time_object.Minute() , time_object.Second() , milliseconds )
+	result = fmt.Sprintf( "%s === %s" , date_part , time_part )
+	return
+}
+
+// Year , Month , Day
+func FormatDBLogPrefix( input_time *time.Time ) ( result string ) {
+	time_object := input_time.In( location )
+	result = fmt.Sprintf( "%d.%02d.%02d" , time_object.Year() , time_object.Month() , time_object.Day()  )
+	return
+}
+
 func ParseFormattedTimeString( time_str string ) ( result time.Time ) {
 	parts := strings.Split( time_str , " === " )
 	date_part := parts[ 0 ]

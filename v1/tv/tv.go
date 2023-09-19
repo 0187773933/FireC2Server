@@ -2,12 +2,16 @@ package tv
 
 import (
 	"fmt"
+	logrus "github.com/sirupsen/logrus"
+	logger "github.com/0187773933/FireC2Server/v1/logger"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	types "github.com/0187773933/FireC2Server/v1/types"
 	lg_tv "github.com/0187773933/LGTVController/v1/controller"
 	tg_tv_types "github.com/0187773933/LGTVController/v1/types"
 	vizio_tv "github.com/0187773933/VizioController/controller"
 )
+
+var log *logrus.Logger
 
 type TV struct {
 	WakeOnLan bool `yaml:"tv_wake_on_lan"`
@@ -29,6 +33,7 @@ type TV struct {
 // https://github.com/YuukanOO/rtv/blob/master/main.go
 
 func New( config *types.ConfigFile ) ( result *TV ) {
+	log = logger.Log
 	result = &TV{
 		Brand: config.TVBrand ,
 		IP: config.TVIP ,
@@ -51,10 +56,10 @@ func New( config *types.ConfigFile ) ( result *TV ) {
 			result.LG = lg_tv.New( lg_tv_config )
 			break;
 		case "samsung":
-			fmt.Println( "samsung === todo" )
+			log.Println( "samsung === todo" )
 			break;
 		case "vizio":
-			fmt.Println( "github.com/0187773933/VizioController/controller v0 doesn't require setup" )
+			log.Println( "github.com/0187773933/VizioController/controller v0 doesn't require setup" )
 			break;
 	}
 	return
@@ -77,13 +82,13 @@ type Status struct {
 	Power bool `json:"power"`
 }
 func ( tv *TV ) Status() ( result Status ) {
-	fmt.Println( "TV.Status()" )
+	log.Println( "TV.Status()" )
 	result.Volume = tv.GetVolume()
-	fmt.Println( "Volume ===" , result.Volume )
+	log.Println( "Volume ===" , result.Volume )
 	result.Input = tv.GetInput()
-	fmt.Println( "Input ===" , result.Input )
+	log.Println( "Input ===" , result.Input )
 	result.Power = tv.GetPowerStatus()
-	fmt.Println( "Power ===" , result.Power )
+	log.Println( "Power ===" , result.Power )
 	// result.Mute = tv.GetPowerStatus()
 	return;
 }
@@ -127,29 +132,29 @@ func ( tv *TV ) GetPowerStatus() ( result bool ) {
 			break;
 		case "vizio":
 			//vizio_tv.PowerOff( tv.IP , tv.VizioAuthToken )
-			fmt.Println( "vizio === GetPowerStatus() === to do" )
+			log.Println( "vizio === GetPowerStatus() === to do" )
 	}
 	return;
 }
 
 func ( tv *TV ) GetInput() ( result int ) {
-	fmt.Println( "TV.GetInput()" )
+	log.Println( "TV.GetInput()" )
 	switch tv.Brand{
 		case "lg":
 			result_string := tv.LG.API( "get_inputs" )
-			fmt.Println( "lg === to do , unknown what get_inputs list is" , result_string )
+			log.Println( "lg === to do , unknown what get_inputs list is" , result_string )
 			// result = utils.StringToInt( result_string )
-			// fmt.Println( "LG-3" )
+			// log.Println( "LG-3" )
 			result = 1
 			break;
 		case "samsung":
 			break;
 		case "vizio":
 			v_result := vizio_tv.GetCurrentInput( tv.IP , tv.VizioAuthToken )
-			fmt.Println( "vizio === to do , probably have to split strings" , v_result , v_result.Name )
+			log.Println( "vizio === to do , probably have to split strings" , v_result , v_result.Name )
 			result = 1
 	}
-	fmt.Println( "done" )
+	log.Println( "done" )
 	return;
 }
 
@@ -199,7 +204,7 @@ func ( tv *TV ) MuteOff() {
 // 	switch tv.Brand{
 // 		case "lg":
 // 			audio_status := tv.LG.API( "get_audio_status" )
-// 			fmt.Println( "lg === to do" , audio_status )
+// 			log.Println( "lg === to do" , audio_status )
 // 			break;
 // 		case "samsung":
 // 			break;
@@ -236,6 +241,6 @@ func ( tv *TV ) SetVolume( volume_level int ) {
 			// current_volume := tv.GetVolume()
 			// vizio_tv.VolumeUp( tv.IP , tv.VizioAuthToken )
 			// vizio_tv.VolumeDown( tv.IP , tv.VizioAuthToken )
-			fmt.Println( "TODO" )
+			log.Println( "TODO" )
 	}
 }

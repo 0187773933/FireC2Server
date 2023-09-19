@@ -1,8 +1,10 @@
 package encryption
 
 import (
-	"fmt"
+	"os"
 	"io"
+	"fmt"
+	filepath "path/filepath"
 	base64 "encoding/base64"
 	hex "encoding/hex"
 	random "crypto/rand"
@@ -141,4 +143,75 @@ func Test_ChaChaEncryptDecrypt() {
 	y := ChaChaDecryptBase64String( "2432612431332431436c754a424778736e66796a794b466c32356e794f614836" , x )
 	fmt.Printf( "%+v\n" , x )
 	fmt.Println( y )
+}
+
+func ChaChaEncryptFile( key string , file_path string ) error {
+	key_hex , _ := hex.DecodeString( key )
+	var key_bytes [32]byte
+	copy( key_bytes[:] , key_hex )
+	aead, _ := chacha.New( key_bytes[:] )
+
+	in_file , err := os.Open( file_path )
+	if err != nil { return err }
+	defer in_file.Close()
+
+	outFile, err := os.Create( file_path + ".encrypted" )
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	nonce := make( []byte , aead.NonceSize() )
+	io.ReadFull( random.Reader, nonce[:] )
+	_ , err = outFile.Write( nonce )
+	if err != nil { return err }
+
+	chunk_size := 1024
+	buffer := make( []byte , chunk_size )
+	for {
+		n , err := in_file.Read( buffer )
+		if err == io.EOF { break }
+		if err != nil { return err }
+		encrypted_bytes := aead.Seal( nil , nonce , buffer[ :n ] , nil )
+		_, err = outFile.Write( encrypted_bytes )
+		if err != nil { return err }
+	}
+	return nil
+}
+
+func ChaChaDecryptFile( key string , file_path string ) error {
+	key_hex, _ := hex.DecodeString(key)
+	var key_bytes [32]byte
+	copy( key_bytes[:], key_hex )
+	aead, _ := chacha.New( key_bytes[:] )
+
+	in_file , err := os.Open( file_path )
+	if err != nil { return err }
+	defer in_file.Close()
+
+	output_file_path := file_path[ :len( file_path )-len( ".encrypted" ) ]
+	original_extension := filepath.Ext( output_file_path )
+	decrypted_file_name := output_file_path + ".decrypted" + original_extension
+	out_file , err := os.Create( decrypted_file_name )
+	if err != nil { return err }
+	defer out_file.Close()
+
+	nonce := make([]byte, aead.NonceSize())
+	_ , err = io.ReadFull( in_file , nonce)
+	if err != nil { return err }
+
+	chunk_size := 1024
+	buffer := make( []byte , ( chunk_size + aead.Overhead() ) )
+
+	for {
+		n, err := in_file.Read( buffer )
+		if err == io.EOF { break }
+		if err != nil { return err }
+		decrypted_bytes , err := aead.Open( nil , nonce , buffer[ :n ] , nil )
+		if err != nil { return err }
+		_ , err = out_file.Write( decrypted_bytes )
+		if err != nil { return err }
+	}
+
+	return nil
 }
