@@ -2,7 +2,6 @@ package tv
 
 import (
 	"fmt"
-	logrus "github.com/sirupsen/logrus"
 	logger "github.com/0187773933/FireC2Server/v1/logger"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	types "github.com/0187773933/FireC2Server/v1/types"
@@ -11,7 +10,7 @@ import (
 	vizio_tv "github.com/0187773933/VizioController/controller"
 )
 
-var log *logrus.Logger
+var log = logger.GetLogger()
 
 type TV struct {
 	WakeOnLan bool `yaml:"tv_wake_on_lan"`
@@ -33,7 +32,6 @@ type TV struct {
 // https://github.com/YuukanOO/rtv/blob/master/main.go
 
 func New( config *types.ConfigFile ) ( result *TV ) {
-	log = logger.Log
 	result = &TV{
 		Brand: config.TVBrand ,
 		IP: config.TVIP ,

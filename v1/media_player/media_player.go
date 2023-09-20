@@ -3,7 +3,6 @@ package media_player
 import (
 	"time"
 	// "sync"
-	logrus "github.com/sirupsen/logrus"
 	logger "github.com/0187773933/FireC2Server/v1/logger"
 	bolt_api "github.com/boltdb/bolt"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
@@ -15,7 +14,7 @@ import (
 // var mu sync.Mutex
 // var active *State
 
-var log *logrus.Logger
+var log = logger.GetLogger()
 
 type Functions interface {
 	Play()
@@ -38,7 +37,6 @@ type MediaPlayer struct {
 }
 
 func New( db *bolt_api.DB , config *types.ConfigFile ) ( result *MediaPlayer ) {
-	log = logger.Log
 	log.Debug( "setting up media-player" )
 	result = &MediaPlayer{
 		Config: config ,

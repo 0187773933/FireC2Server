@@ -59,7 +59,7 @@ func main() {
 	SetupDB( &config )
 	defer SetupStackTraceReport()
 	// var log =
-	logger.Init( DB )
+	// logger.Init()
 	// utils.GenerateNewKeys()
 	utils.WriteLoginURLPrefix( config.ServerLoginUrlPrefix )
 	s = server.New( DB , config )

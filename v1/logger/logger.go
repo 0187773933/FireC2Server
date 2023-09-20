@@ -7,6 +7,7 @@ import (
 	"io"
 	// "encoding/json"
 	bolt_api "github.com/boltdb/bolt"
+	types "github.com/0187773933/FireC2Server/v1/types"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	logrus "github.com/sirupsen/logrus"
 	// ulid "github.com/oklog/ulid/v2"
@@ -14,6 +15,7 @@ import (
 
 var Log *logrus.Logger
 var DB *bolt_api.DB
+var config *types.ConfigFile
 
 type CustomTextFormatter struct {
 	logrus.TextFormatter
@@ -95,7 +97,16 @@ func ( f *CustomJSONFormatter ) Format( entry *logrus.Entry ) ( []byte , error )
 	return f.JSONFormatter.Format( entry )
 }
 
-func Init( db *bolt_api.DB ) {
+// so apparently The limitation arises due to the Go language's initialization order:
+// Package-level variables are initialized before main() is called.
+// Functions in main() execute after package-level initializations.
+// something something , singleton
+func GetLogger() *logrus.Logger {
+	if Log == nil { Init() }
+	return Log
+}
+
+func Init() {
 	Log = logrus.New()
 	log_level := os.Getenv( "LOG_LEVEL" )
 	fmt.Printf( "LOG_LEVEL=%s\n" , log_level )

@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	// "time"
-	logrus "github.com/sirupsen/logrus"
 	logger "github.com/0187773933/FireC2Server/v1/logger"
 	fiber "github.com/gofiber/fiber/v2"
 	fiber_cookie "github.com/gofiber/fiber/v2/middleware/encryptcookie"
@@ -15,7 +14,7 @@ import (
 )
 
 var GlobalServer *Server
-var log *logrus.Logger
+var log = logger.GetLogger()
 
 type Server struct {
 	FiberApp *fiber.App `yaml:"fiber_app"`
@@ -44,7 +43,6 @@ func New( db *bolt_api.DB , config types.ConfigFile ) ( server Server ) {
 	server.DB = db
 	GlobalServer = &server
 
-	log = logger.Log
 	log.Debug( "Server Starting" )
 	server.MediaPlayer = media_player.New( db , &config )
 	server.FiberApp.Use( server.LogRequest )
