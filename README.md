@@ -20,6 +20,9 @@
 	- Random M3U8 Music Tracks
 - Spotify
 	- Detect if media control overlay is already open
+		- add just generic get status pre-call
+			- don't press anything , get 1 screenshot , detect multiple things
+				- now playing , which key index , shuffle status , media_controls open?
 - Disney+
 	- asdf
 - YouTube
