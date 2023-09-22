@@ -63,13 +63,17 @@ func ( mp *Spotify ) IsShuffleOn() ( result bool ) {
 	coords := []int{ 752 , 964 }
 	log.Debug( "pressing left" )
 	mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+	time.Sleep( 500 * time.Millisecond )
 	result = mp.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color )
 	return
 }
 
-
 func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
 	was_on = mp.IsShuffleOn()
+	if was_on == true {
+		log.Debug( "Shuffle === ON" )
+		return
+	}
 	shuffle_index := 1
 	index := mp.GetActiveButtonIndex()
 	if index == shuffle_index {
@@ -97,8 +101,12 @@ func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
 	return
 }
 
-func ( mp *Spotify ) ShuffleOff() ( was_off bool ) {
-	was_off = mp.IsShuffleOn()
+func ( mp *Spotify ) ShuffleOff() ( was_on bool ) {
+	was_on = mp.IsShuffleOn()
+	if was_on == false {
+		log.Debug( "Shuffle === OFF" )
+		return
+	}
 	shuffle_index := 1
 	index := mp.GetActiveButtonIndex()
 	if index == shuffle_index {

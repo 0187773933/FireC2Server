@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"strings"
 	fiber "github.com/gofiber/fiber/v2"
 )
 
@@ -21,7 +22,21 @@ func ( s *Server ) SetupMediaPlayerRoutes( group fiber.Router , player_name stri
 	}
 }
 
+
 func ( s *Server ) SetupAdminRoutes() {
+
+	var generic_adb_command_routes = []string{ "play" , "pause" , "stop" , "next" , "previous" }
+	for _ , command := range generic_adb_command_routes {
+		x_command := command
+		route := fmt.Sprintf( "/%s" , x_command )
+		s.FiberApp.Get( route , func( c *fiber.Ctx ) error {
+			s.MediaPlayer.ADB.PressKeyName( fmt.Sprintf( "KEYCODE_MEDIA_%s" , strings.ToUpper( x_command ) ) )
+			return c.JSON( fiber.Map{
+				"url": route ,
+				"result": true ,
+			})
+		})
+	}
 
 	twitch := s.FiberApp.Group( "/twitch" )
 	twitch.Use( validate_admin_mw )

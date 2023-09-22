@@ -1,6 +1,7 @@
 package media_player
 
 import (
+	"fmt"
 	"time"
 	// "sync"
 	logger "github.com/0187773933/FireC2Server/v1/logger"
@@ -86,7 +87,8 @@ func ( s *MediaPlayer ) Run( player_name string , command string , args ...inter
 		go s.Prepare()
 		s.Status = s.GetStatus()
 	}
-	log.Debug( player_name , command , args )
+	log.Debug( fmt.Sprintf( "%s === %s" , player_name , command ) )
+	log.Debug( args )
 	if mp , exists := s.MediaPlayers[ player_name ]; exists {
 		switch command {
 			case "play":
