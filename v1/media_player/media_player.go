@@ -16,6 +16,8 @@ import (
 
 var log = logger.GetLogger()
 
+const ACTIVITY_BLANK = "com.amazon.tv.launcher/com.amazon.tv.launcher.ui.HomeActivity_vNext"
+
 type Functions interface {
 	Play()
 	Pause()
@@ -25,6 +27,7 @@ type Functions interface {
 	Teardown()
 	Setup()
 	Update()
+	PlayPlaylistWithShuffle( playlist_id string )
 }
 
 type MediaPlayer struct {
@@ -48,16 +51,19 @@ func New( db *bolt_api.DB , config *types.ConfigFile ) ( result *MediaPlayer ) {
 	result.Status = result.GetStatus()
 	result.Set( "active_player_name" , "startup" )
 	result.Set( "active_player_start_time" , utils.GetFormattedTimeString() )
+
 	twitch := &Twitch{
 		Name: "twitch" ,
 		MediaPlayer: result ,
 	}
 	result.MediaPlayers[ twitch.Name ] = twitch
+
 	youtube := &YouTube{
 		Name: "youtube" ,
 		MediaPlayer: result ,
 	}
 	result.MediaPlayers[ youtube.Name ] = youtube
+
 	spotify := &Spotify{
 		Name: "spotify" ,
 		MediaPlayer: result ,
@@ -67,7 +73,7 @@ func New( db *bolt_api.DB , config *types.ConfigFile ) ( result *MediaPlayer ) {
 }
 
 
-func ( s *MediaPlayer ) Run( player_name string , command string ) ( result string ) {
+func ( s *MediaPlayer ) Run( player_name string , command string , args ...interface{} ) ( result string ) {
 	prepare_commands := map[string]bool {
 		"play": true ,
 		"pause": true ,
@@ -79,6 +85,7 @@ func ( s *MediaPlayer ) Run( player_name string , command string ) ( result stri
 		go s.Prepare()
 		s.Status = s.GetStatus()
 	}
+	log.Debug( player_name , command , args )
 	if mp , exists := s.MediaPlayers[ player_name ]; exists {
 		switch command {
 			case "play":
@@ -114,12 +121,14 @@ type Status struct {
 	PreviousStartTimeOBJ time.Time `json:"-"`
 	PreviousStartTimeDuration time.Duration `json:"-"`
 	PreviousStartTimeDurationSeconds float64 `json:"previous_start_time_duration_seconds"`
+	ADBTopWindow string `json:"adb_top_window"`
+	ADBVolume int `json:"adb_volume"`
+	TV tv.Status `json:"tv"`
 }
 
-
-
 func ( s *MediaPlayer ) GetStatus() ( result Status ) {
-	log.Println( "GetStatus()" )
+	log.Debug( "GetStatus()" )
+
 	// 1.) Get Previous State Info from DB
 	start_time , start_time_obj := utils.GetFormattedTimeStringOBJ()
 	previous_player_name := s.Get( "active_player_name" )
@@ -143,12 +152,13 @@ func ( s *MediaPlayer ) GetStatus() ( result Status ) {
 
 	// 2.) Get Current ADB Status Info
 	adb_windows := s.ADB.GetWindowStack()
-	top_window := adb_windows[ 0 ]
-	log.Println( top_window.Activity )
+	if len( adb_windows ) > 0 {
+		result.ADBTopWindow = adb_windows[ 0 ].Activity
+	}
+	result.ADBVolume = s.ADB.GetVolume()
 
 	// 3.) TV Get Status
-	tv_status := s.TV.Status()
-	log.Println( tv_status )
+	result.TV = s.TV.Status()
 	return
 }
 

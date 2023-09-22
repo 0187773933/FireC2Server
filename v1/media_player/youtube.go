@@ -11,6 +11,14 @@ type YouTube struct {
 	// DB *bolt_api.DB `yaml:"-"`
 }
 
+func ( mp *YouTube ) PlayPlaylistWithShuffle( playlist_id string ) {
+	log.Debug( "YouTube PlayPlaylistWithShuffle()" )
+}
+
+func ( mp *YouTube ) PlayPlaylist( playlist_id string ) {
+	log.Debug( "YouTube PlayPlaylist()" )
+}
+
 func ( t *YouTube ) Play() {
 	fmt.Println( "YouTube playing" )
 }

@@ -54,10 +54,10 @@ func New( config *types.ConfigFile ) ( result *TV ) {
 			result.LG = lg_tv.New( lg_tv_config )
 			break;
 		case "samsung":
-			log.Println( "samsung === todo" )
+			log.Debug( "samsung === todo" )
 			break;
 		case "vizio":
-			log.Println( "github.com/0187773933/VizioController/controller v0 doesn't require setup" )
+			log.Debug( "github.com/0187773933/VizioController/controller v0 doesn't require setup" )
 			break;
 	}
 	return
@@ -80,13 +80,13 @@ type Status struct {
 	Power bool `json:"power"`
 }
 func ( tv *TV ) Status() ( result Status ) {
-	log.Println( "TV.Status()" )
+	log.Debug( "TV.Status()" )
 	result.Volume = tv.GetVolume()
-	log.Println( "Volume ===" , result.Volume )
+	log.Debug( "Volume === " , result.Volume )
 	result.Input = tv.GetInput()
-	log.Println( "Input ===" , result.Input )
+	log.Debug( "Input === " , result.Input )
 	result.Power = tv.GetPowerStatus()
-	log.Println( "Power ===" , result.Power )
+	log.Debug( "Power === " , result.Power )
 	// result.Mute = tv.GetPowerStatus()
 	return;
 }
@@ -130,17 +130,17 @@ func ( tv *TV ) GetPowerStatus() ( result bool ) {
 			break;
 		case "vizio":
 			//vizio_tv.PowerOff( tv.IP , tv.VizioAuthToken )
-			log.Println( "vizio === GetPowerStatus() === to do" )
+			log.Debug( "vizio === GetPowerStatus() === to do" )
 	}
 	return;
 }
 
 func ( tv *TV ) GetInput() ( result int ) {
-	log.Println( "TV.GetInput()" )
+	log.Debug( "TV.GetInput()" )
 	switch tv.Brand{
 		case "lg":
 			result_string := tv.LG.API( "get_inputs" )
-			log.Println( "lg === to do , unknown what get_inputs list is" , result_string )
+			log.Debug( "lg === to do , unknown what get_inputs list is" , result_string )
 			// result = utils.StringToInt( result_string )
 			// log.Println( "LG-3" )
 			result = 1
@@ -149,10 +149,10 @@ func ( tv *TV ) GetInput() ( result int ) {
 			break;
 		case "vizio":
 			v_result := vizio_tv.GetCurrentInput( tv.IP , tv.VizioAuthToken )
-			log.Println( "vizio === to do , probably have to split strings" , v_result , v_result.Name )
+			log.Debug( "vizio === to do , probably have to split strings" , v_result , v_result.Name )
 			result = 1
 	}
-	log.Println( "done" )
+	log.Debug( "done" )
 	return;
 }
 
@@ -239,6 +239,6 @@ func ( tv *TV ) SetVolume( volume_level int ) {
 			// current_volume := tv.GetVolume()
 			// vizio_tv.VolumeUp( tv.IP , tv.VizioAuthToken )
 			// vizio_tv.VolumeDown( tv.IP , tv.VizioAuthToken )
-			log.Println( "TODO" )
+			log.Debug( "TODO" )
 	}
 }

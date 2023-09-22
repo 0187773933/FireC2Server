@@ -9,7 +9,6 @@ require (
 	github.com/0187773933/VizioController v0.0.0-20201223083155-9d69e0c9b933
 	github.com/boltdb/bolt v1.3.1
 	github.com/gofiber/fiber/v2 v2.49.2
-	github.com/oklog/ulid/v2 v2.1.0
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/crypto v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -17,7 +16,7 @@ require (
 
 require (
 	4d63.com/embedfiles v1.0.0 // indirect
-	github.com/0187773933/ADBWrapper v0.0.0-20230912140958-cdcdb6e63afa // indirect
+	github.com/0187773933/ADBWrapper v0.0.0-20230921113957-a49288426d7a // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect

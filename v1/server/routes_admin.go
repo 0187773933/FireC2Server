@@ -34,4 +34,23 @@ func ( s *Server ) SetupAdminRoutes() {
 	spotify := s.FiberApp.Group( "/spotify" )
 	spotify.Use( validate_admin_mw )
 	s.SetupMediaPlayerRoutes( spotify , "spotify" )
+	spotify.Get( "/playlist-shuffle/:playlist_id" , func( c *fiber.Ctx ) error {
+		playlist_id := c.Params( "playlist_id" )
+		s.MediaPlayer.MediaPlayers[ "spotify" ].PlayPlaylistWithShuffle( playlist_id )
+		return c.JSON( fiber.Map{
+			"url": "/playlist-shuffle/:playlist_id" ,
+			"playlist_id": playlist_id ,
+			"result": true ,
+		})
+	})
+	spotify.Get( "/playlist/:playlist_id" , func( c *fiber.Ctx ) error {
+		playlist_id := c.Params( "playlist_id" )
+		s.MediaPlayer.MediaPlayers[ "spotify" ].PlayPlaylist( playlist_id )
+		return c.JSON( fiber.Map{
+			"url": "/playlist/:playlist_id" ,
+			"playlist_id": playlist_id ,
+			"result": true ,
+		})
+	})
+
 }

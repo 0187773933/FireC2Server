@@ -3,51 +3,28 @@ package media_player
 import (
 	"fmt"
 	"time"
-	"strings"
+	"math"
+	// "strings"
 	// bolt_api "github.com/boltdb/bolt"
+	"image/color"
 	adb_wrapper "ADBWrapper/v1/wrapper"
-	// utils "github.com/0187773933/FireC2Server/v1/utils"
+	utils "github.com/0187773933/FireC2Server/v1/utils"
 )
 
-func enable_shuffle( adb *adb_wrapper.Wrapper ) {
+// func enable_shuffle( adb *adb_wrapper.Wrapper ) {
 
-}
+// }
 
-func playlist_with_shuffle( adb *adb_wrapper.Wrapper ) {
+const ACTIVITY_SPOTIFY = "com.spotify.tv.android/com.spotify.tv.android.SpotifyTVActivity"
+
+func reopen_spotify( adb *adb_wrapper.Wrapper ) {
 	adb.StopAllApps()
-	adb.Brightness( 0 )
 	adb.CloseAppName( "com.spotify.tv.android" )
-	time.Sleep( 1 * time.Second )
-	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , "6ZFJWltDYCI0OVyXNleN9e" )
-	adb.OpenURI( playlist_uri )
-
-	// Enable Shuffle
-	adb.WaitOnScreen( "./screenshots/spotify/playing.png" , ( 10 * time.Second ) , 945 , 925 , 30 , 30 )
-	fmt.Println( "Ready" )
-	time.Sleep( 1 * time.Second )
-	shuffle_test := adb.ClosestScreenInList( []string{
-			"./screenshots/spotify/shuffle_off.png" ,
-			"./screenshots/spotify/shuffle_on.png" ,
-		} ,
-		735 , 925 , 35 , 45 ,
-	)
-	if strings.Contains( shuffle_test , "off" ) {
-		adb.PressKeyName( "KEYCODE_DPAD_LEFT" )
-		time.Sleep( 200 * time.Millisecond )
-		adb.PressKeyName( "KEYCODE_DPAD_LEFT" )
-		time.Sleep( 200 * time.Millisecond )
-		adb.PressKeyName( "KEYCODE_ENTER" )
-		time.Sleep( 200 * time.Millisecond )
-		adb.PressKeyName( "KEYCODE_MEDIA_NEXT" )
-		// adb.SetVolumePercent( 100 )
-		time.Sleep( 200 * time.Millisecond )
-		adb.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-		time.Sleep( 200 * time.Millisecond )
-		adb.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-		time.Sleep( 200 * time.Millisecond )
-		adb.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	}
-
+	// time.Sleep( 1 * time.Second )
+	time.Sleep( 500 * time.Millisecond )
+	adb.OpenActivity( ACTIVITY_SPOTIFY )
+	time.Sleep( 500 * time.Millisecond )
+	// time.Sleep( 1 * time.Second )
 }
 
 type Spotify struct {
@@ -56,39 +33,187 @@ type Spotify struct {
 	// DB *bolt_api.DB `yaml:"-"`
 }
 
+func ( mp *Spotify ) GetActiveButtonIndex() ( result int ) {
+	result = -1
+	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
+	indexes := [][]int{
+		{ 201 , 940 } ,
+		{ 789 , 940 } ,
+		{ 893 , 940 } ,
+		{ 997 , 940 } ,
+		{ 1101 , 940 } ,
+		{ 1205 , 940 } ,
+		{ 1793 , 940 } ,
+	}
+	screenshot := mp.ADB.ScreenshotToPNG()
+	for index , coords := range indexes {
+		pixel := screenshot.At( coords[ 0 ] , coords[ 1 ] )
+		r , g , b , a := pixel.RGBA()
+		pixel_rgba := color.RGBA{ R: uint8( r ) , G: uint8( g ) , B: uint8( b ) , A: uint8( a ) }
+		if pixel_rgba == active_color {
+			result = index
+			return
+		}
+	}
+	return
+}
+
+
+func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
+	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
+	coords := []int{ 752 , 964 }
+	shuffle_index := 1
+	log.Debug( "pressing left" )
+	mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+	if mp.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color ) == true {
+		log.Debug( "Shuffle === ON" )
+		was_on = true
+		return
+	}
+
+	was_on = false
+	index := mp.GetActiveButtonIndex()
+	if index == shuffle_index {
+		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	}
+	distance := int( math.Abs( float64( shuffle_index - index ) ) )
+	log.Debug( "Shuffle === OFF" )
+	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
+	if index < shuffle_index {
+		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing right" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+		}
+	} else {
+		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing left" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		}
+	}
+	log.Debug( "pressing enter" )
+	mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	log.Debug( "Shuffle === ON" )
+	return
+}
+
+func ( mp *Spotify ) ShuffleOff() ( was_off bool ) {
+	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
+	coords := []int{ 752 , 964 }
+	shuffle_index := 1
+	log.Debug( "pressing left" )
+	mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+	if mp.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color ) == false {
+		log.Debug( "Shuffle === OFF" )
+		was_off = true
+		return
+	}
+	was_off = false
+	index := mp.GetActiveButtonIndex()
+	if index == shuffle_index {
+		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	}
+	distance := int( math.Abs( float64( shuffle_index - index ) ) )
+	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
+	if index < shuffle_index {
+		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing right" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+		}
+	} else {
+		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing left" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		}
+	}
+	log.Debug( "pressing enter" )
+	mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	log.Debug( "Shuffle === OFF" )
+	return
+}
+
+func ( mp *Spotify ) ReopenSpotifyApp() {
+	mp.ADB.StopAllApps()
+	mp.ADB.Brightness( 0 )
+	mp.ADB.CloseAppName( "com.spotify.tv.android" )
+	log.Debug( "Done" )
+}
+
+func ( mp *Spotify ) ContinuousOpen() {
+	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
+	log.Println( "Spotify -->Play()" )
+	log.Debug( mp.Status )
+	mp.Set( "active_player_name" , "spotify" )
+	mp.Set( "active_player_command" , "play" )
+	mp.Set( "active_player_start_time" , start_time_string )
+	if mp.Status.ADBTopWindow != ACTIVITY_SPOTIFY {
+		log.Debug( "spotify was NOT already open" )
+		mp.ReopenSpotifyApp()
+	} else {
+		log.Debug( "spotify was already open" )
+	}
+}
+
+func ( mp *Spotify ) PlayPlaylistWithShuffle( playlist_id string ) {
+	mp.ContinuousOpen()
+	log.Debug( mp.Status.ADBVolume )
+	// TODO === Need to Add TV Mute and Unmute
+	// TODO === If Same Playlist don't open , just press next ? depends
+	mp.ADB.SetVolume( 0 )
+	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
+	mp.ADB.OpenURI( playlist_uri )
+	log.Debug( "Opened Playlist === " , playlist_id )
+	// was_on := mp.ShuffleOn()
+	mp.ShuffleOn()
+	mp.Next() // they sometimes force same song
+	mp.ADB.SetVolume( mp.Status.ADBVolume )
+}
+
+func ( mp *Spotify ) PlayPlaylist( playlist_id string ) {
+	mp.ADB.SetVolume( 0 )
+	mp.ContinuousOpen()
+	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
+	mp.ADB.OpenURI( playlist_uri )
+	log.Debug( "Opened Playlist === " , playlist_id )
+	mp.Next() // they sometimes force same song
+	mp.ADB.SetVolume( mp.Status.ADBVolume )
+}
+
 func ( mp *Spotify ) Play() {
-	fmt.Println( "Spotify -->Play()" )
-	fmt.Println( mp.Status )
-	// mp.Set( "active_player_name" , "spotify" )
-	// mp.Set( "active_player_command" , "play" )
-	// mp.Set( "active_player_start_time" , start_time )
-	// playlist_with_shuffle( &mp.ADB )
+	mp.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
 }
 
 func ( mp *Spotify ) Pause() {
-	fmt.Println( "Spotify paused" )
+	log.Debug( "Pause()" )
+	mp.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 }
 
 func ( mp *Spotify ) Stop() {
-	fmt.Println( "Spotify stopped" )
+	log.Debug( "Stop()" )
+	mp.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
 }
 
 func ( mp *Spotify ) Next() {
-	fmt.Println( "Spotify next" )
+	log.Debug( "Next()" )
+	mp.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
 }
 
 func ( mp *Spotify ) Previous() {
-	fmt.Println( "Spotify previous" )
+	log.Debug( "Previous()" )
+	mp.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
 }
 
 func ( mp *Spotify ) Teardown() {
-	fmt.Println( "Spotify previous" )
+	log.Debug( "Teardown()" )
 }
 
 func ( mp *Spotify ) Setup() {
-	fmt.Println( "Spotify previous" )
+	log.Debug( "Setup()" )
 }
 
 func ( mp *Spotify ) Update() {
-	fmt.Println( "Spotify previous" )
+	log.Debug( "Update()" )
 }

@@ -11,6 +11,14 @@ type Twitch struct {
 	// DB *bolt_api.DB `yaml:"-"`
 }
 
+func ( mp *Twitch ) PlayPlaylistWithShuffle( playlist_id string ) {
+	log.Debug( "Twitch PlayPlaylistWithShuffle()" )
+}
+
+func ( mp *Twitch ) PlayPlaylist( playlist_id string ) {
+	log.Debug( "Twitch PlayPlaylist()" )
+}
+
 func ( t *Twitch ) Play() {
 	fmt.Println( "Twitch playing" )
 }
