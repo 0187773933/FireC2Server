@@ -70,6 +70,7 @@ func ( mp *Spotify ) IsShuffleOn() ( result bool ) {
 
 func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
 	was_on = mp.IsShuffleOn()
+	shuffle_index := 1
 	index := mp.GetActiveButtonIndex()
 	if index == shuffle_index {
 		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
@@ -98,6 +99,7 @@ func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
 
 func ( mp *Spotify ) ShuffleOff() ( was_off bool ) {
 	was_off = mp.IsShuffleOn()
+	shuffle_index := 1
 	index := mp.GetActiveButtonIndex()
 	if index == shuffle_index {
 		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
@@ -124,8 +126,8 @@ func ( mp *Spotify ) ShuffleOff() ( was_off bool ) {
 }
 
 func ( mp *Spotify ) PressPreviousButton() {
-
 	shuffle_on := mp.IsShuffleOn()
+	button_index := 2
 	index := mp.GetActiveButtonIndex()
 	if index == button_index {
 		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
