@@ -27,6 +27,7 @@ type Functions interface {
 	Teardown()
 	Setup()
 	Update()
+	PlayPlaylist( playlist_id string )
 	PlayPlaylistWithShuffle( playlist_id string )
 }
 

@@ -135,6 +135,42 @@ func ( mp *Spotify ) ShuffleOff() ( was_off bool ) {
 	return
 }
 
+func ( mp *Spotify ) PressPreviousButton() {
+	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
+	coords := []int{ 752 , 964 }
+	button_index := 2
+	log.Debug( "pressing left" )
+	mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+	shuffle_on := mp.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color )
+
+	index := mp.GetActiveButtonIndex()
+	if index == button_index {
+		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	}
+	distance := int( math.Abs( float64( button_index - index ) ) )
+	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
+	if index < button_index {
+		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing right" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+		}
+	} else {
+		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing left" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		}
+	}
+	log.Debug( "pressing enter" )
+	mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	if shuffle_on == true {
+		log.Debug( "pressing enter" )
+		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	}
+	return
+}
+
 func ( mp *Spotify ) ReopenSpotifyApp() {
 	mp.ADB.StopAllApps()
 	mp.ADB.Brightness( 0 )
@@ -203,7 +239,8 @@ func ( mp *Spotify ) Next() {
 
 func ( mp *Spotify ) Previous() {
 	log.Debug( "Previous()" )
-	mp.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
+	// mp.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
+	mp.PressPreviousButton()
 }
 
 func ( mp *Spotify ) Teardown() {
