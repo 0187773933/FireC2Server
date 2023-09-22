@@ -58,20 +58,18 @@ func ( mp *Spotify ) GetActiveButtonIndex() ( result int ) {
 	return
 }
 
-
-func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
+func ( mp *Spotify ) IsShuffleOn() ( result bool ) {
 	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
 	coords := []int{ 752 , 964 }
-	shuffle_index := 1
 	log.Debug( "pressing left" )
 	mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
-	if mp.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color ) == true {
-		log.Debug( "Shuffle === ON" )
-		was_on = true
-		return
-	}
+	result = mp.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color )
+	return
+}
 
-	was_on = false
+
+func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
+	was_on = mp.IsShuffleOn()
 	index := mp.GetActiveButtonIndex()
 	if index == shuffle_index {
 		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
@@ -99,17 +97,7 @@ func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
 }
 
 func ( mp *Spotify ) ShuffleOff() ( was_off bool ) {
-	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
-	coords := []int{ 752 , 964 }
-	shuffle_index := 1
-	log.Debug( "pressing left" )
-	mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
-	if mp.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color ) == false {
-		log.Debug( "Shuffle === OFF" )
-		was_off = true
-		return
-	}
-	was_off = false
+	was_off = mp.IsShuffleOn()
 	index := mp.GetActiveButtonIndex()
 	if index == shuffle_index {
 		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
@@ -136,13 +124,8 @@ func ( mp *Spotify ) ShuffleOff() ( was_off bool ) {
 }
 
 func ( mp *Spotify ) PressPreviousButton() {
-	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
-	coords := []int{ 752 , 964 }
-	button_index := 2
-	log.Debug( "pressing left" )
-	mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
-	shuffle_on := mp.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color )
 
+	shuffle_on := mp.IsShuffleOn()
 	index := mp.GetActiveButtonIndex()
 	if index == button_index {
 		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
