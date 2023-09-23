@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	// "time"
+	"time"
 	logger "github.com/0187773933/FireC2Server/v1/logger"
 	fiber "github.com/gofiber/fiber/v2"
 	fiber_cookie "github.com/gofiber/fiber/v2/middleware/encryptcookie"
@@ -10,17 +10,34 @@ import (
 	favicon "github.com/gofiber/fiber/v2/middleware/favicon"
 	types "github.com/0187773933/FireC2Server/v1/types"
 	bolt_api "github.com/boltdb/bolt"
-	media_player "github.com/0187773933/FireC2Server/v1/media_player"
+	adb_wrapper "ADBWrapper/v1/wrapper"
+	tv "github.com/0187773933/FireC2Server/v1/tv"
 )
 
 var GlobalServer *Server
 var log = logger.GetLogger()
 
+type Status struct {
+	StartTime string `json:"start_time"`
+	StartTimeOBJ time.Time `json:"-"`
+	PreviousPlayerName string `json:"previous_player_name"`
+	PreviousPlayerCommand string `json:"previous_player_command"`
+	PreviousStartTime string `json:"previous_start_time"`
+	PreviousStartTimeOBJ time.Time `json:"-"`
+	PreviousStartTimeDuration time.Duration `json:"-"`
+	PreviousStartTimeDurationSeconds float64 `json:"previous_start_time_duration_seconds"`
+	ADBTopWindow string `json:"adb_top_window"`
+	ADBVolume int `json:"adb_volume"`
+	TV tv.Status `json:"tv"`
+}
+
 type Server struct {
 	FiberApp *fiber.App `yaml:"fiber_app"`
 	Config types.ConfigFile `yaml:"config"`
 	DB *bolt_api.DB `yaml:"-"`
-	MediaPlayer *media_player.MediaPlayer `yaml:"-"`
+	ADB adb_wrapper.Wrapper `json:"-"`
+	TV *tv.TV `json:"-"`
+	Status Status `json:"-"`
 }
 
 func ( s *Server ) SetupRoutes() {
@@ -41,10 +58,11 @@ func New( db *bolt_api.DB , config types.ConfigFile ) ( server Server ) {
 	server.FiberApp = fiber.New()
 	server.Config = config
 	server.DB = db
+	server.ADB = server.ADBConnect()
+	server.TV = tv.New( &config )
 	GlobalServer = &server
-
 	log.Debug( "Server Starting" )
-	server.MediaPlayer = media_player.New( db , &config )
+	// server.MediaPlayer = media_player.New( db , &config )
 	server.FiberApp.Use( server.LogRequest )
 	server.FiberApp.Use( favicon.New() )
 	server.FiberApp.Use( fiber_cookie.New( fiber_cookie.Config{

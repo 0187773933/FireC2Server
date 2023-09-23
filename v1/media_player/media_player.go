@@ -28,8 +28,14 @@ type Functions interface {
 	Teardown()
 	Setup()
 	Update()
-	PlayPlaylist( playlist_id string )
-	PlayPlaylistWithShuffle( playlist_id string )
+	ShuffleOn()
+	ShuffleOff()
+	Item( video_id string )
+	Playlist( playlist_id string )
+	NextItem()
+	NextPlaylist()
+	PreviousItem()
+	PreviousPlaylist()
 }
 
 type MediaPlayer struct {

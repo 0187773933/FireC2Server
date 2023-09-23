@@ -68,70 +68,6 @@ func ( mp *Spotify ) IsShuffleOn() ( result bool ) {
 	return
 }
 
-func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
-	was_on = mp.IsShuffleOn()
-	if was_on == true {
-		log.Debug( "Shuffle === ON" )
-		return
-	}
-	shuffle_index := 1
-	index := mp.GetActiveButtonIndex()
-	if index == shuffle_index {
-		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
-	}
-	distance := int( math.Abs( float64( shuffle_index - index ) ) )
-	log.Debug( "Shuffle === OFF" )
-	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
-	if index < shuffle_index {
-		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
-		for i := 0 ; i < distance ; i++ {
-			log.Debug( "pressing right" )
-			mp.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-		}
-	} else {
-		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
-		for i := 0 ; i < distance ; i++ {
-			log.Debug( "pressing left" )
-			mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
-		}
-	}
-	log.Debug( "pressing enter" )
-	mp.ADB.PressKeyName( "KEYCODE_ENTER" )
-	log.Debug( "Shuffle === ON" )
-	return
-}
-
-func ( mp *Spotify ) ShuffleOff() ( was_on bool ) {
-	was_on = mp.IsShuffleOn()
-	if was_on == false {
-		log.Debug( "Shuffle === OFF" )
-		return
-	}
-	shuffle_index := 1
-	index := mp.GetActiveButtonIndex()
-	if index == shuffle_index {
-		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
-	}
-	distance := int( math.Abs( float64( shuffle_index - index ) ) )
-	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
-	if index < shuffle_index {
-		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
-		for i := 0 ; i < distance ; i++ {
-			log.Debug( "pressing right" )
-			mp.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-		}
-	} else {
-		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
-		for i := 0 ; i < distance ; i++ {
-			log.Debug( "pressing left" )
-			mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
-		}
-	}
-	log.Debug( "pressing enter" )
-	mp.ADB.PressKeyName( "KEYCODE_ENTER" )
-	log.Debug( "Shuffle === OFF" )
-	return
-}
 
 func ( mp *Spotify ) PressPreviousButton() {
 	shuffle_on := mp.IsShuffleOn()
@@ -173,7 +109,7 @@ func ( mp *Spotify ) ReopenSpotifyApp() {
 
 func ( mp *Spotify ) ContinuousOpen() {
 	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
-	log.Println( "Spotify -->Play()" )
+	log.Debug( "ContinuousOpen()" )
 	log.Debug( mp.Status )
 	mp.Set( "active_player_name" , "spotify" )
 	mp.Set( "active_player_command" , "play" )
@@ -201,17 +137,115 @@ func ( mp *Spotify ) PlayPlaylistWithShuffle( playlist_id string ) {
 	mp.ADB.SetVolume( mp.Status.ADBVolume )
 }
 
-func ( mp *Spotify ) PlayPlaylist( playlist_id string ) {
+// 5Muvh0ooAJkSgBylFyI3su
+func ( mp *Spotify ) Item( item_id string ) {
 	mp.ADB.SetVolume( 0 )
 	mp.ContinuousOpen()
-	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
+	playlist_uri := fmt.Sprintf( "spotify:track:%s:play" , item_id )
 	mp.ADB.OpenURI( playlist_uri )
 	log.Debug( "Opened Playlist === " , playlist_id )
 	mp.Next() // they sometimes force same song
 	mp.ADB.SetVolume( mp.Status.ADBVolume )
 }
 
+func ( mp *Spotify ) Playlist( playlist_id string ) {
+	go mp.TV.Prepare()
+	mp.Status = s.GetStatus()
+	mp.ADB.SetVolume( 0 )
+	mp.ContinuousOpen()
+	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
+	mp.ADB.OpenURI( playlist_uri )
+	log.Debug( "Opened Playlist === " , playlist_id )
+	mp.ADB.SetVolume( mp.Status.ADBVolume )
+}
+
+func ( mp *Spotify ) NextItem( song_id string ) {
+	log.Debug( "NextItem()" )
+}
+
+func ( mp *Spotify ) NextPlaylist( playlist_id string ) {
+	log.Debug( "NextPlaylist()" )
+}
+
+func ( mp *Spotify ) PreviousItem( song_id string ) {
+	log.Debug( "PreviousItem()" )
+}
+
+func ( mp *Spotify ) PreviousPlaylist( playlist_id string ) {
+	log.Debug( "PreviousPlaylist()" )
+}
+
+func ( mp *Spotify ) ShuffleOn() ( was_on bool ) {
+	log.Debug( "ShuffleOn()" )
+	was_on = mp.IsShuffleOn()
+	if was_on == true {
+		log.Debug( "Shuffle === ON" )
+		return
+	}
+	shuffle_index := 1
+	index := mp.GetActiveButtonIndex()
+	if index == shuffle_index {
+		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	}
+	distance := int( math.Abs( float64( shuffle_index - index ) ) )
+	log.Debug( "Shuffle === OFF" )
+	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
+	if index < shuffle_index {
+		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing right" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+		}
+	} else {
+		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing left" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		}
+	}
+	log.Debug( "pressing enter" )
+	mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	log.Debug( "Shuffle === ON" )
+	return
+}
+
+func ( mp *Spotify ) ShuffleOff() ( was_on bool ) {
+	log.Debug( "ShuffleOff()" )
+	was_on = mp.IsShuffleOn()
+	if was_on == false {
+		log.Debug( "Shuffle === OFF" )
+		return
+	}
+	shuffle_index := 1
+	index := mp.GetActiveButtonIndex()
+	if index == shuffle_index {
+		mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	}
+	distance := int( math.Abs( float64( shuffle_index - index ) ) )
+	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
+	if index < shuffle_index {
+		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing right" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+		}
+	} else {
+		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing left" )
+			mp.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		}
+	}
+	log.Debug( "pressing enter" )
+	mp.ADB.PressKeyName( "KEYCODE_ENTER" )
+	log.Debug( "Shuffle === OFF" )
+	return
+}
+
+// =============================================
+
 func ( mp *Spotify ) Play() {
+	log.Debug( "Play()" )
 	mp.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
 }
 

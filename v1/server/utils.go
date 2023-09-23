@@ -2,7 +2,11 @@ package server
 
 import (
 	"fmt"
+	// "time"
 	// "strings"
+	bolt_api "github.com/boltdb/bolt"
+	// tv "github.com/0187773933/FireC2Server/v1/tv"
+	adb_wrapper "ADBWrapper/v1/wrapper"
 	fiber "github.com/gofiber/fiber/v2"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 )
@@ -55,4 +59,69 @@ func ( s *Server ) Printf( format_string string , args ...interface{} ) {
 	time_string := utils.GetFormattedTimeString()
 	sent_format := fmt.Sprintf( format_string , args... )
 	fmt.Printf( "%s === %s" , time_string , sent_format )
+}
+
+func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
+	if s.Config.ADBConnectionType == "tcp" {
+		connection = adb_wrapper.ConnectIP( s.Config.ADBPath , s.Config.ADBServerIP , s.Config.ADBServerPort )
+	} else if s.Config.ADBConnectionType == "usb" {
+		connection = adb_wrapper.ConnectUSB( s.Config.ADBPath , s.Config.ADBSerial )
+	}
+	s.ADB = connection
+	return
+}
+
+func ( s *Server ) GetStatus() ( result Status ) {
+	log.Debug( "GetStatus()" )
+
+	// 1.) Get Previous State Info from DB
+	start_time , start_time_obj := utils.GetFormattedTimeStringOBJ()
+	previous_player_name := s.Get( "active_player_name" )
+	previous_player_command := s.Get( "active_player_command" )
+	previous_start_time := s.Get( "active_player_start_time" )
+
+	result.StartTime = start_time
+	result.StartTimeOBJ = start_time_obj
+	result.PreviousPlayerName = previous_player_name
+	result.PreviousPlayerCommand = previous_player_command
+	result.PreviousStartTime = previous_start_time
+
+	if previous_start_time != "" {
+		previous_start_time_obj := utils.ParseFormattedTimeString( previous_start_time )
+		previous_start_time_duration := start_time_obj.Sub( previous_start_time_obj )
+		previous_start_time_duration_seconds := previous_start_time_duration.Seconds()
+		result.PreviousStartTimeOBJ = previous_start_time_obj
+		result.PreviousStartTimeDuration = previous_start_time_duration
+		result.PreviousStartTimeDurationSeconds = previous_start_time_duration_seconds
+	}
+
+	// 2.) Get Current ADB Status Info
+	adb_windows := s.ADB.GetWindowStack()
+	if len( adb_windows ) > 0 {
+		result.ADBTopWindow = adb_windows[ 0 ].Activity
+	}
+	result.ADBVolume = s.ADB.GetVolume()
+
+	// 3.) TV Get Status
+	result.TV = s.TV.Status()
+	s.Status = result
+	return
+}
+
+func ( s *Server ) Set( key string , value string ) ( result string ) {
+	s.DB.Update( func( tx *bolt_api.Tx ) error {
+		bucket := tx.Bucket( []byte( "state" ) )
+		bucket.Put( []byte( key ) , []byte( value ) )
+		return nil
+	})
+	return "success"
+}
+func ( s *Server ) Get( key string ) ( result string ) {
+	s.DB.View( func( tx *bolt_api.Tx ) error {
+		bucket := tx.Bucket( []byte( "state" ) )
+		value := bucket.Get( []byte( key ) )
+		if value != nil { result = string( value ) }
+		return nil
+	})
+	return result
 }

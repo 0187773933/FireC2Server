@@ -97,6 +97,9 @@ func ( f *CustomJSONFormatter ) Format( entry *logrus.Entry ) ( []byte , error )
 	return f.JSONFormatter.Format( entry )
 }
 
+
+
+
 // so apparently The limitation arises due to the Go language's initialization order:
 // Package-level variables are initialized before main() is called.
 // Functions in main() execute after package-level initializations.
@@ -129,5 +132,4 @@ func Init() {
 
 	// log.SetOutput( os.Stdout )
 	Log.SetOutput( &CustomLogrusWriter{} )
-
 }
