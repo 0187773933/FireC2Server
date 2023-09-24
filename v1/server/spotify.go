@@ -117,25 +117,21 @@ func ( s *Server ) SpotifyContinuousOpen() {
 	}
 }
 
-func ( s *Server ) SpotifyPlaylistWithShuffle( playlist_id string ) {
-	log.Debug( "SpotifyPlaylistWithShuffle()" )
+func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
+	playlist_id := c.Params( "playlist_id" )
+	log.Debug( fmt.Sprintf( "SpotifyPlaylistWithShuffle( %s )" , playlist_id ) )
+
 	s.SpotifyContinuousOpen()
-	log.Debug( s.Status.ADBVolume )
 	// TODO === Need to Add TV Mute and Unmute
 	// TODO === If Same Playlist don't open , just press next ? depends
 	s.ADB.SetVolume( 0 )
 	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
 	s.ADB.OpenURI( playlist_uri )
-	log.Debug( "Opened Playlist === " , playlist_id )
 	// was_on := s.ShuffleOn()
 	s.SpotifyShuffleOn()
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
 	s.ADB.SetVolume( s.Status.ADBVolume )
-}
-func ( s *Server ) GetSpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
-	log.Debug( "GetSpotifyPlaylistWithShuffle()" )
-	playlist_id := c.Params( "playlist_id" )
-	s.SpotifyPlaylistWithShuffle( playlist_id )
+
 	return c.JSON( fiber.Map{
 		"url": "/spotify/playlist-shuffle/:playlist_id" ,
 		"playlist_id": playlist_id ,
@@ -144,27 +140,42 @@ func ( s *Server ) GetSpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 }
 
 // 5Muvh0ooAJkSgBylFyI3su
-func ( s *Server ) SpotifySong( song_id string ) {
-	log.Debug( "SpotifySong()" )
-	s.ADB.SetVolume( 0 )
-	s.SpotifyContinuousOpen()
-	playlist_uri := fmt.Sprintf( "spotify:track:%s:play" , song_id )
-	s.ADB.OpenURI( playlist_uri )
-	log.Debug( "Opened Song === " , song_id )
-	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
-	s.ADB.SetVolume( s.Status.ADBVolume )
-}
+func ( s *Server ) SpotifySong( c *fiber.Ctx ) ( error ) {
+	song_id := c.Params( "song_id" )
+	log.Debug( fmt.Sprintf( "SpotifySong( %s )" , song_id ) )
 
-func ( s *Server ) SpotifyPlaylist( playlist_id string ) {
-	log.Debug( "SpotifyPlaylist()" )
 	go s.TV.Prepare()
 	s.Status = s.GetStatus()
 	s.ADB.SetVolume( 0 )
 	s.SpotifyContinuousOpen()
-	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
-	s.ADB.OpenURI( playlist_uri )
-	log.Debug( "Opened Playlist === " , playlist_id )
+	uri := fmt.Sprintf( "spotify:track:%s:play" , song_id )
+	s.ADB.OpenURI( uri )
 	s.ADB.SetVolume( s.Status.ADBVolume )
+
+	return c.JSON( fiber.Map{
+		"url": "/spotify/song/:song_id" ,
+		"song_id": song_id ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) SpotifyPlaylist( c *fiber.Ctx ) ( error ) {
+	playlist_id := c.Params( "playlist_id" )
+	log.Debug( fmt.Sprintf( "SpotifyPlaylist( %s )" , playlist_id ) )
+
+	go s.TV.Prepare()
+	s.Status = s.GetStatus()
+	s.ADB.SetVolume( 0 )
+	s.SpotifyContinuousOpen()
+	uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
+	s.ADB.OpenURI( uri )
+	s.ADB.SetVolume( s.Status.ADBVolume )
+
+	return c.JSON( fiber.Map{
+		"url": "/spotify/playlist/:playlist_id" ,
+		"playlist_id": playlist_id ,
+		"result": true ,
+	})
 }
 
 func ( s *Server ) SpotifyNextSong( song_id string ) {
@@ -248,6 +259,21 @@ func ( s *Server ) SpotifyShuffleOff() ( was_on bool ) {
 	s.ADB.PressKeyName( "KEYCODE_ENTER" )
 	log.Debug( "Shuffle === OFF" )
 	return
+}
+func ( s *Server ) SpotifySetShuffle( c *fiber.Ctx ) error {
+	log.Debug( "SpotifySetShuffle()" )
+	state := c.Params( "state" )
+	if state == "on" {
+		s.SpotifyShuffleOn()
+	} else {
+		s.SpotifyShuffleOff()
+	}
+	return c.JSON( fiber.Map{
+		"url": "/spotify/shuffle/:state" ,
+		"state": state ,
+		"result": true ,
+	})
+
 }
 
 func ( s *Server ) SpotifyUpdate() {

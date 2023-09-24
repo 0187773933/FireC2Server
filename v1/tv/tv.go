@@ -213,6 +213,7 @@ func ( tv *TV ) MuteOff() {
 
 
 func ( tv *TV ) GetVolume() ( result int ) {
+	result = -1
 	switch tv.Brand{
 		case "lg":
 			result_string := tv.LG.API( "get_volume" )
