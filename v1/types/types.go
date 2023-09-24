@@ -1,5 +1,22 @@
 package types
 
+
+type SpotifyItem struct {
+	Name string `yaml:"name"`
+}
+type SpotifyLibrary struct {
+	Songs map[string]SpotifyItem `yaml:"songs"`
+	Playlists map[string]SpotifyItem `yaml:"playlists"`
+}
+
+type Library struct {
+	Spotify SpotifyLibrary `yaml:"spotify"`
+	// Twitch TwitchLibrary `yaml:"twitch"`
+	// Disney DisneyLibrary `yaml:"disney"`
+	// YouTube YouTubeLibrary `yaml:"youtube"`
+	// VLC VLCLibrary `yaml:"vlc"`
+}
+
 type ConfigFile struct {
 	ServerName string `yaml:"server_name"`
 	ServerBaseUrl string `yaml:"server_base_url"`
@@ -33,4 +50,5 @@ type ConfigFile struct {
 	ADBSerial string `yaml:"adb_serial"`
 	ADBServerIP string `yaml:"adb_server_ip"`
 	ADBServerPort string `yaml:"adb_server_port"`
+	Library Library `yaml:"library"`
 }

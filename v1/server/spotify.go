@@ -120,7 +120,7 @@ func ( s *Server ) SpotifyContinuousOpen() {
 func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	playlist_id := c.Params( "playlist_id" )
 	log.Debug( fmt.Sprintf( "SpotifyPlaylistWithShuffle( %s )" , playlist_id ) )
-
+	fmt.Println( s.Config.Library.Spotify )
 	s.SpotifyContinuousOpen()
 	// TODO === Need to Add TV Mute and Unmute
 	// TODO === If Same Playlist don't open , just press next ? depends

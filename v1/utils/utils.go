@@ -81,7 +81,6 @@ func ParseFormattedTimeString( time_str string ) ( result time.Time ) {
 	return
 }
 
-
 func StringToInt( input string ) ( result int ) {
 	result , _ = strconv.Atoi( input )
 	return
@@ -109,9 +108,16 @@ func WriteJSON( filePath string , data interface{} ) {
 }
 
 func ParseConfig( file_path string ) ( result types.ConfigFile ) {
-	file , _ := ioutil.ReadFile( file_path )
-	error := yaml.Unmarshal( file , &result )
+	config_file , _ := ioutil.ReadFile( file_path )
+	error := yaml.Unmarshal( config_file , &result )
 	if error != nil { panic( error ) }
+
+	var spotify_library types.SpotifyLibrary
+	spotify_library_file , _ := ioutil.ReadFile( "./library/spotify.yaml" )
+	error = yaml.Unmarshal( spotify_library_file , &spotify_library )
+	if error != nil { panic( error ) }
+	result.Library.Spotify = spotify_library
+
 	return
 }
 
