@@ -6,6 +6,8 @@
 
 ## TODO
 
+- switching back to redis
+	- https://github.com/0187773933/RedisCircularList
 - Find some new way to get the config and db reference into logger package.
 	- apparently there is init() in go? that gets called before main starts ...
 - Audio playing locally through speakers

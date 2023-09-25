@@ -23,8 +23,10 @@ func SetupCloseHandler() {
 	signal.Notify( c , os.Interrupt , syscall.SIGTERM , syscall.SIGINT )
 	go func() {
 		<-c
-		logger.Log.Println( "\r- Ctrl+C pressed in Terminal" )
-		logger.Log.Printf( "Shutting Down %s Server\n" , s.Config.ServerName )
+		// logger.Log.Println( "\r- Ctrl+C pressed in Terminal" )
+		fmt.Println( "\r" )
+		logger.Log.Println( "Ctrl+C pressed in Terminal" )
+		logger.Log.Printf( "Shutting Down %s Server" , s.Config.ServerName )
 		DB.Close()
 		s.FiberApp.Shutdown()
 		os.Exit( 0 )

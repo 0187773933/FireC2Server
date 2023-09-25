@@ -142,8 +142,6 @@ func ParseConfig( file_path string ) ( result types.ConfigFile ) {
 	if error != nil { panic( error ) }
 	result.Library.VLC = vlc_library
 
-	fmt.Println( result.Library.Spotify.Playlists )
-
 	return
 }
 
