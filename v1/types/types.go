@@ -9,12 +9,45 @@ type SpotifyLibrary struct {
 	Playlists map[string]SpotifyItem `yaml:"playlists"`
 }
 
+type TwitchFollowing struct {
+	Currated []string `yaml:"currated"`
+	All []string `yaml:"all"`
+}
+type TwitchLibrary struct {
+	Following TwitchFollowing `yaml:"following"`
+}
+
+type DisneyItem struct {
+	Name string `yaml:"name"`
+}
+type DisneyMovies struct {
+	Currated map[string]DisneyItem `yaml:"currated"`
+}
+type DisneyLibrary struct {
+	Movies DisneyMovies `yaml:"movies"`
+}
+
+type YoutubeSet struct {
+	Live []string `yaml:"live"`
+	Normal []string `yaml:"normal"`
+	Relaxing []string `yaml:"relaxing"`
+}
+type YouTubeLibrary struct {
+	Videos YoutubeSet `yaml:"movies"`
+	Playlists YoutubeSet `yaml:"playlists"`
+	Following YoutubeSet `yaml:"following"`
+}
+
+type VLCLibrary struct {
+	Videos []string `yaml:"videos"`
+}
+
 type Library struct {
 	Spotify SpotifyLibrary `yaml:"spotify"`
-	// Twitch TwitchLibrary `yaml:"twitch"`
-	// Disney DisneyLibrary `yaml:"disney"`
-	// YouTube YouTubeLibrary `yaml:"youtube"`
-	// VLC VLCLibrary `yaml:"vlc"`
+	Twitch TwitchLibrary `yaml:"twitch"`
+	Disney DisneyLibrary `yaml:"disney"`
+	YouTube YouTubeLibrary `yaml:"youtube"`
+	VLC VLCLibrary `yaml:"vlc"`
 }
 
 type ConfigFile struct {
@@ -50,5 +83,9 @@ type ConfigFile struct {
 	ADBSerial string `yaml:"adb_serial"`
 	ADBServerIP string `yaml:"adb_server_ip"`
 	ADBServerPort string `yaml:"adb_server_port"`
+	YouTubeAPIKey string `yaml:"youtube_api_key"`
+	TwitchClientID string `yaml:"twitch_client_id"`
+	TwitchClientSecret string `yaml:"twitch_client_secret"`
+	TwitchOAUTHToken string `yaml:"twitch_oauth_token"`
 	Library Library `yaml:"library"`
 }
