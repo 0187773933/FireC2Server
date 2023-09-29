@@ -7,6 +7,7 @@ import (
 	// "strings"
 	// tv "github.com/0187773933/FireC2Server/v1/tv"
 	// types "github.com/0187773933/FireC2Server/v1/types"
+	redis "github.com/redis/go-redis/v9"
 	adb_wrapper "ADBWrapper/v1/wrapper"
 	fiber "github.com/gofiber/fiber/v2"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
@@ -183,6 +184,7 @@ func ( s *Server ) Set( key string , value interface{} ) ( result string ) {
 func ( s *Server ) Get( key string ) ( result string ) {
 	var ctx = context.Background()
 	val , err := s.DB.Get( ctx , key ).Result()
+	if err == redis.Nil { return }
 	if err != nil { panic( err ) }
 	result = val
 	return

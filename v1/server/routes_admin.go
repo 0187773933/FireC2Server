@@ -24,7 +24,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	spotify.Get( "/playlist-shuffle/:playlist_id" , s.SpotifyPlaylistWithShuffle )
 	// spotify.Get( "/next/song" , SpotifyPlaylistWithShuffle )
 	// spotify.Get( "/next/playlist" , SpotifyNextPlaylist )
-	// spotify.Get( "/next/playlist-shuffle" , SpotifyNextPlaylistWithShuffle )
+	spotify.Get( "/next/playlist-shuffle" , s.SpotifyNextPlaylistWithShuffle )
 	// spotify.Get( "/previous/song" , SpotifyPlaylistWithShuffle )
 	// spotify.Get( "/previous/playlist" , SpotifyPlaylistWithShuffle )
 	// spotify.Get( "/previous" , SpotifyPressPreviousButton ) // needs a custom previous , requires 2 clicks if in shuffle-mode

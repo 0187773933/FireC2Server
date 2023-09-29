@@ -7,6 +7,7 @@ import (
 	"image/color"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
+	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
 const ACTIVITY_SPOTIFY = "com.spotify.tv.android/com.spotify.tv.android.SpotifyTVActivity"
@@ -120,7 +121,6 @@ func ( s *Server ) SpotifyContinuousOpen() {
 func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	playlist_id := c.Params( "playlist_id" )
 	log.Debug( fmt.Sprintf( "SpotifyPlaylistWithShuffle( %s )" , playlist_id ) )
-	fmt.Println( s.Config.Library.Spotify )
 	s.SpotifyContinuousOpen()
 	// TODO === Need to Add TV Mute and Unmute
 	// TODO === If Same Playlist don't open , just press next ? depends
@@ -178,12 +178,35 @@ func ( s *Server ) SpotifyPlaylist( c *fiber.Ctx ) ( error ) {
 	})
 }
 
+// circular_set.Add( s.DB , "LIBRARY.SPOTIFY.PLAYLISTS" , key )
+
 func ( s *Server ) SpotifyNextSong( song_id string ) {
 	log.Debug( "SpotifyNextSong()" )
 }
 
-func ( s *Server ) SpotifyNextPlaylist( playlist_id string ) {
+func ( s *Server ) SpotifyNextPlaylist() {
 	log.Debug( "SpotifyNextPlaylist()" )
+}
+
+func ( s *Server ) SpotifyNextPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
+	playlist_id := circular_set.Next( s.DB , "LIBRARY.SPOTIFY.PLAYLISTS" )
+	log.Debug( fmt.Sprintf( "SpotifyPlaylistWithShuffle( %s )" , playlist_id ) )
+	s.SpotifyContinuousOpen()
+	// TODO === Need to Add TV Mute and Unmute
+	// TODO === If Same Playlist don't open , just press next ? depends
+	s.ADB.SetVolume( 0 )
+	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
+	s.ADB.OpenURI( playlist_uri )
+	// was_on := s.ShuffleOn()
+	s.SpotifyShuffleOn()
+	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
+	s.ADB.SetVolume( s.Status.ADBVolume )
+
+	return c.JSON( fiber.Map{
+		"url": "/spotify/next/playlist-shuffle" ,
+		"playlist_id": playlist_id ,
+		"result": true ,
+	})
 }
 
 func ( s *Server ) SpotifyPreviousSong( song_id string ) {
