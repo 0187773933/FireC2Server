@@ -164,8 +164,8 @@ func ( s *Server ) StoreLibrary() {
 
 	// Disney Movies - Currated
 	disney_movies_currated_shuffled := utils.ShuffleKeys( s.Config.Library.Disney.Movies.Currated )
-	s.DB.Del( context.Background() , "LIBRARY.DISNEY.MOVIES.CURRATED" ) // #design-decision , forces new random
-	s.DB.Del( context.Background() , "LIBRARY.DISNEY.MOVIES.CURRATED.INDEX" ) // #design-decision , forces new random
+	// s.DB.Del( context.Background() , "LIBRARY.DISNEY.MOVIES.CURRATED" ) // #design-decision , forces new random
+	// s.DB.Del( context.Background() , "LIBRARY.DISNEY.MOVIES.CURRATED.INDEX" ) // #design-decision , forces new random
 	for _ , item := range disney_movies_currated_shuffled {
 		circular_set.Add( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" , item )
 	}
