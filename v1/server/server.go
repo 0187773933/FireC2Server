@@ -9,7 +9,7 @@ import (
 	fiber_cors "github.com/gofiber/fiber/v2/middleware/cors"
 	favicon "github.com/gofiber/fiber/v2/middleware/favicon"
 	types "github.com/0187773933/FireC2Server/v1/types"
-	bolt_api "github.com/boltdb/bolt"
+	redis "github.com/redis/go-redis/v9"
 	adb_wrapper "ADBWrapper/v1/wrapper"
 	tv "github.com/0187773933/FireC2Server/v1/tv"
 )
@@ -34,7 +34,7 @@ type Status struct {
 type Server struct {
 	FiberApp *fiber.App `yaml:"fiber_app"`
 	Config types.ConfigFile `yaml:"config"`
-	DB *bolt_api.DB `yaml:"-"`
+	DB *redis.Client `yaml:"-"`
 	ADB adb_wrapper.Wrapper `json:"-"`
 	TV *tv.TV `json:"-"`
 	Status Status `json:"-"`
@@ -54,13 +54,14 @@ func ( s *Server ) Start() {
 	s.FiberApp.Listen( fmt.Sprintf( ":%s" , s.Config.ServerPort ) )
 }
 
-func New( db *bolt_api.DB , config types.ConfigFile ) ( server Server ) {
+func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	server.FiberApp = fiber.New()
 	server.Config = config
 	server.DB = db
 	server.ADB = server.ADBConnect()
 	server.TV = tv.New( &config )
 	GlobalServer = &server
+	server.StoreLibrary()
 	log.Debug( "Server Starting" )
 	// server.MediaPlayer = media_player.New( db , &config )
 	server.FiberApp.Use( server.LogRequest )

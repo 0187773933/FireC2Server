@@ -10,7 +10,9 @@ import (
 	"unicode"
 	"bufio"
 	"net"
-	tz "4d63.com/tz"
+	"runtime"
+	"math/rand"
+	// tz "4d63.com/tz"
 	"encoding/json"
 	// "strings"
 	"io/ioutil"
@@ -21,7 +23,16 @@ import (
 	encryption "github.com/0187773933/FireC2Server/v1/encryption"
 )
 
-var location , _ = tz.LoadLocation( "America/New_York" )
+func SetupStackTraceReport() {
+	if r := recover(); r != nil {
+		stacktrace := make( []byte , 1024 )
+		runtime.Stack( stacktrace , true )
+		fmt.Printf( "%s\n" , stacktrace )
+	}
+}
+
+// var location , _ = tz.LoadLocation( "America/New_York" )
+var location , _ = time.LoadLocation( "America/New_York" )
 var month_map = map[string]time.Month{
 	"JAN": time.January , "FEB": time.February , "MAR": time.March ,
 	"APR": time.April , "MAY": time.May , "JUN": time.June ,
@@ -83,6 +94,18 @@ func ParseFormattedTimeString( time_str string ) ( result time.Time ) {
 
 func StringToInt( input string ) ( result int ) {
 	result , _ = strconv.Atoi( input )
+	return
+}
+
+func ShuffleKeys[ K comparable , V any ]( m map[ K ]V ) ( result []K ) {
+	result = make( []K , 0 , len( m ) )
+	for key := range m {
+		result = append( result , key )
+	}
+	rand.Seed( time.Now().UnixNano() )
+	rand.Shuffle( len( result ) , func( i , j int ) {
+		result[ i ] , result[ j ] = result[ j ] , result[ i ]
+	})
 	return
 }
 

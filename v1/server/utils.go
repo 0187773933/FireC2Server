@@ -2,13 +2,15 @@ package server
 
 import (
 	"fmt"
-	// "time"
+	"context"
+	"encoding/json"
 	// "strings"
-	bolt_api "github.com/boltdb/bolt"
 	// tv "github.com/0187773933/FireC2Server/v1/tv"
+	// types "github.com/0187773933/FireC2Server/v1/types"
 	adb_wrapper "ADBWrapper/v1/wrapper"
 	fiber "github.com/gofiber/fiber/v2"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
+	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
 // weak attempt at sanitizing form input to build a "username"
@@ -108,20 +110,109 @@ func ( s *Server ) GetStatus() ( result Status ) {
 	return
 }
 
-func ( s *Server ) Set( key string , value string ) ( result string ) {
-	s.DB.Update( func( tx *bolt_api.Tx ) error {
-		bucket := tx.Bucket( []byte( "state" ) )
-		bucket.Put( []byte( key ) , []byte( value ) )
-		return nil
-	})
-	return "success"
+func ( s *Server ) StoreLibrary() {
+
+	// Should we delete everyting before hand? .... design question
+
+	// Spotify Songs == TODO
+
+	// Spotify Playlists
+	for key , _ := range s.Config.Library.Spotify.Playlists {
+		circular_set.Add( s.DB , "LIBRARY.SPOTIFY.PLAYLISTS" , key )
+	}
+
+	// Twitch Following - Curated
+	for _ , item := range s.Config.Library.Twitch.Following.Currated {
+		circular_set.Add( s.DB , "LIBRARY.TWITCH.FOLLOWING.CURRATED" , item )
+	}
+
+	// Twitch Following - All
+	for _ , item := range s.Config.Library.Twitch.Following.All {
+		circular_set.Add( s.DB , "LIBRARY.TWITCH.FOLLOWING.ALL" , item )
+	}
+
+	// Youtube Videos - Live
+	for _ , item := range s.Config.Library.YouTube.Videos.Live {
+		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.VIDEOS.LIVE" , item )
+	}
+
+	// Youtube Videos - Normal
+	for _ , item := range s.Config.Library.YouTube.Videos.Normal {
+		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.VIDEOS.NORMAL" , item )
+	}
+
+	// Youtube Playlists - Normal
+	for _ , item := range s.Config.Library.YouTube.Playlists.Normal {
+		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.PLAYLISTS.NORMAL" , item )
+	}
+
+	// Youtube Playlists - Relaxing
+	for _ , item := range s.Config.Library.YouTube.Playlists.Relaxing {
+		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.PLAYLISTS.RELAXING" , item )
+	}
+
+	// Youtube Following - Live Channels
+	for _ , item := range s.Config.Library.YouTube.Following.Live {
+		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.FOLLOWING.LIVE" , item )
+	}
+
+	// Youtube Following - Channels
+	for _ , item := range s.Config.Library.YouTube.Following.Normal {
+		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.FOLLOWING.NORMAL" , item )
+	}
+
+	// Disney Movies - Currated
+	disney_movies_currated_shuffled := utils.ShuffleKeys( s.Config.Library.Disney.Movies.Currated )
+	s.DB.Del( context.Background() , "LIBRARY.DISNEY.MOVIES.CURRATED" ) // #design-decision , forces new random
+	s.DB.Del( context.Background() , "LIBRARY.DISNEY.MOVIES.CURRATED.INDEX" ) // #design-decision , forces new random
+	for _ , item := range disney_movies_currated_shuffled {
+		circular_set.Add( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" , item )
+	}
+
+	// VLC == TODO
+
+}
+
+func ( s *Server ) Set( key string , value interface{} ) ( result string ) {
+	var ctx = context.Background()
+	err := s.DB.Set( ctx , key , value , 0 ).Err()
+	if err != nil { panic( err ) }
+	result = "success"
+	return
 }
 func ( s *Server ) Get( key string ) ( result string ) {
-	s.DB.View( func( tx *bolt_api.Tx ) error {
-		bucket := tx.Bucket( []byte( "state" ) )
-		value := bucket.Get( []byte( key ) )
-		if value != nil { result = string( value ) }
-		return nil
-	})
-	return result
+	var ctx = context.Background()
+	val , err := s.DB.Get( ctx , key ).Result()
+	if err != nil { panic( err ) }
+	result = val
+	return
+}
+
+// have to build
+// https://github.com/RedisJSON/RedisJSON/
+// and then add loadmodule /Users/morpheous/APPLICATIONS_2/RedisJSON/target/release/librejson.dylib
+// to the redis.conf
+// brew services restart redis
+
+// https://github.com/RedisJSON/RedisJSON/
+// s.SetJSON( "config" , s.Config )
+// https://redis.io/commands/json.set/
+
+// https://github.com/RedisJSON/RedisJSON/#community-supported-clients
+// fmt.Println( s.DB.JSONSet ) 😭
+// https://github.com/redis/go-redis/pull/2704/commits/acf2b714f7b4920f1b910247dc42799b354f62ce
+func ( s *Server ) SetJSON( key string , value interface{} ) ( result string ) {
+	json_value , _ := json.Marshal( value )
+	result = s.Set( key , json_value )
+	return
+}
+
+// var test = &types.ConfigFile{}
+// s.GetJSON( "config" , test )
+// fmt.Println( test.BoltDBEncryptionKey )
+// https://redis.io/commands/json.get/
+func ( s *Server ) GetJSON( key string , target interface{} ) {
+	json_value := s.Get( key )
+	json.Unmarshal( []byte( json_value ) , target )
+	return
 }

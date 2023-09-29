@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"runtime"
 	"os"
 	"os/signal"
-	"time"
+	"context"
 	"syscall"
 	"path/filepath"
-	bolt_api "github.com/boltdb/bolt"
+	redis "github.com/redis/go-redis/v9"
 	logger "github.com/0187773933/FireC2Server/v1/logger"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	types "github.com/0187773933/FireC2Server/v1/types"
@@ -16,7 +15,7 @@ import (
 )
 
 var s server.Server
-var DB *bolt_api.DB
+var DB *redis.Client
 
 func SetupCloseHandler() {
 	c := make( chan os.Signal )
@@ -33,25 +32,22 @@ func SetupCloseHandler() {
 	}()
 }
 
+// https://pkg.go.dev/github.com/redis/go-redis/v9#Options
 func SetupDB( config *types.ConfigFile ) {
-	db , _ := bolt_api.Open( config.BoltDBPath , 0600 , &bolt_api.Options{ Timeout: ( 3 * time.Second ) } )
-	DB = db
-	tx , err := DB.Begin( true )
-	tx.CreateBucketIfNotExists( []byte( "state" ) );
-	tx.CreateBucketIfNotExists( []byte( "logs" ) );
-	tx.Commit();
+	DB = redis.NewClient( &redis.Options{
+		Addr: config.RedisAddress ,
+		Password: config.RedisPassword ,
+		DB: config.RedisDBNumber ,
+	})
+	var ctx = context.Background()
+	ping_result , err := DB.Ping( ctx ).Result()
+	logger.Log.Printf( "DB Connected : PING = %s" , ping_result )
 	if err != nil { panic( err ) }
 }
 
-func SetupStackTraceReport() {
-	if r := recover(); r != nil {
-		stacktrace := make([]byte, 1024)
-		runtime.Stack(stacktrace, true)
-		fmt.Printf("%s\n", stacktrace)
-	}
-}
-
 func main() {
+
+	defer utils.SetupStackTraceReport()
 
 	config_file_path := "./config.yaml"
 	if len( os.Args ) > 1 { config_file_path , _ = filepath.Abs( os.Args[ 1 ] ) }
@@ -59,9 +55,6 @@ func main() {
 
 	SetupCloseHandler()
 	SetupDB( &config )
-	defer SetupStackTraceReport()
-	// var log =
-	// logger.Init()
 	// utils.GenerateNewKeys()
 	utils.WriteLoginURLPrefix( config.ServerLoginUrlPrefix )
 	s = server.New( DB , config )

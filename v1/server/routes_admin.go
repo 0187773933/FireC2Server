@@ -38,5 +38,4 @@ func ( s *Server ) SetupAdminRoutes() {
 	// youtube.Use( validate_admin_mw )
 	// s.SetupMediaPlayerRoutes( youtube , "youtube" )
 
-
 }
