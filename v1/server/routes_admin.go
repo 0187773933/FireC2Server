@@ -33,7 +33,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	twitch := s.FiberApp.Group( "/twitch" )
 	twitch.Use( validate_admin_mw )
 	twitch.Get( "/live/next" , s.TwitchLiveNext )
-	twitch.Get( "/live/update" , s.TwitchLiveUpdate )
+	twitch.Get( "/live/update" , s.GetTwitchLiveUpdate )
 
 	// youtube := s.FiberApp.Group( "/youtube" )
 	// youtube.Use( validate_admin_mw )

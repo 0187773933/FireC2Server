@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"context"
+	context "context"
 	"encoding/json"
 	// "strings"
 	// tv "github.com/0187773933/FireC2Server/v1/tv"
@@ -113,6 +113,8 @@ func ( s *Server ) GetStatus() ( result Status ) {
 
 func ( s *Server ) StoreLibrary() {
 
+	var ctx = context.Background()
+
 	// Should we delete everyting before hand? .... design question
 
 	// Spotify Songs == TODO
@@ -123,6 +125,9 @@ func ( s *Server ) StoreLibrary() {
 	}
 
 	// Twitch Following - Curated
+	s.DB.Del( ctx , "LIBRARY.TWITCH.FOLLOWING.CURRATED" )
+	s.DB.Del( ctx , "STATE.TWITCH.FOLLOWING.LIVE" )
+	s.DB.Del( ctx , "STATE.TWITCH.FOLLOWING.LIVE.INDEX" )
 	for _ , item := range s.Config.Library.Twitch.Following.Currated {
 		circular_set.Add( s.DB , "LIBRARY.TWITCH.FOLLOWING.CURRATED" , item )
 	}

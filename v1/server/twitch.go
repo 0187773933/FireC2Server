@@ -4,7 +4,7 @@ import (
 	fmt "fmt"
 	time "time"
 	context "context"
-	// sort "sort"
+	sort "sort"
 	// url "net/url"
 	// "math"
 	// "image/color"
@@ -46,23 +46,58 @@ func ( s *Server ) TwitchContinuousOpen() {
 }
 
 func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
-	stream_id := circular_set.Next( s.DB , "LIVE.TWITCH.FOLLOWING" )
-	log.Debug( fmt.Sprintf( "TwitchLiveNext( %s )" , stream_id ) )
 
 	s.TwitchContinuousOpen()
+
+	next_stream := circular_set.Next( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+	log.Debug( "Next === " , next_stream )
+	if next_stream == "" {
+		log.Debug( "Empty , Refreshing" )
+		s.TwitchLiveUpdate()
+		next_stream = circular_set.Next( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+		if next_stream == "" {
+			log.Debug( "nobody is live ...." )
+			return c.JSON( fiber.Map{
+				"url": "/twitch/live/next" ,
+				"stream": "nobody is live ...." ,
+				"result": false ,
+			})
+		}
+	}
+	// force refresh on last
+	first_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , "STATE.TWITCH.FOLLOWING.LIVE" , 0 , 0 ).Result()
+	first_in_set := first_in_set_z[0].Member.(string)
+	if first_in_set == next_stream {
+		log.Debug( "recycled list" )
+		s.TwitchLiveUpdate()
+		// next_stream = circular_set.Next( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+	}
+	// var context = context.Background()
+	// next_stream , _ := s.DB.LPop( context , "STATE.TWITCH.FOLLOWING.LIVE" ).Result()
+	// if next_stream == "" {
+	// 	log.Debug( "Live Stream List Empty , Refreshing" )
+	// 	s.TwitchLiveUpdate()
+	// 	next_stream , _ = s.DB.LPop( context , "STATE.TWITCH.FOLLOWING.LIVE" ).Result()
+	// 	if next_stream == "" {
+	// 		log.Debug( "nobody is live ...." )
+	// 		return c.JSON( fiber.Map{
+	// 			"url": "/twitch/live/next" ,
+	// 			"stream": "nobody is live ...." ,
+	// 			"result": false ,
+	// 		})
+	// 	}
+	// }
+	log.Debug( fmt.Sprintf( "TwitchLiveNext( %s )" , next_stream ) )
+	fmt.Println( next_stream )
 	// // TODO === Need to Add TV Mute and Unmute
 	// // TODO === If Same Playlist don't open , just press next ? depends
 	// s.ADB.SetVolume( 0 )
-	// playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
-	// s.ADB.OpenURI( playlist_uri )
-	// // was_on := s.ShuffleOn()
-	// s.SpotifyShuffleOn()
-	// s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
-	// s.ADB.SetVolume( s.Status.ADBVolume )
-
+	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
+	s.ADB.OpenURI( uri )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/next" ,
-		"stream": stream_id ,
+		"stream": next_stream ,
 		"result": true ,
 	})
 }
@@ -154,8 +189,7 @@ func ( s *Server ) TwitchRefreshAuthToken() ( access_token string ) {
 
 
 // Update DB With List of Currated Live Followers
-func ( s *Server ) TwitchLiveUpdate( c *fiber.Ctx ) ( error ) {
-
+func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	// 1.) Get Currated List
 	var context = context.Background()
 	currated_followers , _ := s.DB.ZRangeByScore(
@@ -180,7 +214,6 @@ func ( s *Server ) TwitchLiveUpdate( c *fiber.Ctx ) ( error ) {
 	live_followers := live_followers_json.(map[string]interface{})[ "data" ].( []interface{} )
 
 	// 3.) Get Live Currated List
-	var live_currated []string
 	live_index_map := make(map[string]int)
 	for i , user := range live_followers {
 		user_name := user.(map[string]interface{})["user_login"].(string)
@@ -189,17 +222,32 @@ func ( s *Server ) TwitchLiveUpdate( c *fiber.Ctx ) ( error ) {
 	} // lookup table
 	s.DB.Del( context , "STATE.TWITCH.FOLLOWING.LIVE" )
 	for _ , user := range currated_followers {
-		if _ , exists := live_index_map[user]; exists {
-			live_currated = append( live_currated , user )
-			s.DB.RPush( context , "STATE.TWITCH.FOLLOWING.LIVE" , user )
+		if _ , exists := live_index_map[ user ]; exists {
+			result = append( result , user )
+			// s.DB.RPush( context , "STATE.TWITCH.FOLLOWING.LIVE" , user )
+			circular_set.Add( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" , user )
 		}
 	}
 
-	log.Debug( live_currated )
+
+	currated_map := make(map[string]int)
+	for i, user := range currated_followers {
+		currated_map[user] = i
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return currated_map[result[i]] < currated_map[result[j]]
+	})
+
+
+	log.Debug( result )
+	return
+}
+
+func ( s *Server ) GetTwitchLiveUpdate( c *fiber.Ctx ) ( error ) {
+	live := s.TwitchLiveUpdate()
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/update" ,
-		"followers": live_followers ,
-		"currated": live_currated ,
+		"currated": live ,
 		"result": true ,
 	})
 }
