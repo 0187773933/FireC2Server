@@ -3,10 +3,9 @@ module github.com/0187773933/FireC2Server
 go 1.19
 
 require (
-	4d63.com/tz v1.2.0
 	ADBWrapper v0.0.0-00010101000000-000000000000
 	github.com/0187773933/LGTVController v0.0.0-20230917160125-3fd2f2b61451
-	github.com/0187773933/RedisCircular v0.0.0-20231008143736-9681618488a5
+	github.com/0187773933/RedisCircular v0.0.0-20231008202030-9b7b0dd451d0
 	github.com/0187773933/VizioController v0.0.0-20201223083155-9d69e0c9b933
 	github.com/boltdb/bolt v1.3.1
 	github.com/gofiber/fiber/v2 v2.49.2
@@ -17,7 +16,6 @@ require (
 )
 
 require (
-	4d63.com/embedfiles v1.0.0 // indirect
 	github.com/0187773933/ADBWrapper v0.0.0-20230924114033-5fdc91ffcac4 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect

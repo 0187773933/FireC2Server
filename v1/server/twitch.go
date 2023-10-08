@@ -54,7 +54,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	if next_stream == "" {
 		log.Debug( "Empty , Refreshing" )
 		s.TwitchLiveUpdate()
-		next_stream = circular_set.Next( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+		next_stream = circular_set.Current( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
 		if next_stream == "" {
 			log.Debug( "nobody is live ...." )
 			return c.JSON( fiber.Map{
@@ -220,16 +220,12 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 		live_index_map[user_name] = i;
 
 	} // lookup table
-	s.DB.Del( context , "STATE.TWITCH.FOLLOWING.LIVE" )
 	for _ , user := range currated_followers {
 		if _ , exists := live_index_map[ user ]; exists {
 			result = append( result , user )
 			// s.DB.RPush( context , "STATE.TWITCH.FOLLOWING.LIVE" , user )
-			circular_set.Add( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" , user )
 		}
 	}
-
-
 	currated_map := make(map[string]int)
 	for i, user := range currated_followers {
 		currated_map[user] = i
@@ -237,8 +233,10 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	sort.Slice(result, func(i, j int) bool {
 		return currated_map[result[i]] < currated_map[result[j]]
 	})
-
-
+	s.DB.Del( context , "STATE.TWITCH.FOLLOWING.LIVE" )
+	for _ , user := range result {
+		circular_set.Add( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" , user )
+	}
 	log.Debug( result )
 	return
 }
