@@ -30,9 +30,10 @@ func ( s *Server ) SetupAdminRoutes() {
 	// spotify.Get( "/previous" , SpotifyPressPreviousButton ) // needs a custom previous , requires 2 clicks if in shuffle-mode
 
 
-	// twitch := s.FiberApp.Group( "/twitch" )
-	// twitch.Use( validate_admin_mw )
-	// s.SetupMediaPlayerRoutes( twitch , "twitch" )
+	twitch := s.FiberApp.Group( "/twitch" )
+	twitch.Use( validate_admin_mw )
+	twitch.Get( "/live/next" , s.TwitchLiveNext )
+	twitch.Get( "/live/update" , s.TwitchLiveUpdate )
 
 	// youtube := s.FiberApp.Group( "/youtube" )
 	// youtube.Use( validate_admin_mw )

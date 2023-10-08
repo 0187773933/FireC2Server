@@ -13,6 +13,9 @@ import (
 	"runtime"
 	"math/rand"
 	// tz "4d63.com/tz"
+	"bytes"
+	"net/http"
+	"net/url"
 	"encoding/json"
 	// "strings"
 	"io/ioutil"
@@ -248,4 +251,47 @@ func WakeOnLan( mac_address string ) {
 	conn , _ := net.DialUDP( "udp" , nil , addr )
 	defer conn.Close()
 	conn.Write( magic_packet )
+}
+
+
+func GetJSON( baseURL string , headers map[string]string , params map[string]string ) ( target interface{} ) {
+	client := &http.Client{}
+	u , err := url.Parse( baseURL )
+	if err != nil { fmt.Println( err ); return }
+	q := u.Query()
+	for key, value := range params {
+		q.Add( key , value )
+	}
+	u.RawQuery = q.Encode()
+	req , err := http.NewRequest("GET", u.String(), nil)
+	if err != nil { fmt.Println( err ); return }
+	for key , value := range headers {
+		req.Header.Set( key , value )
+	}
+	resp , err := client.Do( req )
+	if err != nil { fmt.Println( err ); return }
+	defer resp.Body.Close()
+	body , err := ioutil.ReadAll( resp.Body )
+	if err != nil { fmt.Println( err ); return }
+	json.Unmarshal( body , &target )
+	return
+}
+
+func PostJSON( url string , headers map[string]string , payload interface{} ) ( result interface{} ) {
+	client := &http.Client{}
+	payload_bytes , err := json.Marshal( payload )
+	if err != nil { fmt.Println( err ); return }
+	req , err := http.NewRequest( "POST" , url , bytes.NewBuffer( payload_bytes ) )
+	if err != nil { fmt.Println( err ); return }
+	req.Header.Set( "Content-Type" , "application/json" )
+	for key, value := range headers {
+		req.Header.Set( key , value )
+	}
+	resp , err := client.Do( req )
+	if err != nil { fmt.Println( err ); return }
+	defer resp.Body.Close()
+	body , err := ioutil.ReadAll( resp.Body )
+	if err != nil { fmt.Println( err ); return }
+	json.Unmarshal( body , &result )
+	return
 }

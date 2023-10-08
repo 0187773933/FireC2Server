@@ -10,7 +10,8 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-const ACTIVITY_SPOTIFY = "com.spotify.tv.android/com.spotify.tv.android.SpotifyTVActivity"
+const SPOTIFY_ACTIVITY = "com.spotify.tv.android/com.spotify.tv.android.SpotifyTVActivity"
+const SPOTIFY_APP_NAME = "com.spotify.tv.android"
 
 // func reopen_spotify( adb *adb_wrapper.Wrapper ) {
 // 	adb.StopAllApps()
@@ -95,7 +96,7 @@ func ( s *Server ) SpotifyReopenApp() {
 	log.Debug( "SpotifyReopenApp()" )
 	s.ADB.StopAllApps()
 	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( "com.spotify.tv.android" )
+	s.ADB.CloseAppName( SPOTIFY_APP_NAME )
 	log.Debug( "Done" )
 }
 
@@ -109,7 +110,7 @@ func ( s *Server ) SpotifyContinuousOpen() {
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADBTopWindow ) )
-	if s.Status.ADBTopWindow != ACTIVITY_SPOTIFY {
+	if s.Status.ADBTopWindow != SPOTIFY_ACTIVITY {
 		log.Debug( "spotify was NOT already open" )
 		s.SpotifyReopenApp()
 		time.Sleep( 1 * time.Millisecond )

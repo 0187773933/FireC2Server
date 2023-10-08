@@ -87,8 +87,11 @@ type ConfigFile struct {
 	ADBServerIP string `yaml:"adb_server_ip"`
 	ADBServerPort string `yaml:"adb_server_port"`
 	YouTubeAPIKey string `yaml:"youtube_api_key"`
+	TwitchUserID string `yaml:"twitch_user_id"`
 	TwitchClientID string `yaml:"twitch_client_id"`
 	TwitchClientSecret string `yaml:"twitch_client_secret"`
 	TwitchOAUTHToken string `yaml:"twitch_oauth_token"`
+	TwitchAccessToken string `yaml:"twitch_access_token"`
+	TwitchRefreshToken string `yaml:"twitch_refresh_token"`
 	Library Library `yaml:"library"`
 }
