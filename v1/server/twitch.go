@@ -47,6 +47,7 @@ func ( s *Server ) TwitchContinuousOpen() {
 
 func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 
+	log.Debug( "TwitchLiveNext()" )
 	s.TwitchContinuousOpen()
 
 	next_stream := circular_set.Next( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
@@ -70,24 +71,50 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	if first_in_set == next_stream {
 		log.Debug( "recycled list" )
 		s.TwitchLiveUpdate()
-		// next_stream = circular_set.Next( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
 	}
-	// var context = context.Background()
-	// next_stream , _ := s.DB.LPop( context , "STATE.TWITCH.FOLLOWING.LIVE" ).Result()
-	// if next_stream == "" {
-	// 	log.Debug( "Live Stream List Empty , Refreshing" )
-	// 	s.TwitchLiveUpdate()
-	// 	next_stream , _ = s.DB.LPop( context , "STATE.TWITCH.FOLLOWING.LIVE" ).Result()
-	// 	if next_stream == "" {
-	// 		log.Debug( "nobody is live ...." )
-	// 		return c.JSON( fiber.Map{
-	// 			"url": "/twitch/live/next" ,
-	// 			"stream": "nobody is live ...." ,
-	// 			"result": false ,
-	// 		})
-	// 	}
-	// }
 	log.Debug( fmt.Sprintf( "TwitchLiveNext( %s )" , next_stream ) )
+	fmt.Println( next_stream )
+	// // TODO === Need to Add TV Mute and Unmute
+	// // TODO === If Same Playlist don't open , just press next ? depends
+	// s.ADB.SetVolume( 0 )
+	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
+	s.ADB.OpenURI( uri )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	return c.JSON( fiber.Map{
+		"url": "/twitch/live/next" ,
+		"stream": next_stream ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
+
+	log.Debug( "TwitchLivePrevious()" )
+	s.TwitchContinuousOpen()
+
+	next_stream := circular_set.Previous( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+	log.Debug( "Next === " , next_stream )
+	if next_stream == "" {
+		log.Debug( "Empty , Refreshing" )
+		s.TwitchLiveUpdate()
+		next_stream = circular_set.Previous( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+		if next_stream == "" {
+			log.Debug( "nobody is live ...." )
+			return c.JSON( fiber.Map{
+				"url": "/twitch/live/next" ,
+				"stream": "nobody is live ...." ,
+				"result": false ,
+			})
+		}
+	}
+	// force refresh on last
+	last_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , "STATE.TWITCH.FOLLOWING.LIVE" , -1 , -1 ).Result()
+	last_in_set := last_in_set_z[0].Member.(string)
+	if last_in_set == next_stream {
+		log.Debug( "recycled list" )
+		s.TwitchLiveUpdate()
+	}
+	log.Debug( fmt.Sprintf( "TwitchLivePrevious( %s )" , next_stream ) )
 	fmt.Println( next_stream )
 	// // TODO === Need to Add TV Mute and Unmute
 	// // TODO === If Same Playlist don't open , just press next ? depends
