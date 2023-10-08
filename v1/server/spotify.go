@@ -97,6 +97,7 @@ func ( s *Server ) SpotifyReopenApp() {
 	s.ADB.StopAllApps()
 	s.ADB.Brightness( 0 )
 	s.ADB.CloseAppName( SPOTIFY_APP_NAME )
+	s.ADB.OpenAppName( SPOTIFY_APP_NAME )
 	log.Debug( "Done" )
 }
 
@@ -113,7 +114,7 @@ func ( s *Server ) SpotifyContinuousOpen() {
 	if s.Status.ADBTopWindow != SPOTIFY_ACTIVITY {
 		log.Debug( "spotify was NOT already open" )
 		s.SpotifyReopenApp()
-		time.Sleep( 1 * time.Millisecond )
+		time.Sleep( 3 * time.Second )
 	} else {
 		log.Debug( "spotify was already open" )
 	}
@@ -128,6 +129,7 @@ func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	s.ADB.SetVolume( 0 )
 	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
 	s.ADB.OpenURI( playlist_uri )
+	time.Sleep( 500 * time.Millisecond )
 	// was_on := s.ShuffleOn()
 	s.SpotifyShuffleOn()
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
