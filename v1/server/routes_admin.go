@@ -40,7 +40,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	disney := s.FiberApp.Group( "/disney" )
 	disney.Use( validate_admin_mw )
 	disney.Get( "/next" , s.DisneyMovieNext )
-	// disney.Get( "/previous" , s.DisneyMoviePrevious )
+	disney.Get( "/previous" , s.DisneyMoviePrevious )
 
 
 	// YouTube

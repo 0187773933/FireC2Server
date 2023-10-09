@@ -61,9 +61,24 @@ func ( s *Server ) DisneyMovieNext( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	return c.JSON( fiber.Map{
-		"url": "/disney/movies/next" ,
-		"movie": next_movie ,
-		"uri": uri ,
+		"url": "/disney/next" ,
+		"uuid": next_movie ,
+		"name": s.Config.Library.Disney.Movies.Currated[ next_movie ].Name ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) DisneyMoviePrevious( c *fiber.Ctx ) ( error ) {
+	log.Debug( "DisneyMoviePrevious()" )
+	s.DisneyContinuousOpen()
+	next_movie := circular_set.Previous( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
+	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
+	s.ADB.OpenURI( uri )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	return c.JSON( fiber.Map{
+		"url": "/disney/previous" ,
+		"uuid": next_movie ,
+		"name": s.Config.Library.Disney.Movies.Currated[ next_movie ].Name ,
 		"result": true ,
 	})
 }
