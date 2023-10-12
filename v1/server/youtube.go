@@ -19,6 +19,37 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
+const YOUTUBE_ACTIVITY = "com.disney.disneyplus/com.bamtechmedia.dominguez.main.MainActivity"
+const YOUTUBE_APP_NAME = "com.disney.disneyplus"
+
+func ( s *Server ) YouTubeReopenApp() {
+	log.Debug( "DisneyReopenApp()" )
+	s.ADB.StopAllApps()
+	s.ADB.Brightness( 0 )
+	s.ADB.CloseAppName( YOUTUBE_APP_NAME )
+	time.Sleep( 500 * time.Millisecond )
+	s.ADB.OpenAppName( YOUTUBE_APP_NAME )
+	log.Debug( "Done" )
+}
+
+func ( s *Server ) YouTubeContinuousOpen() {
+	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
+	log.Debug( "YouTubeContinuousOpen()" )
+	s.GetStatus()
+	log.Debug( s.Status )
+	s.Set( "active_player_name" , "youtube" )
+	s.Set( "active_player_command" , "play" )
+	s.Set( "active_player_start_time" , start_time_string )
+	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADBTopWindow ) )
+	if s.Status.ADBTopWindow == YOUTUBE_ACTIVITY {
+		log.Debug( "youtube was already open" )
+	} else {
+		log.Debug( "youtube was NOT already open" )
+		s.YouTubeReopenApp()
+		time.Sleep( 500 * time.Millisecond )
+	}
+}
+
 
 
 // 1.) Get Channels channelID
@@ -47,13 +78,14 @@ import (
 // or just goto dev console on youtube channel's /stream page
 // and run `ytInitialData.metadata.channelMetadataRenderer.externalId`
 func ( s *Server ) YouTubeGetChannelId( channel_name string ) ( result string ) {
+	next_api_key := circular_set.Next( s.DB , "CONFIG.YOUTUBE.API_KEYS" )
 	headers := map[string]string{
 		"Accept": "application/json" ,
 	}
 	params := map[string]string{
 		"part": "snippet" ,
 		"forUsername": channel_name ,
-		"key": s.Config.YouTubeAPIKeyOne ,
+		"key": next_api_key ,
 	}
 	response_json := utils.GetJSON( "https://youtube.googleapis.com/youtube/v3/channels" , headers , params )
 	items , _ := response_json.( map[string]interface{} )[ "items" ].( []interface{} )
@@ -119,6 +151,7 @@ func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []
 }
 
 // Update DB With List of Currated Live Followers
+// fucking idiots with this god damn quota. bro
 func ( s *Server ) YouTubeLiveUpdate() ( result []string ) {
 	s.DB.Del( context.Background() , "STATE.YOUTUBE.LIVE.VIDEOS" )
 	for channel_id , _ := range s.Config.Library.YouTube.Following.Live {
@@ -132,7 +165,7 @@ func ( s *Server ) YouTubeLiveUpdate() ( result []string ) {
 				}
 			}
 		}
-		time.Sleep( 500 * time.Millisecond )
+		time.Sleep( 1 * time.Second )
 	}
 	rand.Shuffle( len( result ) , func( i , j int ) {
 		result[ i ] , result[ j ] = result[ j ] , result[ i ]

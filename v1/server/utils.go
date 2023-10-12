@@ -137,6 +137,11 @@ func ( s *Server ) StoreLibrary() {
 		circular_set.Add( s.DB , "LIBRARY.TWITCH.FOLLOWING.ALL" , item )
 	}
 
+	// Set API Keys
+	for _ , api_key := range s.Config.YouTubeAPIKeys {
+		circular_set.Add( s.DB , "CONFIG.YOUTUBE.API_KEYS" , api_key )
+	}
+
 	// Youtube Videos - Live
 	// for _ , item := range s.Config.Library.YouTube.Videos.Live {
 	// 	circular_set.Add( s.DB , "LIBRARY.YOUTUBE.VIDEOS.LIVE" , item )
