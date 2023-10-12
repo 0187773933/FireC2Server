@@ -6,6 +6,7 @@ import (
 	// url "net/url"
 	// "math"
 	// "image/color"
+	"math/rand"
 	"strings"
 	"context"
 	"encoding/json"
@@ -118,9 +119,8 @@ func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []
 }
 
 // Update DB With List of Currated Live Followers
-func ( s *Server ) YouTubeLiveUpdate() ( result []YoutubeVideo ) {
-	var ctx = context.Background()
-	s.DB.Del( ctx , "STATE.YOUTUBE.LIVE.VIDEOS" )
+func ( s *Server ) YouTubeLiveUpdate() ( result []string ) {
+	s.DB.Del( context.Background() , "STATE.YOUTUBE.LIVE.VIDEOS" )
 	for channel_id , _ := range s.Config.Library.YouTube.Following.Live {
 		fmt.Println( "\n" , channel_id , s.Config.Library.YouTube.Following.Live[ channel_id ].Name )
 		live_videos := s.YouTubeGetChannelsLiveVideos( channel_id )
@@ -128,10 +128,17 @@ func ( s *Server ) YouTubeLiveUpdate() ( result []YoutubeVideo ) {
 			for _ , video_name := range s.Config.Library.YouTube.Following.Live[ channel_id ].Videos {
 				if strings.Contains( strings.ToLower( video_item.Name ) , video_name ) {
 					fmt.Println( "adding" , video_item.Id , video_item.Name )
-					circular_set.Add( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" , video_item.Id )
+					result = append( result , video_item.Id )
 				}
 			}
 		}
+		time.Sleep( 500 * time.Millisecond )
+	}
+	rand.Shuffle( len( result ) , func( i , j int ) {
+		result[ i ] , result[ j ] = result[ j ] , result[ i ]
+	})
+	for _ , video_id := range result {
+		circular_set.Add( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" , video_id )
 	}
 	return
 }
