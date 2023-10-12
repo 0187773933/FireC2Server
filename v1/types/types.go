@@ -27,8 +27,12 @@ type DisneyLibrary struct {
 	Movies DisneyMovies `yaml:"movies"`
 }
 
+type YoutubeLiveItem struct {
+	Name string `yaml:"name"`
+	Videos []string `yaml:"videos"`
+}
 type YoutubeSet struct {
-	Live []string `yaml:"live"`
+	Live map[string]YoutubeLiveItem `yaml:"live"`
 	Normal []string `yaml:"normal"`
 	Relaxing []string `yaml:"relaxing"`
 }
@@ -86,7 +90,8 @@ type ConfigFile struct {
 	ADBSerial string `yaml:"adb_serial"`
 	ADBServerIP string `yaml:"adb_server_ip"`
 	ADBServerPort string `yaml:"adb_server_port"`
-	YouTubeAPIKey string `yaml:"youtube_api_key"`
+	YouTubeAPIKeyOne string `yaml:"youtube_api_key_one"`
+	YouTubeAPIKeyTwo string `yaml:"youtube_api_key_two"`
 	TwitchUserID string `yaml:"twitch_user_id"`
 	TwitchClientID string `yaml:"twitch_client_id"`
 	TwitchClientSecret string `yaml:"twitch_client_secret"`

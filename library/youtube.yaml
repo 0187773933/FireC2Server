@@ -1,28 +1,4 @@
 videos:
-  live:
-    - 86YLFOog4GM
-    - hHbp9hG61CQ
-    - 2wqpy036z24
-    - VI8Wj5EwoRM
-    - kxwuFPFUZyY
-    - ydYDqZQpim8
-    - DsNtwGJXTTs
-    - PfDDEVBgvWM
-    - -SMPqDuM7Yg
-    - K3vjVPiXq5g
-    - xXV3sz92k8w
-    - MNlaVyNVt-s
-    - -UhpUv9dewc
-    - no-TgUxPk_o
-    - 89N2pUjUacU
-    - fFj4wnSTYtM
-    - WBvHHNXXeqw
-    - lXzSU7ezjp8
-    - -HAi_5IIAYg
-    - cmkAbDUEoyA
-    - w_DfTc7F5oQ
-    - -UhpUv9dewc
-    - NLhxcyzXQxM
   normal:
     - aK7fgid2xDg
 playlists:
@@ -36,11 +12,111 @@ playlists:
     - PLcW8xNfZoh7e34w865G25OqLLCX_o2kvK
 following:
   live:
-    - MontereyBayAquarium
-    - CornellLabBirdCams
-    - ExploreOceans
-    - CityofDeerfieldBeach
-    - CanadianBirdNerd
-    # - UCWh93l9snW90iP2ybPHikAg
+    "UCnM5iMGiKsZg-iOlIO2ZkdQ":
+      name: MontereyBayAquarium
+      videos:
+        - "sea otter"
+        - "bay cam"
+        - "shark cam"
+        - "kelp forest"
+        - "open sea cam"
+    "UCZXZQxS3d6NpR-eH_gdDwYA":
+      name: "Cornell Lab Bird Cams"
+      videos:
+        - "cam at sapsucker woods"
+    "UCSyg9cb3Iq-NtlbxqNB9wGw":
+      name: "Explore Oceans"
+      videos:
+        - "underwater reef channel"
+        - "utopia village"
+        - "pipeline cam"
+    "UCGOxU-8iNOeoG3a337shXoA":
+      name: "City of Deerfield Beach"
+      videos:
+        - "beach camera"
+        - "underwater camera"
+    "UC9PWlinrw22aAcsobDqqghQ":
+      name: "Canadian Bird Nerd"
+      videos:
+        - "rocky mountain view"
+    "UCakgsb0w7QB0VHdnCc-OVEA":
+      name: "Space videos"
+      videos:
+        - "nasa live stream"
+    "UCPSSgJVH-ppHUfmdHXm55rQ":
+      name: "St. John USVI"
+      videos:
+        - "beach bar"
+        - "bay beach"
+        - "grande bay"
+    "UC15QFO-cdISk-4Sn5CPd78g":
+      name: "Niagra Falls Live"
+      videos:
+        - "niagra falls"
+    "UC9X6gGKDv2yhMoofoeS7-Gg":
+      name: "Namibia Cam"
+      videos:
+        - "namib desert"
+        - "kalahari desert"
+    "UCUtGnX65osNPQ98Y3-SSgpg":
+      name: "Explore Zen Den"
+      videos:
+        - "sky tower"
+        - "catlina west end"
+        - "santa monica beach"
+        - "redwoood river"
+        - "mission mountain range"
+    "UCegzBUd6-PYoO_v7gjJgufg":
+      name: "Teleport Camera"
+      videos:
+        - "venice beach"
+        - "san francisco"
+        - "house of sanskara"
+    "UCR9FtQmoisWTX-TmmoBmL9Q":
+      name: "Huntington Beach"
+      videos:
+        - "huntington beach"
+    "UCjYc5xAEWCYIcqG1-KC9nZQ":
+      name: "Volusia Beaches"
+      videos:
+        - "daytona beach"
+        - "ormond by the sea"
+        - "ormond north"
+        - "ormond east"
+    "UCIQVWkOilfxoQSFcban_d-A":
+      name: "Maui Live Cam"
+      videos:
+        - "kaanapali beach"
+    "UC-CrxJnHPaM4tm2haTibUZA":
+      name: "Soggy Dollar"
+      videos:
+        - "white bay"
+    "UC88QpAaX8sdqm1fWYSjzbSQ":
+      name: "San Diego Web Cam"
+      videos:
+        - "rotating"
+    "UCG8-xn6zUbEqmqlnsvrD33Q":
+      name: "PTZtv"
+      videos:
+        - "fort lauderdale beach"
+        - "caribbean islands to alaska"
+        - "port miami"
+        - "key west harbor"
+        - "santa clara valley"
+    "UCGOxU-8iNOeoG3a337shXoA":
+      name: "City of Deerfield Beach"
+      videos:
+        - "underwater camera"
+        - "surf camera"
+        - "beach camera"
+        - "fishing pier"
+    "UCVtTjaaajzCaWsMxHBmTIsA":
+      name: "City of Hollywood"
+      videos:
+        - "broadwalk"
+    "UCgPDwePWls1uuZx0109bWzg":
+      name: "Siesta Beach"
+      videos:
+        - "siesta beach"
   normal:
     - kylelandry

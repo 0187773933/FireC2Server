@@ -138,34 +138,34 @@ func ( s *Server ) StoreLibrary() {
 	}
 
 	// Youtube Videos - Live
-	for _ , item := range s.Config.Library.YouTube.Videos.Live {
-		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.VIDEOS.LIVE" , item )
-	}
+	// for _ , item := range s.Config.Library.YouTube.Videos.Live {
+	// 	circular_set.Add( s.DB , "LIBRARY.YOUTUBE.VIDEOS.LIVE" , item )
+	// }
 
-	// Youtube Videos - Normal
-	for _ , item := range s.Config.Library.YouTube.Videos.Normal {
-		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.VIDEOS.NORMAL" , item )
-	}
+	// // Youtube Videos - Normal
+	// for _ , item := range s.Config.Library.YouTube.Videos.Normal {
+	// 	circular_set.Add( s.DB , "LIBRARY.YOUTUBE.VIDEOS.NORMAL" , item )
+	// }
 
-	// Youtube Playlists - Normal
-	for _ , item := range s.Config.Library.YouTube.Playlists.Normal {
-		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.PLAYLISTS.NORMAL" , item )
-	}
+	// // Youtube Playlists - Normal
+	// for _ , item := range s.Config.Library.YouTube.Playlists.Normal {
+	// 	circular_set.Add( s.DB , "LIBRARY.YOUTUBE.PLAYLISTS.NORMAL" , item )
+	// }
 
-	// Youtube Playlists - Relaxing
-	for _ , item := range s.Config.Library.YouTube.Playlists.Relaxing {
-		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.PLAYLISTS.RELAXING" , item )
-	}
+	// // Youtube Playlists - Relaxing
+	// for _ , item := range s.Config.Library.YouTube.Playlists.Relaxing {
+	// 	circular_set.Add( s.DB , "LIBRARY.YOUTUBE.PLAYLISTS.RELAXING" , item )
+	// }
 
-	// Youtube Following - Live Channels
-	for _ , item := range s.Config.Library.YouTube.Following.Live {
-		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.FOLLOWING.LIVE" , item )
-	}
+	// // Youtube Following - Live Channels
+	// for _ , item := range s.Config.Library.YouTube.Following.Live {
+	// 	circular_set.Add( s.DB , "LIBRARY.YOUTUBE.FOLLOWING.LIVE" , item )
+	// }
 
-	// Youtube Following - Channels
-	for _ , item := range s.Config.Library.YouTube.Following.Normal {
-		circular_set.Add( s.DB , "LIBRARY.YOUTUBE.FOLLOWING.NORMAL" , item )
-	}
+	// // Youtube Following - Channels
+	// for _ , item := range s.Config.Library.YouTube.Following.Normal {
+	// 	circular_set.Add( s.DB , "LIBRARY.YOUTUBE.FOLLOWING.NORMAL" , item )
+	// }
 
 	// Disney Movies - Currated
 	disney_movies_currated_shuffled := utils.ShuffleKeys( s.Config.Library.Disney.Movies.Currated )

@@ -157,7 +157,7 @@ func ParseConfig( file_path string ) ( result types.ConfigFile ) {
 	result.Library.Disney = disney_library
 
 	var youtube_library types.YouTubeLibrary
-	youtube_library_file , _ := ioutil.ReadFile( "./library/disney.yaml" )
+	youtube_library_file , _ := ioutil.ReadFile( "./library/youtube.yaml" )
 	error = yaml.Unmarshal( youtube_library_file , &youtube_library )
 	if error != nil { panic( error ) }
 	result.Library.YouTube = youtube_library

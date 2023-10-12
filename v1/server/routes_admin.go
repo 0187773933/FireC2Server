@@ -41,11 +41,13 @@ func ( s *Server ) SetupAdminRoutes() {
 	disney.Use( validate_admin_mw )
 	disney.Get( "/next" , s.DisneyMovieNext )
 	disney.Get( "/previous" , s.DisneyMoviePrevious )
+	disney.Get( "/movie/:movie_id" , s.DisneyMovie )
 
 
 	// YouTube
-	// youtube := s.FiberApp.Group( "/youtube" )
-	// youtube.Use( validate_admin_mw )
+	youtube := s.FiberApp.Group( "/youtube" )
+	youtube.Use( validate_admin_mw )
+	youtube.Get( "/update/live" , s.GetYouTubeLiveUpdate )
 	// s.SetupMediaPlayerRoutes( youtube , "youtube" )
 
 }

@@ -82,3 +82,22 @@ func ( s *Server ) DisneyMoviePrevious( c *fiber.Ctx ) ( error ) {
 		"result": true ,
 	})
 }
+
+func ( s *Server ) DisneyMovie( c *fiber.Ctx ) ( error ) {
+	movie_id := c.Params( "movie_id" )
+	log.Debug( fmt.Sprintf( "DisneyMovie( %s )" , movie_id ) )
+	s.DisneyContinuousOpen()
+	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , movie_id )
+	s.ADB.OpenURI( uri )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	name := "unknown"
+	if movie , ok := s.Config.Library.Disney.Movies.Currated[ movie_id ]; ok {
+		name = movie.Name
+	}
+	return c.JSON( fiber.Map{
+		"url": "/disney/previous" ,
+		"uuid": movie_id ,
+		"name": name ,
+		"result": true ,
+	})
+}
