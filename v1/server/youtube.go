@@ -3,8 +3,8 @@ package server
 import (
 	fmt "fmt"
 	time "time"
-	// "math/rand"
-	// "strings"
+	"math/rand"
+	"strings"
 	// "context"
 	"encoding/json"
 	"io/ioutil"
@@ -179,29 +179,25 @@ func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []
 // fucking idiots with this god damn quota. bro
 func ( s *Server ) YouTubeLiveUpdate() ( result []string ) {
 	// s.DB.Del( context.Background() , "STATE.YOUTUBE.LIVE.VIDEOS" )
-	// for channel_id , _ := range s.Config.Library.YouTube.Following.Live {
-	// 	fmt.Println( "\n" , channel_id , s.Config.Library.YouTube.Following.Live[ channel_id ].Name )
-	// 	live_videos := s.YouTubeGetChannelsLiveVideos( channel_id )
-	// 	for _ , video_item := range live_videos {
-	// 		for _ , video_name := range s.Config.Library.YouTube.Following.Live[ channel_id ].Videos {
-	// 			if strings.Contains( strings.ToLower( video_item.Name ) , video_name ) {
-	// 				fmt.Println( "adding" , video_item.Id , video_item.Name )
-	// 				result = append( result , video_item.Id )
-	// 			}
-	// 		}
-	// 	}
-	// 	time.Sleep( 1 * time.Second )
-	// }
-	// rand.Shuffle( len( result ) , func( i , j int ) {
-	// 	result[ i ] , result[ j ] = result[ j ] , result[ i ]
-	// })
-	// for _ , video_id := range result {
-	// 	circular_set.Add( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" , video_id )
-	// }
-	test := s.YouTubeIsVideoIdAvailable( "7npQNqYXEdk" )
-	fmt.Println( test )
-	test = s.YouTubeIsVideoIdAvailable( "asdf" )
-	fmt.Println( test )
+	for channel_id , _ := range s.Config.Library.YouTube.Following.Live {
+		fmt.Println( "\n" , channel_id , s.Config.Library.YouTube.Following.Live[ channel_id ].Name )
+		live_videos := s.YouTubeGetChannelsLiveVideos( channel_id )
+		for _ , video_item := range live_videos {
+			for _ , video_name := range s.Config.Library.YouTube.Following.Live[ channel_id ].Videos {
+				if strings.Contains( strings.ToLower( video_item.Name ) , video_name ) {
+					fmt.Println( "adding" , video_item.Id , video_item.Name )
+					result = append( result , video_item.Id )
+				}
+			}
+		}
+		time.Sleep( 1 * time.Second )
+	}
+	rand.Shuffle( len( result ) , func( i , j int ) {
+		result[ i ] , result[ j ] = result[ j ] , result[ i ]
+	})
+	for _ , video_id := range result {
+		circular_set.Add( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" , video_id )
+	}
 	return
 }
 

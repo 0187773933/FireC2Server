@@ -24,6 +24,10 @@ else
    NextCommitNumber=1
 fi
 git add .
-git commit -m "$NextCommitNumber"
+if [ -n "$1" ]; then
+	git commit -m "$1"
+else
+	git commit -m "$NextCommitNumber"
+fi
 git remote add origin git@github.com:0187773933/FireC2Server.git
 git push origin master
