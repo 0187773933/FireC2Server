@@ -47,6 +47,9 @@ func ( s *Server ) SetupAdminRoutes() {
 	// YouTube
 	youtube := s.FiberApp.Group( "/youtube" )
 	youtube.Use( validate_admin_mw )
+	youtube.Get( "/:video_id" , s.YouTubeVideo )
+	youtube.Get( "/live/next" , s.YouTubeLiveNext )
+	youtube.Get( "/live/previous" , s.YouTubeLivePrevious )
 	youtube.Get( "/update/live" , s.GetYouTubeLiveUpdate )
 	// s.SetupMediaPlayerRoutes( youtube , "youtube" )
 

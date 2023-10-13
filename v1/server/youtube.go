@@ -16,11 +16,11 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-const YOUTUBE_ACTIVITY = "com.disney.disneyplus/com.bamtechmedia.dominguez.main.MainActivity"
-const YOUTUBE_APP_NAME = "com.disney.disneyplus"
+const YOUTUBE_ACTIVITY = "com.amazon.firetv.youtube/dev.cobalt.app.MainActivity"
+const YOUTUBE_APP_NAME = "com.amazon.firetv.youtube"
 
 func ( s *Server ) YouTubeReopenApp() {
-	log.Debug( "DisneyReopenApp()" )
+	log.Debug( "YouTubeReopenApp()" )
 	s.ADB.StopAllApps()
 	s.ADB.Brightness( 0 )
 	s.ADB.CloseAppName( YOUTUBE_APP_NAME )
@@ -46,6 +46,54 @@ func ( s *Server ) YouTubeContinuousOpen() {
 		time.Sleep( 500 * time.Millisecond )
 	}
 }
+
+func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubeLiveNext()" )
+	s.YouTubeContinuousOpen()
+	video_id := circular_set.Next( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" )
+	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/live/next" ,
+		"video_id": video_id ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubeLivePrevious()" )
+	s.YouTubeContinuousOpen()
+	video_id := circular_set.Previous( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" )
+	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/live/previous" ,
+		"video_id": video_id ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) YouTubeVideo( c *fiber.Ctx ) ( error ) {
+	video_id := c.Params( "video_id" )
+	log.Debug( fmt.Sprintf( "YouTubeVideo( %s )" , video_id ) )
+	s.YouTubeContinuousOpen()
+	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/:video_id" ,
+		"video_id": video_id ,
+		"result": true ,
+	})
+}
+
+// am start -a android.intent.action.VIEW -d "vnd.youtube:PLcW8xNfZoh7cgn3QNojv1ly5NZfg9xVN9?listType=playlist"
+// https://www.youtube.com/playlist?list=PLcW8xNfZoh7cgn3QNojv1ly5NZfg9xVN9
 
 type YoutubeVideoInfo struct {
 	Items []struct {

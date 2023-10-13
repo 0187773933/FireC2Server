@@ -58,6 +58,7 @@ func ( s *Server ) DisneyMovieNext( c *fiber.Ctx ) ( error ) {
 	s.DisneyContinuousOpen()
 	next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
 	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
+	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	return c.JSON( fiber.Map{
@@ -73,6 +74,7 @@ func ( s *Server ) DisneyMoviePrevious( c *fiber.Ctx ) ( error ) {
 	s.DisneyContinuousOpen()
 	next_movie := circular_set.Previous( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
 	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
+	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	return c.JSON( fiber.Map{
@@ -88,6 +90,7 @@ func ( s *Server ) DisneyMovie( c *fiber.Ctx ) ( error ) {
 	log.Debug( fmt.Sprintf( "DisneyMovie( %s )" , movie_id ) )
 	s.DisneyContinuousOpen()
 	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , movie_id )
+	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	name := "unknown"
