@@ -3,12 +3,9 @@ package server
 import (
 	fmt "fmt"
 	time "time"
-	// url "net/url"
-	// "math"
-	// "image/color"
-	"math/rand"
-	"strings"
-	"context"
+	// "math/rand"
+	// "strings"
+	// "context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -50,6 +47,32 @@ func ( s *Server ) YouTubeContinuousOpen() {
 	}
 }
 
+type YoutubeVideoInfo struct {
+	Items []struct {
+		ID string `json:"id"`
+	} `json:"items"`
+}
+func ( s *Server ) YouTubeIsVideoIdAvailable( video_id string ) ( result bool ) {
+	result = false
+	next_api_key := circular_set.Next( s.DB , "CONFIG.YOUTUBE.API_KEYS" )
+	base_url := "https://youtube.googleapis.com/youtube/v3/videos"
+	params := url.Values{}
+	params.Add( "part" , "id" )
+	params.Add( "id" , video_id )
+	params.Add( "key" , next_api_key )
+	full_url := fmt.Sprintf( "%s?%s" , base_url , params.Encode() )
+	req, _ := http.NewRequest( "GET" , full_url , nil )
+	req.Header.Add( "Accept" , "application/json" )
+	resp , _ := http.DefaultClient.Do( req )
+	defer resp.Body.Close()
+	var video_info YoutubeVideoInfo
+	body , _ := ioutil.ReadAll( resp.Body )
+	json.Unmarshal( body , &video_info )
+	if len( video_info.Items ) >= 1 {
+		result = true
+	}
+	return
+}
 
 
 // 1.) Get Channels channelID
@@ -113,6 +136,7 @@ type YoutubeResponse struct {
 }
 // https://developers.google.com/youtube/v3/docs/search/list
 func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []YoutubeVideo ) {
+	next_api_key := circular_set.Next( s.DB , "CONFIG.YOUTUBE.API_KEYS" )
 	base_url := "https://youtube.googleapis.com/youtube/v3/search"
 	params := url.Values{}
 	params.Add( "part" , "snippet" )
@@ -120,21 +144,21 @@ func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []
 	params.Add( "eventType" , "live" )
 	params.Add( "maxResults" , "50" )
 	params.Add( "type" , "video" )
-	params.Add( "key" , s.Config.YouTubeAPIKeyOne )
+	params.Add( "key" , next_api_key )
 	full_url := fmt.Sprintf( "%s?%s" , base_url , params.Encode() )
 	max_retries := 1
 	for i := 0; i < max_retries; i++ {
-		req, _ := http.NewRequest( "GET" , full_url , nil )
+		req , _ := http.NewRequest( "GET" , full_url , nil )
 		req.Header.Add( "Accept" , "application/json" )
-		resp, _ := http.DefaultClient.Do( req )
+		resp , _ := http.DefaultClient.Do( req )
 		defer resp.Body.Close()
-		body, _ := ioutil.ReadAll( resp.Body )
+		body , _ := ioutil.ReadAll( resp.Body )
 		var live_videos YoutubeResponse
 		json.Unmarshal( body, &live_videos )
 		if len( live_videos.Items ) >= 1 {
-			for _, item := range live_videos.Items {
+			for _ , item := range live_videos.Items {
 				video := YoutubeVideo{
-					Id:   item.Id.VideoId,
+					Id: item.Id.VideoId,
 					Name: item.Snippet.Title,
 				}
 				result = append( result , video )
@@ -142,6 +166,7 @@ func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []
 			return result
         } else {
             fmt.Println( "failed. Retrying..." )
+            next_api_key = circular_set.Next( s.DB , "CONFIG.YOUTUBE.API_KEYS" )
             // fmt.Println( string( body ) )
             time.Sleep( 2 * time.Second )
         }
@@ -153,26 +178,30 @@ func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []
 // Update DB With List of Currated Live Followers
 // fucking idiots with this god damn quota. bro
 func ( s *Server ) YouTubeLiveUpdate() ( result []string ) {
-	s.DB.Del( context.Background() , "STATE.YOUTUBE.LIVE.VIDEOS" )
-	for channel_id , _ := range s.Config.Library.YouTube.Following.Live {
-		fmt.Println( "\n" , channel_id , s.Config.Library.YouTube.Following.Live[ channel_id ].Name )
-		live_videos := s.YouTubeGetChannelsLiveVideos( channel_id )
-		for _ , video_item := range live_videos {
-			for _ , video_name := range s.Config.Library.YouTube.Following.Live[ channel_id ].Videos {
-				if strings.Contains( strings.ToLower( video_item.Name ) , video_name ) {
-					fmt.Println( "adding" , video_item.Id , video_item.Name )
-					result = append( result , video_item.Id )
-				}
-			}
-		}
-		time.Sleep( 1 * time.Second )
-	}
-	rand.Shuffle( len( result ) , func( i , j int ) {
-		result[ i ] , result[ j ] = result[ j ] , result[ i ]
-	})
-	for _ , video_id := range result {
-		circular_set.Add( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" , video_id )
-	}
+	// s.DB.Del( context.Background() , "STATE.YOUTUBE.LIVE.VIDEOS" )
+	// for channel_id , _ := range s.Config.Library.YouTube.Following.Live {
+	// 	fmt.Println( "\n" , channel_id , s.Config.Library.YouTube.Following.Live[ channel_id ].Name )
+	// 	live_videos := s.YouTubeGetChannelsLiveVideos( channel_id )
+	// 	for _ , video_item := range live_videos {
+	// 		for _ , video_name := range s.Config.Library.YouTube.Following.Live[ channel_id ].Videos {
+	// 			if strings.Contains( strings.ToLower( video_item.Name ) , video_name ) {
+	// 				fmt.Println( "adding" , video_item.Id , video_item.Name )
+	// 				result = append( result , video_item.Id )
+	// 			}
+	// 		}
+	// 	}
+	// 	time.Sleep( 1 * time.Second )
+	// }
+	// rand.Shuffle( len( result ) , func( i , j int ) {
+	// 	result[ i ] , result[ j ] = result[ j ] , result[ i ]
+	// })
+	// for _ , video_id := range result {
+	// 	circular_set.Add( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" , video_id )
+	// }
+	test := s.YouTubeIsVideoIdAvailable( "7npQNqYXEdk" )
+	fmt.Println( test )
+	test = s.YouTubeIsVideoIdAvailable( "asdf" )
+	fmt.Println( test )
 	return
 }
 
