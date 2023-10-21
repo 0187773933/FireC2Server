@@ -30,6 +30,6 @@ else
 	git commit -m "$NextCommitNumber"
 fi
 git remote add origin git@github.com:0187773933/FireC2Server.git
-git tag v1.0.1
+git tag v1.0.2
 git push origin --tags
 git push origin master
