@@ -23,6 +23,7 @@ else
    echo "Not an integer Resetting"
    NextCommitNumber=1
 fi
+git tag v1.0.0
 git add .
 if [ -n "$1" ]; then
 	git commit -m "$1"
@@ -30,5 +31,5 @@ else
 	git commit -m "$NextCommitNumber"
 fi
 git remote add origin git@github.com:0187773933/FireC2Server.git
-git tag v1.0.0
+
 git push origin master
