@@ -23,7 +23,7 @@ else
    echo "Not an integer Resetting"
    NextCommitNumber=1
 fi
-git tag v1.0.0
+git tag v1.0.1
 git add .
 if [ -n "$1" ]; then
 	git commit -m "$1"
