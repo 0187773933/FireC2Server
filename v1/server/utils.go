@@ -8,7 +8,8 @@ import (
 	// tv "github.com/0187773933/FireC2Server/v1/tv"
 	// types "github.com/0187773933/FireC2Server/v1/types"
 	redis "github.com/redis/go-redis/v9"
-	adb_wrapper "ADBWrapper/v1/wrapper"
+	// adb_wrapper "ADBWrapper/v1/wrapper"
+	adb_wrapper "github.com/0187773933/ADBWrapper/v1/wrapper"
 	fiber "github.com/gofiber/fiber/v2"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
@@ -109,6 +110,14 @@ func ( s *Server ) GetStatus() ( result Status ) {
 	result.TV = s.TV.Status()
 	s.Status = result
 	return
+}
+func ( s *Server ) GetStatusUrl( c *fiber.Ctx ) ( error ) {
+	status := s.GetStatus()
+	return c.JSON( fiber.Map{
+		"url": "/status" ,
+		"status": status ,
+		"result": true ,
+	})
 }
 
 func ( s *Server ) StoreLibrary() {
@@ -227,13 +236,4 @@ func ( s *Server ) GetJSON( key string , target interface{} ) {
 	json_value := s.Get( key )
 	json.Unmarshal( []byte( json_value ) , target )
 	return
-}
-
-func ( s *Server ) GetStatusUrl( c *fiber.Ctx ) ( error ) {
-	status := s.GetStatus()
-	return c.JSON( fiber.Map{
-		"url": "/status" ,
-		"status": status ,
-		"result": true ,
-	})
 }

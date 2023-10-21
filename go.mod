@@ -3,7 +3,6 @@ module github.com/0187773933/FireC2Server
 go 1.19
 
 require (
-	ADBWrapper v0.0.0-00010101000000-000000000000
 	github.com/0187773933/LGTVController v0.0.0-20230917160125-3fd2f2b61451
 	github.com/0187773933/RedisCircular v0.0.0-20231008202030-9b7b0dd451d0
 	github.com/0187773933/VizioController v0.0.0-20201223083155-9d69e0c9b933
@@ -36,5 +35,3 @@ require (
 	gocv.io/x/gocv v0.34.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 )
-
-replace ADBWrapper => /Users/morpheous/WORKSPACE/GO/ADBWrapper
