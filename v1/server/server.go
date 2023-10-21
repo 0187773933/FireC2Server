@@ -27,8 +27,9 @@ type Status struct {
 	PreviousStartTimeOBJ time.Time `json:"-"`
 	PreviousStartTimeDuration time.Duration `json:"-"`
 	PreviousStartTimeDurationSeconds float64 `json:"previous_start_time_duration_seconds"`
-	ADBTopWindow string `json:"adb_top_window"`
-	ADBVolume int `json:"adb_volume"`
+	// ADBTopWindow string `json:"adb_top_window"`
+	// ADBVolume int `json:"adb_volume"`
+	ADB adb_wrapper.Status `json:"adb"`
 	TV tv.Status `json:"tv"`
 }
 

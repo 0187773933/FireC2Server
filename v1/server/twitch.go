@@ -35,8 +35,8 @@ func ( s *Server ) TwitchContinuousOpen() {
 	s.Set( "active_player_name" , "twitch" )
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
-	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADBTopWindow ) )
-	if s.Status.ADBTopWindow != TWITCH_ACTIVITY {
+	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
+	if s.Status.ADB.Activity != TWITCH_ACTIVITY {
 		log.Debug( "twitch was NOT already open" )
 		s.TwitchReopenApp()
 		time.Sleep( 500 * time.Millisecond )

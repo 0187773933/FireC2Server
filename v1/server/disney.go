@@ -34,8 +34,8 @@ func ( s *Server ) DisneyContinuousOpen() {
 	s.Set( "active_player_name" , "disney" )
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
-	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADBTopWindow ) )
-	if s.Status.ADBTopWindow == DISNEY_PLAYING_ACTIVITY || s.Status.ADBTopWindow == DISNEY_ACTIVITY {
+	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
+	if s.Status.ADB.Activity == DISNEY_PLAYING_ACTIVITY || s.Status.ADB.Activity == DISNEY_ACTIVITY {
 		log.Debug( "disney was already open" )
 	} else {
 		log.Debug( "disney was NOT already open" )

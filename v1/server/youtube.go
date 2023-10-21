@@ -37,8 +37,8 @@ func ( s *Server ) YouTubeContinuousOpen() {
 	s.Set( "active_player_name" , "youtube" )
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
-	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADBTopWindow ) )
-	if s.Status.ADBTopWindow == YOUTUBE_ACTIVITY {
+	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
+	if s.Status.ADB.Activity == YOUTUBE_ACTIVITY {
 		log.Debug( "youtube was already open" )
 	} else {
 		log.Debug( "youtube was NOT already open" )

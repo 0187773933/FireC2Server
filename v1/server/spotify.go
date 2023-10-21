@@ -110,8 +110,8 @@ func ( s *Server ) SpotifyContinuousOpen() {
 	s.Set( "active_player_name" , "spotify" )
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
-	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADBTopWindow ) )
-	if s.Status.ADBTopWindow != SPOTIFY_ACTIVITY {
+	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
+	if s.Status.ADB.Activity != SPOTIFY_ACTIVITY {
 		log.Debug( "spotify was NOT already open" )
 		s.SpotifyReopenApp()
 		time.Sleep( 3 * time.Second )
@@ -133,7 +133,7 @@ func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	// was_on := s.ShuffleOn()
 	s.SpotifyShuffleOn()
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
-	s.ADB.SetVolume( s.Status.ADBVolume )
+	s.ADB.SetVolume( s.Status.ADB.Volume )
 
 	return c.JSON( fiber.Map{
 		"url": "/spotify/playlist-shuffle/:playlist_id" ,
@@ -153,7 +153,7 @@ func ( s *Server ) SpotifySong( c *fiber.Ctx ) ( error ) {
 	s.SpotifyContinuousOpen()
 	uri := fmt.Sprintf( "spotify:track:%s:play" , song_id )
 	s.ADB.OpenURI( uri )
-	s.ADB.SetVolume( s.Status.ADBVolume )
+	s.ADB.SetVolume( s.Status.ADB.Volume )
 
 	return c.JSON( fiber.Map{
 		"url": "/spotify/song/:song_id" ,
@@ -172,7 +172,7 @@ func ( s *Server ) SpotifyPlaylist( c *fiber.Ctx ) ( error ) {
 	s.SpotifyContinuousOpen()
 	uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
 	s.ADB.OpenURI( uri )
-	s.ADB.SetVolume( s.Status.ADBVolume )
+	s.ADB.SetVolume( s.Status.ADB.Volume )
 
 	return c.JSON( fiber.Map{
 		"url": "/spotify/playlist/:playlist_id" ,
@@ -203,7 +203,7 @@ func ( s *Server ) SpotifyNextPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	// was_on := s.ShuffleOn()
 	s.SpotifyShuffleOn()
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
-	s.ADB.SetVolume( s.Status.ADBVolume )
+	s.ADB.SetVolume( s.Status.ADB.Volume )
 
 	return c.JSON( fiber.Map{
 		"url": "/spotify/next/playlist-shuffle" ,

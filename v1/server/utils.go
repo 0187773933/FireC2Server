@@ -99,15 +99,12 @@ func ( s *Server ) GetStatus() ( result Status ) {
 		result.PreviousStartTimeDurationSeconds = previous_start_time_duration_seconds
 	}
 
-	// 2.) Get Current ADB Status Info
-	adb_windows := s.ADB.GetWindowStack()
-	if len( adb_windows ) > 0 {
-		result.ADBTopWindow = adb_windows[ 0 ].Activity
-	}
-	result.ADBVolume = s.ADB.GetVolume()
+	// 2.) Get Current ADB Status
+	result.ADB = s.ADB.GetStatus()
 
-	// 3.) TV Get Status
+	// 3.) Get TV Status
 	result.TV = s.TV.Status()
+
 	s.Status = result
 	return
 }
