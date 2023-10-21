@@ -1,5 +1,7 @@
 # Fire C2 Server
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/0187773933/FireC2Server.svg)](https://pkg.go.dev/github.com/0187773933/FireC2Server)
+
 ## Example
 
 - http://localhost:5954/spotify/playlist-shuffle/3UMDmO2YJb8DgUjpSBu8y9?k=asdf
@@ -25,9 +27,5 @@
 		- add just generic get status pre-call
 			- don't press anything , get 1 screenshot , detect multiple things
 				- now playing , which key index , shuffle status , media_controls open?
-- Disney+
-	- asdf
 - YouTube
-	- asdf
-- Twitch
-	- asdf
+	- adhoc playlist support

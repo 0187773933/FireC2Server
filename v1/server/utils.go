@@ -228,3 +228,12 @@ func ( s *Server ) GetJSON( key string , target interface{} ) {
 	json.Unmarshal( []byte( json_value ) , target )
 	return
 }
+
+func ( s *Server ) GetStatusUrl( c *fiber.Ctx ) ( error ) {
+	status := s.GetStatus()
+	return c.JSON( fiber.Map{
+		"url": "/status" ,
+		"status": status ,
+		"result": true ,
+	})
+}

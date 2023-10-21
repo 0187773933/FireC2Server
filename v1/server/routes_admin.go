@@ -14,6 +14,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	s.FiberApp.Get( "stop" , s.Stop )
 	s.FiberApp.Get( "next" , s.Next )
 	s.FiberApp.Get( "previous" , s.Previous )
+	s.FiberApp.Get( "status" , s.GetStatusUrl )
 
 	// Spotify
 	spotify := s.FiberApp.Group( "/spotify" )
@@ -42,7 +43,6 @@ func ( s *Server ) SetupAdminRoutes() {
 	disney.Get( "/next" , s.DisneyMovieNext )
 	disney.Get( "/previous" , s.DisneyMoviePrevious )
 	disney.Get( "/movie/:movie_id" , s.DisneyMovie )
-
 
 	// YouTube
 	youtube := s.FiberApp.Group( "/youtube" )
