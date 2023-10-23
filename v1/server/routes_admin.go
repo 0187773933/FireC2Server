@@ -8,6 +8,23 @@ import (
 
 func ( s *Server ) SetupAdminRoutes() {
 
+	// 2 x 3 StreamDeck-1
+	// streamdeck := s.FiberApp.Group( "/streamdeck/" )
+
+	// TV
+	tv := s.FiberApp.Group( "/tv" )
+	tv.Use( validate_admin_mw )
+	tv.Get( "/prepare" , s.TVPrepare )
+	tv.Get( "/power/on" , s.TVPowerOn )
+	tv.Get( "/power/off" , s.TVPowerOff )
+	tv.Get( "/power/status" , s.TVPowerStatus )
+	tv.Get( "/input" , s.TVGetInput )
+	tv.Get( "/input/:input" , s.TVSetInput )
+	tv.Get( "/mute/on" , s.TVMuteOn )
+	tv.Get( "/mute/off" , s.TVMuteOff )
+	tv.Get( "/volume" , s.TVGetVolume )
+	tv.Get( "/volume/:volume" , s.TVSetVolume )
+
 	// Generic ADB
 	s.FiberApp.Get( "play" , s.Play )
 	s.FiberApp.Get( "pause" , s.Pause )
