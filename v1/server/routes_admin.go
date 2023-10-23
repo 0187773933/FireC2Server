@@ -9,7 +9,14 @@ import (
 func ( s *Server ) SetupAdminRoutes() {
 
 	// 2 x 3 StreamDeck-1
-	// streamdeck := s.FiberApp.Group( "/streamdeck/" )
+	streamdeck := s.FiberApp.Group( "/streamdeck" )
+	streamdeck.Use( validate_admin_mw )
+	streamdeck.Get( "spotify" , s.StreamDeckSpotify )
+	streamdeck.Get( "youtube" , s.StreamDeckYouTube )
+	streamdeck.Get( "disney" , s.StreamDeckDisney )
+	streamdeck.Get( "twitch" , s.StreamDeckTwitch )
+	streamdeck.Get( "escape-rope" , s.StreamDeckEscapeRope )
+	streamdeck.Get( "heart" , s.StreamDeckHeart )
 
 	// TV
 	tv := s.FiberApp.Group( "/tv" )

@@ -9,6 +9,7 @@ import (
 	tg_tv_types "github.com/0187773933/LGTVController/v1/types"
 	vizio_tv "github.com/0187773933/VizioController/controller"
 	hdmi_cec "github.com/0187773933/HDMICEC/v1/controller"
+	try "github.com/manucorporat/try"
 )
 
 var log = logger.GetLogger()
@@ -82,7 +83,11 @@ func ( tv *TV ) Prepare() {
 			case "vizio":
 				tv.PowerOn()
 			case "HDMICEC":
-				tv.HDMICEC.SelectHDMI1()
+				try.This( func() {
+					tv.HDMICEC.SelectHDMI1()
+				}).Catch(func(e try.E) {
+					log.Debug( "failed to send hdmi cec command to force hdmi-1 awake" )
+				})
 				break;
 		}
 	}
