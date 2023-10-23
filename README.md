@@ -29,3 +29,6 @@
 				- now playing , which key index , shuffle status , media_controls open?
 - YouTube
 	- adhoc playlist support
+- Disney
+	- detect spining circle , stall-out
+	- force app reload with same uuid
