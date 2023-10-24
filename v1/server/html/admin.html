@@ -7,6 +7,7 @@
 		<link href="/cdn/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
 		<script src="/cdn/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
 		<script src="/cdn/jquery.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.min.css">
 		<style type="text/css">
 			.btn-purple,
 			.btn-purple:hover,
@@ -16,31 +17,92 @@
 				background-color: #8064A2;
 				border-color: #8064A2;
 			}
+			.container {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			.row {
+/*			  padding: 5em;*/
+			  text-align: center;
+			}
 		</style>
 	</head>
 	<body>
 		<div class="container">
 			<div class="row">
 				<div class="col-sm-12">
-					<h1>Admin</h1>
+					<br>
+					<h1>Media Buttons</h1>
+					<br>
+					<div class="row">
+						<div class="col-sm-4">
+							<a class="btn btn-success btn-lg" href="/play"><i class="bi bi-play-circle-fill"></i> Play</a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-warning btn-lg" href="/pause"><i class="bi bi-pause-circle-fill"></i> Pause</a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-danger btn-lg" href="/stop"><i class="bi bi-stop-circle-fill"></i> Stop</a>
+						</div>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-sm-2"></div>
+						<div class="col-sm-4">
+							<a class="btn btn-secondary btn-lg" href="/previous">Previous <i class="bi bi-arrow-left-circle-fill"></i></a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-secondary btn-lg" href="/next"><i class="bi bi-arrow-right-circle-fill"></i> Next</a>
+						</div>
+						<div class="col-sm-2"></div>
+					</div>
+					<br>
 					<br>
 					<h1>Virtual Stream Deck Buttons</h1>
 					<br>
-					<table>
-						<tr>
-							<td><a class="btn btn-danger btn-lg" href="/spotify/next/playlist-shuffle">YouTube</a></td>
-							<td>&nbsp;&nbsp;&nbsp;<a class="btn btn-purple btn-lg" href="/twitch/live/next">Twitch</a></td>
-							<td>&nbsp;&nbsp;&nbsp;<a class="btn btn-success btn-lg" href="/spotify/next/playlist-shuffle">Spotify</a>
-							</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td></td>
-							<td></td>
-						</tr>
-					</table>
+					<div class="row">
+						<div class="col-sm-4">
+							<a class="btn btn-danger btn-lg" href="/streamdeck/youtube">YouTube</a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-purple btn-lg" href="/streamdeck/twitch">Twitch</a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-success btn-lg" href="/streamdeck/spotify">Spotify</a>
+						</div>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-sm-4">
+							<a class="btn btn-primary btn-lg" href="/streamdeck/disney">Disney</a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-danger btn-lg" href="/streamdeck/escape-rope">Escape Rope</a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-success btn-lg" href="/streamdeck/heart">Heart</a>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
+		<script type="text/javascript">
+			function hook_buttons() {
+				document.querySelectorAll( ".btn" ).forEach( function( button ) {
+					button.addEventListener( 'click' , async function( event ) {
+						event.preventDefault();
+						const endpoint = $( this ).attr( "href" );
+        				const response = await fetch( endpoint );
+        				const data = await response.json();
+        				console.log( data );
+					});
+				});
+			}
+			function init() {
+				hook_buttons()
+			}
+			document.addEventListener( "DOMContentLoaded" , init );
+		</script>
 	</body>
 </html>

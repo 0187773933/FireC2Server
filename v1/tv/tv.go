@@ -84,6 +84,11 @@ func ( tv *TV ) Prepare() {
 				tv.PowerOn()
 			case "HDMICEC":
 				try.This( func() {
+					tv.HDMICEC.PowerOn()
+				}).Catch(func(e try.E) {
+					log.Debug( "failed to send hdmi cec power-on command" )
+				})
+				try.This( func() {
 					tv.HDMICEC.SelectHDMI1()
 				}).Catch(func(e try.E) {
 					log.Debug( "failed to send hdmi cec command to force hdmi-1 awake" )

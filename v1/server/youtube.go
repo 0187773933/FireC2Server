@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"context"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
 	// redis "github.com/redis/go-redis/v9"
@@ -51,6 +52,12 @@ func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubeLiveNext()" )
 	s.YouTubeContinuousOpen()
 	video_id := circular_set.Next( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" )
+	available := s.YouTubeIsVideoIdAvailable( video_id )
+	if available == false {
+		fmt.Println( "Deleting ," , video_id )
+		s.DB.ZRem( context.Background() , "STATE.YOUTUBE.LIVE.VIDEOS" , video_id )
+		return s.YouTubeLiveNext( c )
+	}
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
@@ -66,6 +73,12 @@ func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubeLivePrevious()" )
 	s.YouTubeContinuousOpen()
 	video_id := circular_set.Previous( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" )
+	available := s.YouTubeIsVideoIdAvailable( video_id )
+	if available == false {
+		fmt.Println( "Deleting ," , video_id )
+		s.DB.ZRem( context.Background() , "STATE.YOUTUBE.LIVE.VIDEOS" , video_id )
+		return s.YouTubeLivePrevious( c )
+	}
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
@@ -113,8 +126,15 @@ func ( s *Server ) YouTubeIsVideoIdAvailable( video_id string ) ( result bool ) 
 	req.Header.Add( "Accept" , "application/json" )
 	resp , _ := http.DefaultClient.Do( req )
 	defer resp.Body.Close()
+
+	if resp.StatusCode == 403 {
+		fmt.Println( "api key banned ???" , next_api_key )
+		return s.YouTubeIsVideoIdAvailable( video_id )
+	}
+
 	var video_info YoutubeVideoInfo
 	body , _ := ioutil.ReadAll( resp.Body )
+	fmt.Println( string( body ) )
 	json.Unmarshal( body , &video_info )
 	if len( video_info.Items ) >= 1 {
 		result = true
@@ -200,6 +220,12 @@ func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []
 		req.Header.Add( "Accept" , "application/json" )
 		resp , _ := http.DefaultClient.Do( req )
 		defer resp.Body.Close()
+
+		if resp.StatusCode == 403 {
+			fmt.Println( "api key banned ???" , next_api_key )
+			return s.YouTubeGetChannelsLiveVideos( channel_id )
+		}
+
 		body , _ := ioutil.ReadAll( resp.Body )
 		var live_videos YoutubeResponse
 		json.Unmarshal( body, &live_videos )
