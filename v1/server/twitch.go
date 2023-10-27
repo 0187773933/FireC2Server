@@ -82,7 +82,8 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
-
+	s.Set( "active_player_now_playing_id" , next_stream )
+	s.Set( "active_player_now_playing_text" , "" )
 	// Force Highest Quality
 	// The Problem is buffering could delay when this menu appears
 	// you have to wait on button screen
@@ -137,7 +138,8 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
-
+	s.Set( "active_player_now_playing_id" , next_stream )
+	s.Set( "active_player_now_playing_text" , "" )
 	// Force Highest Quality
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )

@@ -136,7 +136,8 @@ func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	s.SpotifyShuffleOn()
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
 	s.ADB.SetVolume( s.Status.ADB.Volume )
-
+	s.Set( "active_player_now_playing_id" , playlist_id )
+	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "playlist === %s" , s.Config.Library.Spotify.Playlists[ playlist_id ].Name ) )
 	return c.JSON( fiber.Map{
 		"url": "/spotify/playlist-shuffle/:playlist_id" ,
 		"playlist_id": playlist_id ,
@@ -156,7 +157,8 @@ func ( s *Server ) SpotifySong( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "spotify:track:%s:play" , song_id )
 	s.ADB.OpenURI( uri )
 	s.ADB.SetVolume( s.Status.ADB.Volume )
-
+	s.Set( "active_player_now_playing_id" , song_id )
+	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "song id === %s" , song_id ) )
 	return c.JSON( fiber.Map{
 		"url": "/spotify/song/:song_id" ,
 		"song_id": song_id ,
@@ -175,7 +177,7 @@ func ( s *Server ) SpotifyPlaylist( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
 	s.ADB.OpenURI( uri )
 	s.ADB.SetVolume( s.Status.ADB.Volume )
-
+	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "playlist === %s" , s.Config.Library.Spotify.Playlists[ playlist_id ].Name ) )
 	return c.JSON( fiber.Map{
 		"url": "/spotify/playlist/:playlist_id" ,
 		"playlist_id": playlist_id ,
@@ -206,7 +208,8 @@ func ( s *Server ) SpotifyNextPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	s.SpotifyShuffleOn()
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
 	s.ADB.SetVolume( s.Status.ADB.Volume )
-
+	s.Set( "active_player_now_playing_id" , playlist_id )
+	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "playlist === %s" , s.Config.Library.Spotify.Playlists[ playlist_id ].Name ) )
 	return c.JSON( fiber.Map{
 		"url": "/spotify/next/playlist-shuffle" ,
 		"playlist_id": playlist_id ,

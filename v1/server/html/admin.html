@@ -134,6 +134,7 @@
 						const response = await fetch( endpoint );
 						const data = await response.json();
 						console.log( data );
+						setTimeout( update_status , 2000 );
 					});
 				});
 			}
@@ -144,18 +145,18 @@
 				console.log( data );
 				const statusDiv = document.getElementById( "status" );
 				statusDiv.innerHTML = `
-					<p>Start Time: ${data.status.start_time}</p>
-					<p>Previous Player Name: ${data.status.previous_player_name}</p>
-					<p>Previous Player Command: ${data.status.previous_player_command}</p>
-					<p>Previous Start Time: ${data.status.previous_start_time}</p>
-					<p>Previous Start Time Duration (seconds): ${data.status.previous_start_time_duration_seconds.toFixed(2)}</p>
-					<p>ADB Display On: ${data.status.adb.display_on}</p>
-					<p>ADB Volume: ${data.status.adb.volume}</p>
-					<p>ADB Package: ${data.status.adb.package}</p>
-					<p>ADB Activity: ${data.status.adb.activity}</p>
+					<p>Current Player Name: ${data.status.player_name}</p>
+					<p>ID: ${data.status.now_playing_id}</p>
+					<p>Text: ${data.status.now_playing_text}</p>
+					<p>Description: ${data.status.adb.media_session.description}</p>
 					<p>Type: ${data.status.adb.media_session.type}</p>
 					<p>State: ${data.status.adb.media_session.state}</p>
-					<p>Description: ${data.status.adb.media_session.description}</p>
+					<p>Start Time: ${data.status.previous_start_time}</p>
+					<p>Time since Launched (seconds): ${data.status.previous_start_time_duration_seconds.toFixed(2)}</p>
+					<p>ADB Activity: ${data.status.adb.activity}</p>
+					<p>ADB Package: ${data.status.adb.package}</p>
+					<p>ADB Display On: ${data.status.adb.display_on}</p>
+					<p>ADB Volume: ${data.status.adb.volume}</p>
 					<p>TV Volume: ${data.status.tv.volume}</p>
 					<p>TV Input: ${data.status.tv.input}</p>
 					<p>TV Power: ${data.status.tv.power}</p>

@@ -61,6 +61,9 @@ func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
+	// s.Set( "STATE.YOUTUBE.NOW_PLAYING" , video_id )
+	s.Set( "active_player_now_playing_id" , video_id )
+	s.Set( "active_player_now_playing_text" , "" )
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	return c.JSON( fiber.Map{
 		"url": "/youtube/live/next" ,
@@ -82,6 +85,8 @@ func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
+	s.Set( "active_player_now_playing_id" , video_id )
+	s.Set( "active_player_now_playing_text" , "" )
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	return c.JSON( fiber.Map{
 		"url": "/youtube/live/previous" ,
@@ -97,6 +102,8 @@ func ( s *Server ) YouTubeVideo( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
+	s.Set( "active_player_now_playing_id" , video_id )
+	s.Set( "active_player_now_playing_text" , "" )
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	return c.JSON( fiber.Map{
 		"url": "/youtube/:video_id" ,

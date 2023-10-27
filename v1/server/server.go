@@ -21,6 +21,10 @@ var log = logger.GetLogger()
 type Status struct {
 	StartTime string `json:"start_time"`
 	StartTimeOBJ time.Time `json:"-"`
+	PlayerName string `json:"player_name"`
+	PlayerCommand string `json:"player_command"`
+	NowPlayingID string `json:"now_playing_id"`
+	NowPlayingText string `json:"now_playing_text"`
 	PreviousPlayerName string `json:"previous_player_name"`
 	PreviousPlayerCommand string `json:"previous_player_command"`
 	PreviousStartTime string `json:"previous_start_time"`

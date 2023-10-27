@@ -84,6 +84,15 @@ func ( s *Server ) GetStatus() ( result Status ) {
 	previous_player_command := s.Get( "active_player_command" )
 	previous_start_time := s.Get( "active_player_start_time" )
 
+	active_player_now_playing_id := s.Get( "active_player_now_playing_id" )
+	active_player_now_playing_text := s.Get( "active_player_now_playing_text" )
+
+	result.NowPlayingID = active_player_now_playing_id
+	result.NowPlayingText = active_player_now_playing_text
+
+	result.PlayerName = previous_player_name
+	result.PlayerCommand = previous_player_command
+
 	result.StartTime = start_time
 	result.StartTimeOBJ = start_time_obj
 	result.PreviousPlayerName = previous_player_name

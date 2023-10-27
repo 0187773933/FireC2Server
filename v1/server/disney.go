@@ -64,6 +64,8 @@ func ( s *Server ) DisneyMovieNext( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
+	s.Set( "active_player_now_playing_id" , next_movie )
+	s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
 	return c.JSON( fiber.Map{
 		"url": "/disney/next" ,
 		"uuid": next_movie ,
@@ -81,6 +83,8 @@ func ( s *Server ) DisneyMoviePrevious( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
+	s.Set( "active_player_now_playing_id" , next_movie )
+	s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
 	return c.JSON( fiber.Map{
 		"url": "/disney/previous" ,
 		"uuid": next_movie ,
@@ -102,6 +106,8 @@ func ( s *Server ) DisneyMovie( c *fiber.Ctx ) ( error ) {
 		name = movie.Name
 	}
 	s.Set( "STATE.DISNEY.NOW_PLAYING" , movie_id )
+	s.Set( "active_player_now_playing_id" , movie_id )
+	s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ movie_id ].Name )
 	return c.JSON( fiber.Map{
 		"url": "/disney/previous" ,
 		"uuid": movie_id ,
