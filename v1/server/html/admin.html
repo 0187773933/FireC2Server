@@ -26,6 +26,10 @@
 /*			  padding: 5em;*/
 			  text-align: center;
 			}
+			[class^="col-"]  {
+				padding-left: 0px !important;
+				padding-right: 0px !important;
+			}
 		</style>
 	</head>
 	<body>
@@ -36,13 +40,16 @@
 					<h1>Media Buttons</h1>
 					<br>
 					<div class="row">
-						<div class="col-sm-4">
+						<div class="col-sm-3">
 							<a class="btn btn-success btn-lg" href="/play"><i class="bi bi-play-circle-fill"></i> Play</a>
 						</div>
-						<div class="col-sm-4">
+						<div class="col-sm-3">
 							<a class="btn btn-warning btn-lg" href="/pause"><i class="bi bi-pause-circle-fill"></i> Pause</a>
 						</div>
-						<div class="col-sm-4">
+						<div class="col-sm-3">
+							<a class="btn btn-info btn-lg" href="/resume"><i class="bi bi-pause-circle-fill"></i> Resume</a>
+						</div>
+						<div class="col-sm-3">
 							<a class="btn btn-danger btn-lg" href="/stop"><i class="bi bi-stop-circle-fill"></i> Stop</a>
 						</div>
 					</div>
@@ -104,7 +111,7 @@
 							<a class="btn btn-primary btn-lg" href="/streamdeck/disney">Disney</a>
 						</div>
 						<div class="col-sm-4">
-							<a class="btn btn-danger btn-lg" href="/streamdeck/escape-rope">Escape Rope</a>
+							<a class="btn btn-info btn-lg" href="/streamdeck/escape-rope">Escape Rope</a>
 						</div>
 						<div class="col-sm-4">
 							<a class="btn btn-success btn-lg" href="/streamdeck/heart">Heart</a>
@@ -160,7 +167,8 @@
 			function init() {
 				update();
 				hook_buttons()
-				setInterval( update , 5000 );
+				// setInterval( update , 5000 );
+				setInterval( update , 10000 );
 			}
 			document.addEventListener( "DOMContentLoaded" , init );
 		</script>

@@ -90,12 +90,93 @@ func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
 }
 
 // functional pause-play-resume
+// func ( s *Server ) Pause( c *fiber.Ctx ) ( error ) {
+// 	log.Debug( "Pause()" )
+// 	info := s.generic_get_current_info()
+// 	switch info.PlayerName {
+// 		case "youtube":
+// 			switch info.PlayerState {
+// 				case "playing":
+// 					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+// 					break;
+// 				case "stopped":
+// 					log.Debug( "youtube already stopped , not pausing" )
+// 					break;
+// 				case "paused":
+// 					log.Debug( "youtube already paused , resuming" )
+// 					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+// 					break;
+// 			}
+// 			break;
+// 		case "twitch":
+// 			switch info.PlayerState {
+// 				case "playing":
+// 					s.ADB.PressKeyName( "KEYCODE_BACK" )
+// 					break;
+// 				case "stopped":
+// 					log.Debug( "twitch already paused , resuming" )
+// 					last_played := s.Get( "STATE.TWITCH.LIVE.NOW_PLAYING" )
+// 					fmt.Println( "last opened stream ===" , last_played )
+// 					uri := fmt.Sprintf( "twitch://stream/%s" , last_played )
+// 					s.ADB.OpenURI( uri )
+// 					s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+// 					break;
+// 			}
+// 			break;
+// 		case "disney":
+// 			switch info.PlayerState {
+// 				case "playing":
+// 					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+// 					break;
+// 				case "stopped":
+// 					log.Debug( "disney already stopped , not pausing" )
+// 					break;
+// 				case "paused":
+// 					log.Debug( "disney already paused , resuming" )
+// 					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+// 					break;
+// 			}
+// 			break;
+// 		case "spotify":
+// 			switch info.PlayerState {
+// 				case "playing":
+// 					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+// 					break;
+// 				case "stopped":
+// 					log.Debug( "spotify already stopped , not pausing" )
+// 					break;
+// 				case "paused":
+// 					log.Debug( "spotify already paused , resuming" )
+// 					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+// 					break;
+// 			}
+// 			break;
+// 		case "vlc":
+// 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+// 			break;
+// 	}
+// 	return c.JSON( fiber.Map{
+// 		"url": "/pause" ,
+// 		"result": true ,
+// 	})
+// }
+
 func ( s *Server ) Pause( c *fiber.Ctx ) ( error ) {
 	log.Debug( "Pause()" )
 	info := s.generic_get_current_info()
 	switch info.PlayerName {
 		case "youtube":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+			switch info.PlayerState {
+				case "playing":
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+					break;
+				case "stopped":
+					log.Debug( "youtube already stopped , not pausing" )
+					break;
+				case "paused":
+					log.Debug( "youtube already paused" )
+					break;
+			}
 			break;
 		case "twitch":
 			switch info.PlayerState {
@@ -103,20 +184,109 @@ func ( s *Server ) Pause( c *fiber.Ctx ) ( error ) {
 					s.ADB.PressKeyName( "KEYCODE_BACK" )
 					break;
 				case "stopped":
-					// assume resuming
-					last_played := s.Get( "STATE.TWITCH.LIVE.NOW_PLAYING" )
-					fmt.Println( "last opened stream ===" , last_played )
-					uri := fmt.Sprintf( "twitch://stream/%s" , last_played )
-					s.ADB.OpenURI( uri )
-					s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+					log.Debug( "twitch already paused" )
 					break;
 			}
 			break;
 		case "disney":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+			switch info.PlayerState {
+				case "playing":
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+					break;
+				case "stopped":
+					log.Debug( "disney already stopped , not pausing" )
+					break;
+				case "paused":
+					log.Debug( "disney already paused" )
+					break;
+			}
 			break;
 		case "spotify":
+			switch info.PlayerState {
+				case "playing":
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+					break;
+				case "stopped":
+					log.Debug( "spotify already stopped , not pausing" )
+					break;
+				case "paused":
+					log.Debug( "spotify already paused" )
+					break;
+			}
+			break;
+		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+			break;
+	}
+	return c.JSON( fiber.Map{
+		"url": "/pause" ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) Resume( c *fiber.Ctx ) ( error ) {
+	log.Debug( "Resume()" )
+	info := s.generic_get_current_info()
+	switch info.PlayerName {
+		case "youtube":
+			switch info.PlayerState {
+				case "playing":
+					log.Debug( "youtube already playing" )
+					break;
+				case "stopped":
+					log.Debug( "youtube stopped , not resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+				case "paused":
+					log.Debug( "youtube paused , resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+			}
+			break;
+		case "twitch":
+			switch info.PlayerState {
+				case "playing":
+					log.Debug( "twitch already playing" )
+					break;
+				case "stopped":
+					log.Debug( "twitch stopped , not resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+				case "paused":
+					log.Debug( "twitch paused , resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+			}
+			break;
+		case "disney":
+			switch info.PlayerState {
+				case "playing":
+					log.Debug( "disney already playing" )
+					break;
+				case "stopped":
+					log.Debug( "disney stopped , not resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+				case "paused":
+					log.Debug( "disney paused , resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+			}
+			break;
+		case "spotify":
+			switch info.PlayerState {
+				case "playing":
+					log.Debug( "spotify already playing" )
+					break;
+				case "stopped":
+					log.Debug( "spotify stopped , not resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+				case "paused":
+					log.Debug( "spotify paused , resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+			}
 			break;
 		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
@@ -166,13 +336,13 @@ func ( s *Server ) Next( c *fiber.Ctx ) ( error ) {
 	info := s.generic_get_current_info()
 	switch info.PlayerName {
 		case "youtube":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
+			return s.YouTubeLiveNext( c )
 			break;
 		case "twitch":
 			return s.TwitchLiveNext( c )
 			break;
 		case "disney":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
+			return s.DisneyMovieNext( c )
 			break;
 		case "spotify":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
@@ -193,13 +363,13 @@ func ( s *Server ) Previous( c *fiber.Ctx ) ( error ) {
 	info := s.generic_get_current_info()
 	switch info.PlayerName {
 		case "youtube":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
+			return s.YouTubeLivePrevious( c )
 			break;
 		case "twitch":
 			return s.TwitchLivePrevious( c )
 			break;
 		case "disney":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
+			return s.DisneyMoviePrevious( c )
 			break;
 		case "spotify":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )

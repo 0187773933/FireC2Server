@@ -45,6 +45,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	// Responsive Media Buttons
 	s.FiberApp.Get( "play" , s.Play )
 	s.FiberApp.Get( "pause" , s.Pause )
+	s.FiberApp.Get( "resume" , s.Resume )
 	s.FiberApp.Get( "stop" , s.Stop )
 	s.FiberApp.Get( "next" , s.Next )
 	s.FiberApp.Get( "previous" , s.Previous )
