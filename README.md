@@ -29,6 +29,9 @@
 				- now playing , which key index , shuffle status , media_controls open?
 - YouTube
 	- adhoc playlist support
+	- fix s.YouTubeIsVideoIdAvailable( video_id )
+		- stream could just be ended , but video_id still valid
+			- delete these too
 - Disney
 	- detect spining circle , stall-out
 	- force app reload with same uuid
@@ -36,4 +39,4 @@
 	- take screenshots of stream ui
 	- have to detect where we are in the quality selection menu
 	- "weird" quality selection menu trap
-- Clone Media Buttons , and Just make Responsive to Current App for webui and just native functions
+- start storing better state details to improve status
