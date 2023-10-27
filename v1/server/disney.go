@@ -42,6 +42,8 @@ func ( s *Server ) DisneyContinuousOpen() {
 		s.DisneyReopenApp()
 		time.Sleep( 500 * time.Millisecond )
 		s.ADB.WaitOnScreen( "./screenshots/disney/profile_selection.png" , ( 20 * time.Second ) )
+		time.Sleep( 500 * time.Millisecond )
+		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
@@ -61,6 +63,7 @@ func ( s *Server ) DisneyMovieNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
 	return c.JSON( fiber.Map{
 		"url": "/disney/next" ,
 		"uuid": next_movie ,
@@ -77,6 +80,7 @@ func ( s *Server ) DisneyMoviePrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
 	return c.JSON( fiber.Map{
 		"url": "/disney/previous" ,
 		"uuid": next_movie ,
@@ -97,6 +101,7 @@ func ( s *Server ) DisneyMovie( c *fiber.Ctx ) ( error ) {
 	if movie , ok := s.Config.Library.Disney.Movies.Currated[ movie_id ]; ok {
 		name = movie.Name
 	}
+	s.Set( "STATE.DISNEY.NOW_PLAYING" , movie_id )
 	return c.JSON( fiber.Map{
 		"url": "/disney/previous" ,
 		"uuid": movie_id ,

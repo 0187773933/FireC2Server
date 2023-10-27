@@ -33,7 +33,7 @@ func ( s *Server ) generic_get_current_info() ( result GenericInfo ) {
 	result.PlayerName = get_app_name( adb_status.Activity )
 	result.Package = adb_status.MediaSession.Package
 	result.PlayerState = adb_status.MediaSession.State
-	// fmt.Println( result )
+	fmt.Println( result )
 	return
 }
 
@@ -51,7 +51,6 @@ func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
 					log.Debug( "already playing" )
 					break;
 				case "stopped":
-					// assume resuming
 					last_played := s.Get( "STATE.TWITCH.LIVE.NOW_PLAYING" )
 					fmt.Println( "last opened stream ===" , last_played )
 					uri := fmt.Sprintf( "twitch://stream/%s" , last_played )
@@ -61,7 +60,21 @@ func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
 			}
 			break;
 		case "disney":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+			switch info.PlayerState {
+				case "playing":
+					log.Debug( "already playing" )
+					break;
+				case "paused":
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+				default:
+					last_played := s.Get( "STATE.DISNEY.NOW_PLAYING" )
+					uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , last_played )
+					log.Debug( uri )
+					s.ADB.OpenURI( uri )
+					s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+					break;
+			}
 			break;
 		case "spotify":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
