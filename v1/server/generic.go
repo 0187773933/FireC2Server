@@ -249,8 +249,12 @@ func ( s *Server ) Resume( c *fiber.Ctx ) ( error ) {
 					log.Debug( "twitch already playing" )
 					break;
 				case "stopped":
-					log.Debug( "twitch stopped , not resuming" )
-					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					log.Debug( "twitch was stopped , resuming" )
+					last_played := s.Get( "STATE.TWITCH.LIVE.NOW_PLAYING" )
+					fmt.Println( "last opened stream ===" , last_played )
+					uri := fmt.Sprintf( "twitch://stream/%s" , last_played )
+					s.ADB.OpenURI( uri )
+					s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 					break;
 				case "paused":
 					log.Debug( "twitch paused , resuming" )
