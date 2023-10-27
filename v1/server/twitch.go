@@ -81,6 +81,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
 
 	// Force Highest Quality
 	// The Problem is buffering could delay when this menu appears
@@ -135,6 +136,7 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
 
 	// Force Highest Quality
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )

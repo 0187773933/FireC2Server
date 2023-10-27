@@ -59,6 +59,32 @@
 					</div>
 					<br>
 					<br>
+					<h1>ADB Media Buttons</h1>
+					<br>
+					<div class="row">
+						<div class="col-sm-4">
+							<a class="btn btn-success btn-lg" href="/adb/play"><i class="bi bi-play-circle-fill"></i> Play</a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-warning btn-lg" href="/adb/pause"><i class="bi bi-pause-circle-fill"></i> Pause</a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-danger btn-lg" href="/adb/stop"><i class="bi bi-stop-circle-fill"></i> Stop</a>
+						</div>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-sm-2"></div>
+						<div class="col-sm-4">
+							<a class="btn btn-secondary btn-lg" href="/adb/previous">Previous <i class="bi bi-arrow-left-circle-fill"></i></a>
+						</div>
+						<div class="col-sm-4">
+							<a class="btn btn-secondary btn-lg" href="/adb/next"><i class="bi bi-arrow-right-circle-fill"></i> Next</a>
+						</div>
+						<div class="col-sm-2"></div>
+					</div>
+					<br>
+					<br>
 					<h1>Virtual Stream Deck Buttons</h1>
 					<br>
 					<div class="row">
@@ -119,8 +145,9 @@
 					<p>ADB Display On: ${data.status.adb.display_on}</p>
 					<p>ADB Volume: ${data.status.adb.volume}</p>
 					<p>ADB Activity: ${data.status.adb.activity}</p>
-					<p>Media Session Type: ${data.status.adb.media_session.type}</p>
-					<p>Media Session State: ${data.status.adb.media_session.state}</p>
+					<p>Type: ${data.status.adb.media_session.type}</p>
+					<p>State: ${data.status.adb.media_session.state}</p>
+					<p>Description: ${data.status.adb.media_session.description}</p>
 					<p>TV Volume: ${data.status.tv.volume}</p>
 					<p>TV Input: ${data.status.tv.input}</p>
 					<p>TV Power: ${data.status.tv.power}</p>

@@ -4,67 +4,47 @@ import (
 	fiber "github.com/gofiber/fiber/v2"
 )
 
-func ( s *Server ) ADBPlay() {
+func ( s *Server ) ADBPlay( c *fiber.Ctx ) ( error ) {
 	log.Debug( "ADBPlay()" )
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
-}
-func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
-	log.Debug( "Play()" )
-	s.ADBPlay()
 	return c.JSON( fiber.Map{
-		"url": "/play" ,
+		"url": "/adb/play" ,
 		"result": true ,
 	})
 }
 
-func ( s *Server ) ADBPause() {
+func ( s *Server ) ADBPause( c *fiber.Ctx ) ( error ) {
 	log.Debug( "ADBPause()" )
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
-}
-func ( s *Server ) Pause( c *fiber.Ctx ) ( error ) {
-	log.Debug( "Pause()" )
-	s.ADBPause()
 	return c.JSON( fiber.Map{
-		"url": "/pause" ,
+		"url": "/adb/pause" ,
 		"result": true ,
 	})
 }
 
-func ( s *Server ) ADBStop() {
+func ( s *Server ) ADBStop( c *fiber.Ctx ) ( error ) {
 	log.Debug( "ADBStop()" )
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
-}
-func ( s *Server ) Stop( c *fiber.Ctx ) ( error ) {
-	log.Debug( "Stop()" )
-	s.ADBStop()
 	return c.JSON( fiber.Map{
-		"url": "/stop" ,
+		"url": "/adb/stop" ,
 		"result": true ,
 	})
 }
 
-func ( s *Server ) ADBNext() {
+func ( s *Server ) ADBNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "ADBNext()" )
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
-}
-func ( s *Server ) Next( c *fiber.Ctx ) ( error ) {
-	log.Debug( "Next()" )
-	s.ADBNext()
 	return c.JSON( fiber.Map{
-		"url": "/next" ,
+		"url": "/adb/next" ,
 		"result": true ,
 	})
 }
 
-func ( s *Server ) ADBPrevious() {
+func ( s *Server ) ADBPrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( "ADBPrevious()" )
 	s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
-}
-func ( s *Server ) Previous( c *fiber.Ctx ) ( error ) {
-	log.Debug( "Previous()" )
-	s.ADBPrevious()
 	return c.JSON( fiber.Map{
-		"url": "/previous" ,
+		"url": "/adb/previous" ,
 		"result": true ,
 	})
 }

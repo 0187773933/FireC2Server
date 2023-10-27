@@ -36,3 +36,4 @@
 	- take screenshots of stream ui
 	- have to detect where we are in the quality selection menu
 	- "weird" quality selection menu trap
+- Clone Media Buttons , and Just make Responsive to Current App for webui and just native functions

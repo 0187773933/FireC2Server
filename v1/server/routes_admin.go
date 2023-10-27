@@ -32,7 +32,17 @@ func ( s *Server ) SetupAdminRoutes() {
 	tv.Get( "/volume" , s.TVGetVolume )
 	tv.Get( "/volume/:volume" , s.TVSetVolume )
 
-	// Generic ADB
+	// Generic ADB Media Buttons
+	adb := s.FiberApp.Group( "/adb" )
+	adb.Use( validate_admin_mw )
+	adb.Get( "play" , s.ADBPlay )
+	adb.Get( "pause" , s.ADBPause )
+	adb.Get( "stop" , s.ADBStop )
+	adb.Get( "next" , s.ADBNext )
+	adb.Get( "previous" , s.ADBPrevious )
+	adb.Get( "status" , s.GetStatusUrl )
+
+	// Responsive Media Buttons
 	s.FiberApp.Get( "play" , s.Play )
 	s.FiberApp.Get( "pause" , s.Pause )
 	s.FiberApp.Get( "stop" , s.Stop )
