@@ -31,7 +31,7 @@
 	<body>
 		<div class="container">
 			<div class="row">
-				<div class="col-sm-12">
+				<div class="col-xlg-6 col-lg-6 col-md-6 col-sm-12">
 					<br>
 					<h1>Media Buttons</h1>
 					<br>
@@ -85,22 +85,54 @@
 						</div>
 					</div>
 				</div>
+				<div class="col-xlg-6 col-lg-6 col-md-6 col-sm-12">
+					<br>
+					<center><h1>Status</h1></center>
+					<div id="status"></div>
+				</div>
 			</div>
 		</div>
 		<script type="text/javascript">
 			function hook_buttons() {
 				document.querySelectorAll( ".btn" ).forEach( function( button ) {
-					button.addEventListener( 'click' , async function( event ) {
+					button.addEventListener( "click" , async function( event ) {
 						event.preventDefault();
 						const endpoint = $( this ).attr( "href" );
-        				const response = await fetch( endpoint );
-        				const data = await response.json();
-        				console.log( data );
+						const response = await fetch( endpoint );
+						const data = await response.json();
+						console.log( data );
 					});
 				});
 			}
+			async function update_status() {
+				const endpoint = "/status"
+				const response = await fetch( endpoint );
+				const data = await response.json();
+				console.log( data );
+				const statusDiv = document.getElementById( "status" );
+				statusDiv.innerHTML = `
+					<p>Start Time: ${data.status.start_time}</p>
+					<p>Previous Player Name: ${data.status.previous_player_name}</p>
+					<p>Previous Player Command: ${data.status.previous_player_command}</p>
+					<p>Previous Start Time: ${data.status.previous_start_time}</p>
+					<p>Previous Start Time Duration (seconds): ${data.status.previous_start_time_duration_seconds.toFixed(2)}</p>
+					<p>ADB Display On: ${data.status.adb.display_on}</p>
+					<p>ADB Volume: ${data.status.adb.volume}</p>
+					<p>ADB Activity: ${data.status.adb.activity}</p>
+					<p>Media Session Type: ${data.status.adb.media_session.type}</p>
+					<p>Media Session State: ${data.status.adb.media_session.state}</p>
+					<p>TV Volume: ${data.status.tv.volume}</p>
+					<p>TV Input: ${data.status.tv.input}</p>
+					<p>TV Power: ${data.status.tv.power}</p>
+				`;
+			}
+			function update() {
+				update_status();
+			}
 			function init() {
+				update();
 				hook_buttons()
+				setInterval( update , 5000 );
 			}
 			document.addEventListener( "DOMContentLoaded" , init );
 		</script>

@@ -60,6 +60,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	twitch.Get( "/next" , s.TwitchLiveNext )
 	twitch.Get( "/previous" , s.TwitchLivePrevious )
 	twitch.Get( "/update" , s.GetTwitchLiveUpdate )
+	twitch.Get( "/set/quality/max" , s.TwitchLiveSetQualityMax )
 
 	// Disney
 	disney := s.FiberApp.Group( "/disney" )

@@ -5,6 +5,7 @@ import (
 	time "time"
 	context "context"
 	sort "sort"
+	rand "math/rand"
 	// url "net/url"
 	// "math"
 	// "image/color"
@@ -80,6 +81,18 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+
+	// Force Highest Quality
+	// The Problem is buffering could delay when this menu appears
+	// you have to wait on button screen
+	// look for white heart
+	// time.Sleep( 3 * time.Second )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/next" ,
 		"stream": next_stream ,
@@ -122,6 +135,15 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+
+	// Force Highest Quality
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	// Right , Down , Right , Enter , Down , Enter
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/next" ,
 		"stream": next_stream ,
@@ -273,6 +295,48 @@ func ( s *Server ) GetTwitchLiveUpdate( c *fiber.Ctx ) ( error ) {
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/update" ,
 		"currated": live ,
+		"result": true ,
+	})
+}
+
+// literally trolling ,
+// we have to get pixel values to know where we are being bullied in the quality selection menu
+func ( s *Server ) TwitchLiveSetQualityMax( c *fiber.Ctx ) ( error ) {
+	// Right , Down , Right , Enter , Down , Enter
+	rand.Seed( time.Now().UnixNano() )
+	min_sleep := 200
+	max_sleep := 700
+	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_UP" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_UP" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_UP" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_UP" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_UP" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	return c.JSON( fiber.Map{
+		"url": "/twitch/live/set/quality/max" ,
 		"result": true ,
 	})
 }

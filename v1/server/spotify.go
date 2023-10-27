@@ -98,6 +98,8 @@ func ( s *Server ) SpotifyReopenApp() {
 	s.ADB.Brightness( 0 )
 	s.ADB.CloseAppName( SPOTIFY_APP_NAME )
 	s.ADB.OpenAppName( SPOTIFY_APP_NAME )
+	// time.Sleep( 1500 * time.Millisecond )
+	time.Sleep( 3000 * time.Millisecond )
 	log.Debug( "Done" )
 }
 

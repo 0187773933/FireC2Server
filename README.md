@@ -32,3 +32,7 @@
 - Disney
 	- detect spining circle , stall-out
 	- force app reload with same uuid
+- Twitch
+	- take screenshots of stream ui
+	- have to detect where we are in the quality selection menu
+	- "weird" quality selection menu trap
