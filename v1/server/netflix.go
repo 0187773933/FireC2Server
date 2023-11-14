@@ -12,40 +12,41 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-const VLC_ACTIVITY = "org.videolan.vlc/org.videolan.television.ui.MainTvActivity"
-const VLC_APP_NAME = "org.videolan.vlc"
+const NETFLIX_ACTIVITY = "com.netflix.ninja/com.netflix.ninja.MainActivity"
+const NETFLIX_APP_NAME = "com.netflix.ninja"
 
-func ( s *Server ) VLCReopenApp() {
-	log.Debug( "VLCReopenApp()" )
+func ( s *Server ) NetflixReopenApp() {
+	log.Debug( "NetflixReopenApp()" )
 	s.ADB.StopAllApps()
 	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( VLC_APP_NAME )
+	s.ADB.CloseAppName( NETFLIX_APP_NAME )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenAppName( VLC_APP_NAME )
+	s.ADB.OpenAppName( NETFLIX_APP_NAME )
 	log.Debug( "Done" )
 }
 
-func ( s *Server ) VLCContinuousOpen() {
+func ( s *Server ) NetflixContinuousOpen() {
 	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
-	log.Debug( "VLCContinuousOpen()" )
+	log.Debug( "NetflixContinuousOpen()" )
 	s.GetStatus()
 	log.Debug( s.Status )
-	s.Set( "active_player_name" , "vlc" )
+	s.Set( "active_player_name" , "netflix" )
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
 	if s.Status.ADB.Activity == VLC_ACTIVITY {
-		log.Debug( "vlc was already open" )
+		log.Debug( "netflix was already open" )
 	} else {
-		log.Debug( "vlc was NOT already open" )
-		s.VLCReopenApp()
+		log.Debug( "netflix was NOT already open" )
+		s.NetflixReopenApp()
 		time.Sleep( 500 * time.Millisecond )
+		// TODO , deal with profile selection screen ....
 	}
 }
 
-func ( s *Server ) VLCNext( c *fiber.Ctx ) ( error ) {
-	log.Debug( "VLCNext()" )
-	s.VLCContinuousOpen()
+func ( s *Server ) NetflixNext( c *fiber.Ctx ) ( error ) {
+	log.Debug( "NetflixNext()" )
+	s.NetflixContinuousOpen()
 	// next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
 	// uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
 	// log.Debug( uri )
@@ -55,16 +56,16 @@ func ( s *Server ) VLCNext( c *fiber.Ctx ) ( error ) {
 	// s.Set( "active_player_now_playing_id" , next_movie )
 	// s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
 	return c.JSON( fiber.Map{
-		"url": "/vlc/next" ,
+		"url": "/netflix/next" ,
 		"result": true ,
 	})
 }
 
-func ( s *Server ) VLCPrevious( c *fiber.Ctx ) ( error ) {
-	log.Debug( "VLCPrevious()" )
-	s.VLCContinuousOpen()
+func ( s *Server ) NetflixPrevious( c *fiber.Ctx ) ( error ) {
+	log.Debug( "NetflixPrevious()" )
+	s.NetflixContinuousOpen()
 	return c.JSON( fiber.Map{
-		"url": "/vlc/previous" ,
+		"url": "/netflix/previous" ,
 		"result": true ,
 	})
 }
