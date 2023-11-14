@@ -34,7 +34,7 @@ func ( s *Server ) NetflixContinuousOpen() {
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
-	if s.Status.ADB.Activity == VLC_ACTIVITY {
+	if s.Status.ADB.Activity == NETFLIX_ACTIVITY {
 		log.Debug( "netflix was already open" )
 	} else {
 		log.Debug( "netflix was NOT already open" )
