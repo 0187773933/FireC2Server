@@ -9,7 +9,7 @@ import (
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
 	// redis "github.com/redis/go-redis/v9"
-	circular_set "github.com/0187773933/RedisCircular/v1/set"
+	// circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
 const VLC_ACTIVITY = "org.videolan.vlc/org.videolan.television.ui.MainTvActivity"
