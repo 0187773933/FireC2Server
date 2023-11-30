@@ -14,6 +14,7 @@
 APP_NAME="public-fire-c2-server"
 sudo docker rm -f $APP_NAME || echo ""
 id=$(sudo docker run -dit \
+--user=morphs \
 --name $APP_NAME \
 --restart='always' \
 -v $(pwd)/SAVE_FILES:/home/morphs/SAVE_FILES:rw \

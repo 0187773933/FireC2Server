@@ -48,12 +48,23 @@ func ( s *Server ) YouTubeContinuousOpen() {
 	}
 }
 
+var RESET_COUNTER = 0;
+
 func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubeLiveNext()" )
 	s.YouTubeContinuousOpen()
 	video_id := circular_set.Next( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" )
 	available := s.YouTubeIsVideoIdAvailable( video_id )
 	if available == false {
+		RESET_COUNTER += 1
+		if RESET_COUNTER > 5 {
+			RESET_COUNTER = 0
+			return c.JSON( fiber.Map{
+				"url": "/youtube/live/next" ,
+				"video_id": video_id ,
+				"result": false ,
+			})
+		}
 		fmt.Println( "Deleting ," , video_id )
 		s.DB.ZRem( context.Background() , "STATE.YOUTUBE.LIVE.VIDEOS" , video_id )
 		return s.YouTubeLiveNext( c )
