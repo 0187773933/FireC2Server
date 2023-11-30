@@ -27,14 +27,24 @@ func ( s *Server ) SpotifyGetActiveButtonIndex() ( result int ) {
 	log.Debug( "SpotifyGetActiveButtonIndex()" )
 	result = -1
 	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
+	// indexes := [][]int{
+	// 	{ 201 , 940 } ,
+	// 	{ 789 , 940 } ,
+	// 	{ 893 , 940 } ,
+	// 	{ 997 , 940 } ,
+	// 	{ 1101 , 940 } ,
+	// 	{ 1205 , 940 } ,
+	// 	{ 1793 , 940 } ,
+	// }
+	// new , they shifted everything up to make you see "about the artist"
 	indexes := [][]int{
-		{ 201 , 940 } ,
-		{ 789 , 940 } ,
-		{ 893 , 940 } ,
-		{ 997 , 940 } ,
-		{ 1101 , 940 } ,
-		{ 1205 , 940 } ,
-		{ 1793 , 940 } ,
+		{ 201 , 852 } ,
+		{ 789 , 852 } ,
+		{ 893 , 852 } ,
+		{ 997 , 852 } ,
+		{ 1101 , 852 } ,
+		{ 1205 , 852 } ,
+		{ 1793 , 852 } ,
 	}
 	screenshot := s.ADB.ScreenshotToPNG()
 	for index , coords := range indexes {
