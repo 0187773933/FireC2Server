@@ -78,6 +78,7 @@ RUN apt-get update -y && apt-get install -y \
     libgstreamer1.0-dev \
     openexr \
     libopenexr-dev \
+    android-tools-adb \
     && rm -rf /var/lib/apt/lists/*
 
 
