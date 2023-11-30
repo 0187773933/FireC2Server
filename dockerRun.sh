@@ -5,10 +5,10 @@ id=$(sudo docker run -dit \
 --name $APP_NAME \
 --restart='always' \
 -v $(pwd)/SAVE_FILES:/home/morphs/SAVE_FILES:rw \
---mount type=bind,source="$(pwd)"/config.yaml,target=/home/morphs/FireC2Server/config.yaml \
+--mount type=bind,source="$(pwd)"/config.yaml,target=/home/morphs/config.yaml \
 --network=6105-buttons-1 \
 -p 5954:5954 \
-$APP_NAME config.yaml)
+$APP_NAME /home/morphs/config.yaml)
 sudo docker logs -f $id
 
 # sudo docker network create 6105-buttons-1
