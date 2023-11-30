@@ -84,8 +84,8 @@ RUN apt-get update -y && apt-get install -y \
 
 ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 
-# Setup User
-RUN useradd -m $USERNAME -p $PASSWORD -s "/bin/bash" && \
+RUN groupadd -g 1000 morphs && \
+    useradd -u 1000 -g morphs -m $USERNAME -p $PASSWORD -s "/bin/bash" && \
     mkdir -p /home/$USERNAME && \
     chown -R $USERNAME:$USERNAME /home/$USERNAME && \
     usermod -aG sudo $USERNAME && \
@@ -104,7 +104,6 @@ RUN sudo tar --checkpoint=100 --checkpoint-action=exec='/bin/bash -c "cmd=$(echo
 RUN echo "PATH=$PATH:/usr/local/go/bin" | tee -a /home/$USERNAME/.bashrc
 
 USER root
-
 
 RUN git clone https://github.com/Pulse-Eight/platform.git && \
     mkdir platform/build && \

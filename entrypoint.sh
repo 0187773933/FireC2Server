@@ -1,4 +1,8 @@
 #!/bin/bash
+
+sudo chown -R morphs:morphs /home/morphs/SAVE_FILES
+sudo chown -R morphs:morphs /home/morphs/.android
+
 HASH_FILE="/home/morphs/git.hash"
 REMOTE_HASH=$(git ls-remote https://github.com/0187773933/FireC2Server.git HEAD | awk '{print $1}')
 if [ -f "$HASH_FILE" ]; then
