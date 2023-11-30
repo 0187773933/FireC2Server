@@ -116,7 +116,7 @@ func ( s *Server ) SpotifyContinuousOpen() {
 	if s.Status.ADB.Activity != SPOTIFY_ACTIVITY {
 		log.Debug( "spotify was NOT already open" )
 		s.SpotifyReopenApp()
-		time.Sleep( 3 * time.Second )
+		time.Sleep( 6 * time.Second )
 	} else {
 		log.Debug( "spotify was already open" )
 	}
