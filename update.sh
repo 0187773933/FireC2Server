@@ -3,8 +3,8 @@
 # Set variables
 LOCK_FILE="docker_build.lock"
 HASH_FILE="git.hash"
-CONTAINER_NAME="public-stream-deck-server"
-GITHUB_REPO="https://github.com/0187773933/StreamDeck"
+CONTAINER_NAME="public-fire-c2-server"
+GITHUB_REPO="https://github.com/0187773933/FireC2Server"
 
 # Check for a lock file
 if [ -f "$LOCK_FILE" ]; then
@@ -16,7 +16,7 @@ fi
 touch $LOCK_FILE
 
 # Get the latest commit hash from the remote repository
-REMOTE_HASH=$(git ls-remote https://github.com/0187773933/StreamDeck.git HEAD | awk '{print $1}')
+REMOTE_HASH=$(git ls-remote https://github.com/0187773933/FireC2Server.git HEAD | awk '{print $1}')
 
 # Check if the hash file exists and read the last stored hash
 if [ -f "$HASH_FILE" ]; then

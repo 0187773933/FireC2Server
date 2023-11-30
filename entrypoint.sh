@@ -9,7 +9,7 @@ fi
 if [ "$REMOTE_HASH" == "$STORED_HASH" ]; then
         echo "No New Updates Available"
         cd /home/morphs/FireC2Server
-        exec /home/morphs/FireC2Server/server "$@"
+        LOG_LEVEL=debug exec /home/morphs/FireC2Server/server "$@"
 else
         echo "New updates available. Updating and Rebuilding Go Module"
         echo "$REMOTE_HASH" | sudo tee "$HASH_FILE"
@@ -20,5 +20,5 @@ else
         cd /home/morphs/FireC2Server
         /usr/local/go/bin/go mod tidy
         GOOS=linux GOARCH=amd64 /usr/local/go/bin/go build -o /home/morphs/FireC2Server/server
-        exec /home/morphs/FireC2Server/server "$@"
+        LOG_LEVEL=debug exec /home/morphs/FireC2Server/server "$@"
 fi
