@@ -352,8 +352,8 @@ func ( s *Server ) TwitchLiveUser( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "twitch://stream/%s" , username )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
-	s.Set( "active_player_now_playing_id" , next_stream )
+	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , username )
+	s.Set( "active_player_now_playing_id" , username )
 	s.Set( "active_player_now_playing_text" , "" )
 	return c.JSON( fiber.Map{
 		"url": "/twitch/view/:username" ,
