@@ -347,7 +347,7 @@ func ( s *Server ) TwitchLiveSetQualityMax( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) TwitchLiveUser( c *fiber.Ctx ) ( error ) {
 	username := c.Params( "username" )
-	log.Debug( fmt.Sprintf( "TwitchLiveUser( %s )" , username )
+	log.Debug( fmt.Sprintf( "TwitchLiveUser( %s )" , username ) )
 	s.TwitchContinuousOpen()
 	uri := fmt.Sprintf( "twitch://stream/%s" , username )
 	s.ADB.OpenURI( uri )

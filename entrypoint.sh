@@ -5,11 +5,13 @@ sudo chown -R morphs:morphs /home/morphs/.android
 
 HASH_FILE="/home/morphs/git.hash"
 REMOTE_HASH=$(git ls-remote https://github.com/0187773933/FireC2Server.git HEAD | awk '{print $1}')
+
 if [ -f "$HASH_FILE" ]; then
     STORED_HASH=$(sudo cat "$HASH_FILE")
 else
     STORED_HASH=""
 fi
+
 if [ "$REMOTE_HASH" == "$STORED_HASH" ]; then
         echo "No New Updates Available"
         cd /home/morphs/FireC2Server
