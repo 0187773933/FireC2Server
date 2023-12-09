@@ -53,8 +53,11 @@ esac
 # -q -o - "$url" | ffmpeg -i - -i black_box.png -filter_complex "[0:v][1:v]overlay=$X:$Y" -c:v libx264 -preset ultrafast -tune fastdecode -c:a copy -f mpegts - |
 # /Applications/IINA.app/Contents/MacOS/iina-cli  --stdin
 
-yt-dlp \
---cookies="/Users/morpheous/Library/CloudStorage/Dropbox/Misc/Cookies/twitch_youtube.txt" \
--q -o - "$url" | ffmpeg -i - -i black_box.png -filter_complex "[0:v][1:v]overlay=$X:$Y" -c:v libx264 -preset ultrafast -tune fastdecode -c:a copy -f hls -hls_time 4 -hls_list_size 10 -hls_segment_filename "stream%03d.ts" -hls_flags delete_segments stream.m3u8
 
-rm black_box.png
+# ffmpeg -i - -c:v libx264 -preset ultrafast -tune zerolatency -c:a aac -ar 44100 -f mpegts -
+
+# yt-dlp \
+# --cookies="/Users/morpheous/Library/CloudStorage/Dropbox/Misc/Cookies/twitch_youtube.txt" \
+# -q -o - "$url" | ffmpeg -i - -c:v libx264 -preset ultrafast -tune fastdecode -c:a copy -f hls -hls_time 4 -hls_list_size 10 -hls_segment_filename "stream%03d.ts" -hls_flags delete_segments stream.m3u8
+
+# rm black_box.png

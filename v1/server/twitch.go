@@ -344,3 +344,20 @@ func ( s *Server ) TwitchLiveSetQualityMax( c *fiber.Ctx ) ( error ) {
 		"result": true ,
 	})
 }
+
+func ( s *Server ) TwitchLiveUser( c *fiber.Ctx ) ( error ) {
+	username := c.Params( "username" )
+	log.Debug( fmt.Sprintf( "TwitchLiveUser( %s )" , username )
+	s.TwitchContinuousOpen()
+	uri := fmt.Sprintf( "twitch://stream/%s" , username )
+	s.ADB.OpenURI( uri )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
+	s.Set( "active_player_now_playing_id" , next_stream )
+	s.Set( "active_player_now_playing_text" , "" )
+	return c.JSON( fiber.Map{
+		"url": "/twitch/view/:username" ,
+		"stream": username ,
+		"result": true ,
+	})
+}
