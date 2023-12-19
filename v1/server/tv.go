@@ -8,6 +8,7 @@ import (
 
 func ( s *Server ) TVPrepare( c *fiber.Ctx ) ( error ) {
 	s.TV.Prepare()
+	s.ADB.ScreenOn()
 	return c.JSON( fiber.Map{
 		"url": "/tv/prepare" ,
 		"result": true ,
