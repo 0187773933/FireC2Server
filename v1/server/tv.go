@@ -9,6 +9,8 @@ import (
 func ( s *Server ) TVPrepare( c *fiber.Ctx ) ( error ) {
 	s.TV.Prepare()
 	s.ADB.ScreenOn()
+	s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	return c.JSON( fiber.Map{
 		"url": "/tv/prepare" ,
 		"result": true ,
