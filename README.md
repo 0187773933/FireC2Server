@@ -40,3 +40,6 @@
 	- have to detect where we are in the quality selection menu
 	- "weird" quality selection menu trap
 - start storing better state details to improve status
+- fix sleep ?
+	- `adb shell settings get secure sleep_timeout`
+	- `adb shell settings put secure sleep_timeout 2147483647`
