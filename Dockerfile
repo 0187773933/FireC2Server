@@ -79,8 +79,11 @@ RUN apt-get update -y && apt-get install -y \
     openexr \
     libopenexr-dev \
     android-tools-adb \
+    libasound2-dev \
+    libhidapi-dev \
+    udev \
+    alsa-utils \
     && rm -rf /var/lib/apt/lists/*
-
 
 ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 

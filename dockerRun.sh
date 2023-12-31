@@ -17,6 +17,7 @@ id=$(sudo docker run -dit \
 --user=morphs \
 --name $APP_NAME \
 --restart='always' \
+--device=/dev/snd \
 -v $(pwd)/SAVE_FILES:/home/morphs/SAVE_FILES:rw \
 -v $(pwd)/ADB_KEYS:/home/morphs/.android:ro \
 --mount type=bind,source="$(pwd)"/config.yaml,target=/home/morphs/config.yaml \
