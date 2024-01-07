@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"time"
 	context "context"
 	"encoding/json"
 	// "strings"
@@ -65,14 +66,41 @@ func ( s *Server ) Printf( format_string string , args ...interface{} ) {
 	fmt.Printf( "%s === %s" , time_string , sent_format )
 }
 
+// func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
+// 	if s.Config.ADBConnectionType == "tcp" {
+// 		connection = adb_wrapper.ConnectIP( s.Config.ADBPath , s.Config.ADBServerIP , s.Config.ADBServerPort )
+// 	} else if s.Config.ADBConnectionType == "usb" {
+// 		connection = adb_wrapper.ConnectUSB( s.Config.ADBPath , s.Config.ADBSerial )
+// 	}
+// 	s.ADB = connection
+// 	return
+// }
+
 func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
-	if s.Config.ADBConnectionType == "tcp" {
-		connection = adb_wrapper.ConnectIP( s.Config.ADBPath , s.Config.ADBServerIP , s.Config.ADBServerPort )
-	} else if s.Config.ADBConnectionType == "usb" {
-		connection = adb_wrapper.ConnectUSB( s.Config.ADBPath , s.Config.ADBSerial )
+	done := make( chan adb_wrapper.Wrapper , 1 )
+	go func() {
+		var conn adb_wrapper.Wrapper
+		if s.Config.ADBConnectionType == "tcp" {
+			conn = adb_wrapper.ConnectIP( s.Config.ADBPath , s.Config.ADBServerIP , s.Config.ADBServerPort )
+		} else if s.Config.ADBConnectionType == "usb" {
+			conn = adb_wrapper.ConnectUSB( s.Config.ADBPath , s.Config.ADBSerial )
+		}
+		done <- conn
+	}()
+	timeout_duration := ( time.Duration( s.Config.ADBTimeoutSeconds ) * time.Second )
+	select {
+		case connection = <-done:
+			s.ADB = connection
+			log.Debug( "ADB Connected" )
+			return
+		case <-time.After( timeout_duration ):
+			log.Debug( "Timed Out Connecting to ADB" )
+			if timeout_duration < 0 {
+				log.Debug( "ADB Timeout is Negative in the Config , Panicing" )
+				panic( "ADB Never Connected !" )
+			}
+			return
 	}
-	s.ADB = connection
-	return
 }
 
 func ( s *Server ) GetStatus() ( result Status ) {

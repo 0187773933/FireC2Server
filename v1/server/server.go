@@ -60,6 +60,7 @@ func ( s *Server ) Start() {
 	s.FiberApp.Listen( fmt.Sprintf( ":%s" , s.Config.ServerPort ) )
 }
 
+
 func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	server.FiberApp = fiber.New()
 	server.Config = config
@@ -68,7 +69,6 @@ func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	server.TV = tv.New( &config )
 	GlobalServer = &server
 	server.StoreLibrary()
-	log.Debug( "Server Starting" )
 	// server.MediaPlayer = media_player.New( db , &config )
 	server.FiberApp.Use( server.LogRequest )
 	server.FiberApp.Use( favicon.New() )

@@ -90,6 +90,7 @@ type ConfigFile struct {
 	ADBSerial string `yaml:"adb_serial"`
 	ADBServerIP string `yaml:"adb_server_ip"`
 	ADBServerPort string `yaml:"adb_server_port"`
+	ADBTimeoutSeconds int `yaml:"adb_timeout_seconds"`
 	YouTubeAPIKeys []string `yaml:"youtube_api_keys"`
 	TwitchUserID string `yaml:"twitch_user_id"`
 	TwitchClientID string `yaml:"twitch_client_id"`

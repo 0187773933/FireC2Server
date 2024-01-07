@@ -49,16 +49,18 @@ func main() {
 
 	defer utils.SetupStackTraceReport()
 
-	config_file_path := "./config.yaml"
+	config_file_path , _ := filepath.Abs( "./config.yaml" )
 	if len( os.Args ) > 1 { config_file_path , _ = filepath.Abs( os.Args[ 1 ] ) }
 	config := utils.ParseConfig( config_file_path )
+	logger.Log.Printf( "Loaded Config File From : %s" , config_file_path )
+	utils.WriteLoginURLPrefix( config.ServerLoginUrlPrefix )
 
 	SetupCloseHandler()
 	SetupDB( &config )
 	// utils.GenerateNewKeys()
-	utils.WriteLoginURLPrefix( config.ServerLoginUrlPrefix )
+	logger.Log.Printf( "Loading Server" )
 	s = server.New( DB , config )
-	logger.Log.Printf( "Loaded Config File From : %s" , config_file_path )
+	logger.Log.Printf( "Starting Server" )
 	s.Start()
 
 }
