@@ -53,6 +53,8 @@
 - fix sleep ?
 	- `adb shell settings get secure sleep_timeout`
 	- `adb shell settings put secure sleep_timeout 2147483647`
+- PushOver Notifications
+- Automatic Staging on HDMI of Twitch Live Streams
 
 ## ADB First Time Connection
 

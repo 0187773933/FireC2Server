@@ -7,7 +7,7 @@ import (
 	types "github.com/0187773933/FireC2Server/v1/types"
 	lg_tv "github.com/0187773933/LGTVController/v1/controller"
 	tg_tv_types "github.com/0187773933/LGTVController/v1/types"
-	vizio_tv "github.com/0187773933/VizioController/controller"
+	vizio_tv "github.com/0187773933/VizioController/v1/controller"
 	hdmi_cec "github.com/0187773933/HDMICEC/v1/controller"
 	try "github.com/manucorporat/try"
 )
@@ -26,6 +26,7 @@ type TV struct {
 	VizioAuthToken string `yaml:"vizio_auth_token"`
 	TimeoutSeconds int `yaml:"timeout_seconds"`
 	LG *lg_tv.Controller `yaml:"-"`
+	VIZIO *vizio_tv.Controller `yaml:"-"`
 	HDMICEC hdmi_cec.Controller `yaml:"-"`
 }
 
@@ -39,11 +40,14 @@ func New( config *types.ConfigFile ) ( result *TV ) {
 		Brand: config.TVBrand ,
 		IP: config.TVIP ,
 		MAC: config.TVMAC ,
+		DefaultVolume: config.TVDefaultVolume ,
+		DefaultInput: config.TVDefaultInput ,
 		WebSocketPort: config.TVWebSocketPort ,
 		LGClientKey: config.TVLGClientKey ,
 		VizioAuthToken: config.TVVizioAuthToken ,
 		TimeoutSeconds: config.TVTimeoutSeconds ,
 	}
+
 	// Initial Setup
 	switch config.TVBrand{
 		case "lg":
@@ -60,7 +64,7 @@ func New( config *types.ConfigFile ) ( result *TV ) {
 			log.Debug( "samsung === todo" )
 			break;
 		case "vizio":
-			log.Debug( "github.com/0187773933/VizioController/controller v0 doesn't require setup" )
+			result.VIZIO = vizio_tv.New( config.TVIP , config.TVVizioAuthToken )
 			break;
 		case "HDMICEC":
 			result.HDMICEC = hdmi_cec.New()
@@ -72,6 +76,7 @@ func New( config *types.ConfigFile ) ( result *TV ) {
 func ( tv *TV ) Prepare() {
 	status := tv.Status()
 	if status.Power == false {
+		log.Debug( "TV Power Was Off , Turning On" )
 		if tv.WakeOnLan == true { utils.WakeOnLan( tv.MAC ) }
 		switch tv.Brand{
 			case "lg":
@@ -96,9 +101,16 @@ func ( tv *TV ) Prepare() {
 				break;
 		}
 	}
+	log.Debug( "Turning Mute OFF" )
 	tv.MuteOff()
-	if status.Volume != tv.DefaultVolume { tv.SetVolume( tv.DefaultVolume ) }
-	if status.Input != tv.DefaultInput { tv.SetInput( tv.DefaultInput ) }
+	if status.Volume != tv.DefaultVolume {
+		log.Debug( fmt.Sprintf( "Current Volume === %d , Target Volume === %d" , status.Volume , tv.DefaultVolume ) )
+		tv.SetVolume( tv.DefaultVolume )
+	}
+	if status.Input != tv.DefaultInput {
+		log.Debug( fmt.Sprintf( "Current Input === %d , Target Input === %d" , status.Input , tv.DefaultInput ) )
+		tv.SetInput( tv.DefaultInput )
+	}
 }
 
 type Status struct {
@@ -126,7 +138,7 @@ func ( tv *TV ) PowerOn() {
 		case "samsung":
 			break;
 		case "vizio":
-			vizio_tv.PowerOn( tv.IP , tv.VizioAuthToken )
+			tv.VIZIO.PowerOn()
 		case "HDMICEC":
 			tv.HDMICEC.SelectHDMI1()
 			break;
@@ -142,7 +154,7 @@ func ( tv *TV ) PowerOff() {
 			log.Debug( "samsung === PowerOff() === to do" )
 			break;
 		case "vizio":
-			vizio_tv.PowerOff( tv.IP , tv.VizioAuthToken )
+			tv.VIZIO.PowerOff()
 		case "HDMICEC":
 			tv.HDMICEC.PowerOff()
 			break;
@@ -165,7 +177,7 @@ func ( tv *TV ) GetPowerStatus() ( result bool ) {
 			break;
 		case "vizio":
 			//vizio_tv.PowerOff( tv.IP , tv.VizioAuthToken )
-			log.Debug( "vizio === GetPowerStatus() === to do" )
+			tv.VIZIO.PowerGetState()
 		case "HDMICEC":
 			log.Debug( "HDMICEC === GetPowerStatus() === to do" )
 			break;
@@ -187,9 +199,26 @@ func ( tv *TV ) GetInput() ( result int ) {
 			log.Debug( "samsung === GetInput() === to do" )
 			break;
 		case "vizio":
-			v_result := vizio_tv.GetCurrentInput( tv.IP , tv.VizioAuthToken )
-			log.Debug( "vizio === to do , probably have to split strings" , v_result , v_result.Name )
-			result = 1
+			current_input := tv.VIZIO.InputGetCurrent()
+			// log.Debug( fmt.Sprintf( "current_input === %s" , current_input.Name ) )
+			switch current_input.Name {
+				case "hdmi1":
+					result = 1
+					break;
+				case "hdmi2":
+					result = 2
+					break;
+				case "hdmi3":
+					result = 3
+					break;
+				case "hdmi4":
+					result = 4
+					break;
+				default:
+					result = -1
+					break
+			}
+			break;
 		case "HDMICEC":
 			log.Debug( "HDMICEC === GetInput() === to do" )
 			break;
@@ -209,7 +238,9 @@ func ( tv *TV ) SetInput( hdmi_input int ) {
 			log.Debug( "samsung === SetInput() === to do" )
 			break;
 		case "vizio":
-			vizio_tv.SetInput( tv.IP , tv.VizioAuthToken , fmt.Sprintf( "HDMI-%d" , hdmi_input ) )
+			target_input := fmt.Sprintf( "HDMI-%d" , hdmi_input )
+			fmt.Println( "setting vizio to :" , target_input )
+			tv.VIZIO.InputSet( target_input )
 		case "HDMICEC":
 			log.Debug( "HDMICEC === SetInput() === to do" )
 			break;
@@ -227,7 +258,7 @@ func ( tv *TV ) MuteOn() {
 			log.Debug( "samsung === MuteOn() === to do" )
 			break;
 		case "vizio":
-			vizio_tv.MuteOn( tv.IP , tv.VizioAuthToken )
+			tv.VIZIO.MuteOn()
 		case "HDMICEC":
 			log.Debug( "HDMICEC === MuteOn() === to do" )
 			break;
@@ -245,7 +276,7 @@ func ( tv *TV ) MuteOff() {
 			log.Debug( "samsung === MuteOff() === to do" )
 			break;
 		case "vizio":
-			vizio_tv.MuteOff( tv.IP , tv.VizioAuthToken )
+			tv.VIZIO.MuteOff()
 		case "HDMICEC":
 			log.Debug( "HDMICEC === MuteOff() === to do" )
 			break;
@@ -277,7 +308,7 @@ func ( tv *TV ) GetVolume() ( result int ) {
 			log.Debug( "samsung === GetVolume() === to do" )
 			break;
 		case "vizio":
-			result = vizio_tv.GetVolume( tv.IP , tv.VizioAuthToken )
+			result = tv.VIZIO.VolumeGet()
 		case "HDMICEC":
 			log.Debug( "HDMICEC === GetVolume() === to do" )
 			break;
@@ -296,10 +327,7 @@ func ( tv *TV ) SetVolume( volume_level int ) {
 			log.Debug( "samsung === GetVolume() === to do" )
 			break;
 		case "vizio":
-			// current_volume := tv.GetVolume()
-			// vizio_tv.VolumeUp( tv.IP , tv.VizioAuthToken )
-			// vizio_tv.VolumeDown( tv.IP , tv.VizioAuthToken )
-			log.Debug( "vizio === GetVolume() === to do" )
+			tv.VIZIO.VolumeSet( volume_level )
 		case "HDMICEC":
 			log.Debug( "HDMICEC === SetVolume() === to do" )
 			break;

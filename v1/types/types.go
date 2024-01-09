@@ -81,7 +81,7 @@ type ConfigFile struct {
 	TVWebSocketPort string `yaml:"tv_websocket_port"`
 	TVMAC string `yaml:"tv_mac"`
 	TVDefaultVolume int `yaml:"tv_default_volume"`
-	TVDefaultInput string `yaml:"tv_default_input"`
+	TVDefaultInput int `yaml:"tv_default_input"`
 	TVLGClientKey string `yaml:"tv_lg_client_key"`
 	TVVizioAuthToken string `yaml:"tv_vizio_auth_token"`
 	TVTimeoutSeconds int `yaml:"tv_timeout_seconds"`
