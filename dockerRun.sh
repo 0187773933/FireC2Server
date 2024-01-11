@@ -3,7 +3,7 @@
 # so you have to run it once , without mounting the ADB_KEYS folder
 # run some command , and pair with the fire cube
 # then pull them locally :
-	# sudo docker cp 05099c8c4137:/home/morphs/.android ADB_KEYS
+	# sudo docker cp public-fire-c2-server:/home/morphs/.android ADB_KEYS
 # and you are also going to want to set the local permissions
 # you can run `id` inside the docker container to get uid and gid of morphs
 # or set it in the docker file

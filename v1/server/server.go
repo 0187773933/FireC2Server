@@ -18,6 +18,8 @@ import (
 var GlobalServer *Server
 var log = logger.GetLogger()
 
+const ACTIVITY_PROFILE_PICKER = "com.amazon.ftv.profilepicker/com.amazon.ftv.profilepicker.ui.PickerActivity"
+
 type Status struct {
 	StartTime string `json:"start_time"`
 	StartTimeOBJ time.Time `json:"-"`
@@ -59,7 +61,6 @@ func ( s *Server ) Start() {
 	fmt.Printf( "Admin API Key === %s\n" , s.Config.ServerAPIKey )
 	s.FiberApp.Listen( fmt.Sprintf( ":%s" , s.Config.ServerPort ) )
 }
-
 
 func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	server.FiberApp = fiber.New()

@@ -123,7 +123,16 @@ func ( s *Server ) SpotifyContinuousOpen() {
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
-	if s.Status.ADB.Activity != SPOTIFY_ACTIVITY {
+	if s.Status.ADB.Activity == ACTIVITY_PROFILE_PICKER {
+		// i mean this assumes you only have like 2 profiles , idk man
+		// TODO : add config options to specify how many profiles you have
+		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		time.Sleep( 200 * time.Millisecond )
+		s.ADB.PressKeyName( "KEYCODE_ENTER" )
+		time.Sleep( 1000 * time.Millisecond )
+	} else if s.Status.ADB.Activity != SPOTIFY_ACTIVITY {
 		log.Debug( "spotify was NOT already open" )
 		s.SpotifyReopenApp()
 		time.Sleep( 6 * time.Second )

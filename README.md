@@ -8,6 +8,8 @@
 
 ## TODO
 
+- all "fresh" / "wake-up" commands need to first check if we are on the amazon firecube profile selection screen ...
+	`adb shell pm list users`
 - switching back to redis
 	- https://github.com/0187773933/RedisCircularList
 - Find some new way to get the config and db reference into logger package.
@@ -30,6 +32,14 @@
 		- https://github.com/mgoff/go-samsung-exlink
 		- https://github.com/rainu/samsung-remote-mqtt
 		- https://github.com/rainu/samsung-remote
+	- HDMICEC
+		- https://kwikwai.com/products-2/?show-controller=true
+		- https://github.com/torvalds/linux/blob/master/drivers/media/cec/platform/cec-gpio/cec-gpio.c
+		- https://github.com/torvalds/linux/blob/master/drivers/media/cec/core/cec-pin.c
+		- https://github.com/Kapp4/agocontrol/tree/master/devices
+		- https://github.com/MichaelPote/arduino-hdmi-irw
+		- https://github.com/s-moch/CEC
+		- https://github.com/floe/CEC
 - VLC
 	- Random M3U8 Music Tracks
 - Spotify
