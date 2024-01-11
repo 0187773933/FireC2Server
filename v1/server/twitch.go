@@ -40,6 +40,7 @@ func ( s *Server ) TwitchContinuousOpen() {
 	if s.Status.ADB.Activity == ACTIVITY_PROFILE_PICKER {
 		// i mean this assumes you only have like 2 profiles , idk man
 		// TODO : add config options to specify how many profiles you have
+		time.Sleep( 1000 * time.Millisecond )
 		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
 		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
 		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
