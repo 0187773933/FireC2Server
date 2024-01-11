@@ -35,14 +35,9 @@ func ( s *Server ) NetflixContinuousOpen() {
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
 	if s.Status.ADB.Activity == ACTIVITY_PROFILE_PICKER {
-		// i mean this assumes you only have like 2 profiles , idk man
-		// TODO : add config options to specify how many profiles you have
+		log.Debug( fmt.Sprintf( "Choosing Profile Index === %d" , s.Config.FireCubeTotalUserProfiles ) )
 		time.Sleep( 1000 * time.Millisecond )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
-		time.Sleep( 200 * time.Millisecond )
-		s.ADB.PressKeyName( "KEYCODE_ENTER" )
+		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
 	} else if s.Status.ADB.Activity == NETFLIX_ACTIVITY {
 		log.Debug( "netflix was already open" )

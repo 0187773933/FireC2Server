@@ -271,3 +271,13 @@ func ( s *Server ) GetJSON( key string , target interface{} ) {
 	json.Unmarshal( []byte( json_value ) , target )
 	return
 }
+
+
+func ( s *Server ) SelectFireCubeProfile() {
+	for i := 0; i < s.Config.FireCubeTotalUserProfiles; i++ {
+		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		time.Sleep( 100 * time.Millisecond )
+	}
+	time.Sleep( 200 * time.Millisecond )
+	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+}

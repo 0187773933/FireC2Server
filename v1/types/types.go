@@ -91,6 +91,8 @@ type ConfigFile struct {
 	ADBServerIP string `yaml:"adb_server_ip"`
 	ADBServerPort string `yaml:"adb_server_port"`
 	ADBTimeoutSeconds int `yaml:"adb_timeout_seconds"`
+	FireCubeTotalUserProfiles int `yaml:"firecube_total_user_profiles"`
+	FireCubeUserProfileIndex int `yaml:"firecube_user_profile_index"`
 	YouTubeAPIKeys []string `yaml:"youtube_api_keys"`
 	TwitchUserID string `yaml:"twitch_user_id"`
 	TwitchClientID string `yaml:"twitch_client_id"`
