@@ -35,7 +35,7 @@ func ( s *Server ) VLCContinuousOpen() {
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
 	if s.Status.ADB.Activity == ACTIVITY_PROFILE_PICKER {
-		log.Debug( fmt.Sprintf( "Choosing Profile Index === %d" , s.Config.FireCubeTotalUserProfiles ) )
+		log.Debug( fmt.Sprintf( "Choosing Profile Index === %d" , s.Config.FireCubeUserProfileIndex ) )
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )

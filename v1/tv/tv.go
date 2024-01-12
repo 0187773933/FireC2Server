@@ -74,42 +74,35 @@ func New( config *types.ConfigFile ) ( result *TV ) {
 }
 
 func ( tv *TV ) Prepare() {
-	status := tv.Status()
-	if status.Power == false {
-		log.Debug( "TV Power Was Off , Turning On" )
-		if tv.WakeOnLan == true { utils.WakeOnLan( tv.MAC ) }
-		switch tv.Brand{
-			case "lg":
-				tv.PowerOn()
-				break;
-			case "samsung":
-				tv.PowerOn()
-				break;
-			case "vizio":
-				tv.PowerOn()
-			case "HDMICEC":
-				try.This( func() {
-					tv.HDMICEC.PowerOn()
-				}).Catch(func(e try.E) {
-					log.Debug( "failed to send hdmi cec power-on command" )
-				})
-				try.This( func() {
-					tv.HDMICEC.SelectHDMI1()
-				}).Catch(func(e try.E) {
-					log.Debug( "failed to send hdmi cec command to force hdmi-1 awake" )
-				})
-				break;
-		}
-	}
-	log.Debug( "Turning Mute OFF" )
-	tv.MuteOff()
-	if status.Volume != tv.DefaultVolume {
-		log.Debug( fmt.Sprintf( "Current Volume === %d , Target Volume === %d" , status.Volume , tv.DefaultVolume ) )
-		tv.SetVolume( tv.DefaultVolume )
-	}
-	if status.Input != tv.DefaultInput {
-		log.Debug( fmt.Sprintf( "Current Input === %d , Target Input === %d" , status.Input , tv.DefaultInput ) )
-		tv.SetInput( tv.DefaultInput )
+	// status := tv.Status()
+	switch tv.Brand{
+		case "lg":
+			tv.PowerOn()
+			break;
+		case "samsung":
+			tv.PowerOn()
+			break;
+		case "vizio":
+			tv.VIZIO.PowerOn()
+			tv.VIZIO.InputHDMISet( tv.DefaultInput )
+			tv.VIZIO.MuteOff()
+			tv.VIZIO.VolumeSet( tv.DefaultVolume )
+			break;
+		case "wakeonlan":
+			utils.WakeOnLan( tv.MAC )
+			break;
+		case "HDMICEC":
+			try.This( func() {
+				tv.HDMICEC.PowerOn()
+			}).Catch(func(e try.E) {
+				log.Debug( "failed to send hdmi cec power-on command" )
+			})
+			try.This( func() {
+				tv.HDMICEC.SelectHDMI1()
+			}).Catch( func( e try.E ) {
+				log.Debug( "failed to send hdmi cec command to force hdmi-1 awake" )
+			})
+			break;
 	}
 }
 
@@ -126,7 +119,8 @@ func ( tv *TV ) Status() ( result Status ) {
 	log.Debug( "Input === " , result.Input )
 	result.Power = tv.GetPowerStatus()
 	log.Debug( "Power === " , result.Power )
-	// result.Mute = tv.GetPowerStatus()
+	// result.Mute = tv.GetMute()
+	// log.Debug( "Mute === " , result.Mute )
 	return;
 }
 
@@ -283,19 +277,21 @@ func ( tv *TV ) MuteOff() {
 	}
 }
 
-// func ( tv *TV ) GetMute() {
-// 	switch tv.Brand{
-// 		case "lg":
-// 			audio_status := tv.LG.API( "get_audio_status" )
-// 			log.Println( "lg === to do" , audio_status )
-// 			break;
-// 		case "samsung":
-// 			break;
-// 		case "vizio":
-// 			vizio_tv.MuteOn( tv.IP , tv.VizioAuthToken )
-// 	}
-// }
-
+func ( tv *TV ) GetMute() {
+	switch tv.Brand{
+		case "lg":
+			// audio_status := tv.LG.API( "get_audio_status" )
+			log.Println( "GetMute() lg === to do" )
+			break;
+		case "samsung":
+			// audio_status := tv.LG.API( "get_audio_status" )
+			log.Println( "GetMute() samsung === to do" )
+			break;
+		case "vizio":
+			fmt.Println( tv.VIZIO.AudioGetSetting( "mute" ) )
+			break;
+	}
+}
 
 func ( tv *TV ) GetVolume() ( result int ) {
 	result = -1
