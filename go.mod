@@ -7,7 +7,7 @@ require (
 	github.com/0187773933/HDMICEC v0.0.0-20231023152806-6e9c7a2c10a8
 	github.com/0187773933/LGTVController v0.0.0-20230917160125-3fd2f2b61451
 	github.com/0187773933/RedisCircular v0.0.0-20231008202030-9b7b0dd451d0
-	github.com/0187773933/VizioController v1.0.17
+	github.com/0187773933/VizioController v1.0.18
 	github.com/boltdb/bolt v1.3.2-0.20180302180052-fd01fc79c553
 	github.com/gofiber/fiber/v2 v2.50.1-0.20231024211000-7eadeb8ed3a2
 	github.com/manucorporat/try v0.0.0-20170609134256-2a0c6b941d52
