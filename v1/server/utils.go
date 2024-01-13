@@ -169,8 +169,8 @@ func ( s *Server ) StoreLibrary() {
 
 	// Twitch Following - Curated
 	s.DB.Del( ctx , "LIBRARY.TWITCH.FOLLOWING.CURRATED" )
-	s.DB.Del( ctx , "STATE.TWITCH.FOLLOWING.LIVE" )
-	s.DB.Del( ctx , "STATE.TWITCH.FOLLOWING.LIVE.INDEX" )
+	// s.DB.Del( ctx , "STATE.TWITCH.FOLLOWING.LIVE" ) // TEMP TESTING , probably should change back
+	// s.DB.Del( ctx , "STATE.TWITCH.FOLLOWING.LIVE.INDEX" ) // TEMP TESTING , probably should change back
 	for _ , item := range s.Config.Library.Twitch.Following.Currated {
 		circular_set.Add( s.DB , "LIBRARY.TWITCH.FOLLOWING.CURRATED" , item )
 	}

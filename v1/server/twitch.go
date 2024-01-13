@@ -6,6 +6,7 @@ import (
 	context "context"
 	sort "sort"
 	rand "math/rand"
+	// "reflect"
 	strconv "strconv"
 	// json "encoding/json"
 	// url "net/url"
@@ -19,6 +20,7 @@ import (
 
 const TWITCH_ACTIVITY = "tv.twitch.android.viewer/tv.twitch.starshot64.app.StarshotActivity"
 const TWITCH_APP_NAME = "tv.twitch.android.viewer"
+const R_KEY_STATE_TWITCH_FOLLOWING_LIVE = "STATE.TWITCH.FOLLOWING.LIVE"
 
 func ( s *Server ) TwitchReopenApp() {
 	log.Debug( "TwitchReopenApp()" )
@@ -84,11 +86,8 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 		s.TwitchLiveUpdate()
 	}
 	log.Debug( fmt.Sprintf( "TwitchLiveNext( %s )" , next_stream ) )
-	fmt.Println( next_stream )
-	// // TODO === Need to Add TV Mute and Unmute
-	// // TODO === If Same Playlist don't open , just press next ? depends
-	// s.ADB.SetVolume( 0 )
 	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
+	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
@@ -140,11 +139,8 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 		s.TwitchLiveUpdate()
 	}
 	log.Debug( fmt.Sprintf( "TwitchLivePrevious( %s )" , next_stream ) )
-	fmt.Println( next_stream )
-	// // TODO === Need to Add TV Mute and Unmute
-	// // TODO === If Same Playlist don't open , just press next ? depends
-	// s.ADB.SetVolume( 0 )
 	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
+	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
@@ -348,17 +344,11 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	return
 }
 
-func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
-
-	// 1.) Get Live Followers
-	live_followers := s.TwitchGetLiveFollowers()
-	fmt.Println( "live followers ===" , live_followers )
-	live_followers_map := make( map[ string ]int )
-	for i , user := range live_followers {
-		live_followers_map[ user ] = i;
+func ( s *Server ) TwitchFilterCurratedFollers( input_list []string ) ( result []string ) {
+	input_list_map := make( map[ string ]int )
+	for i , user := range input_list {
+		input_list_map[ user ] = i;
 	}
-
-	// 2.) Filter Live Followers to Only those in Currated Library List
 	var context = context.Background()
 	currated_followers , _ := s.DB.ZRangeByScore(
 		context ,
@@ -369,12 +359,10 @@ func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
 		} ,
 	).Result()
 	for _ , user := range currated_followers {
-		if _ , exists := live_followers_map[ user ]; exists {
+		if _ , exists := input_list_map[ user ]; exists {
 			result = append( result , user )
 		}
 	}
-
-	// 3.) Sort Currated List ( result ) by Scores
 	currated_followers_map := make( map[ string ]int )
 	for i , user := range currated_followers {
 		currated_followers_map[ user ] = i
@@ -382,20 +370,70 @@ func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
 	sort.Slice( result , func( i , j int ) bool {
 		return currated_followers_map[ result[ i ] ] < currated_followers_map[ result[ j ] ]
 	})
-	fmt.Println( "live followers currated ===" , result )
+	return
+}
 
+func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
 
-	cached_followers , _ := s.DB.ZRangeWithScores( context , "STATE.TWITCH.FOLLOWING.LIVE" , 0 , -1 ).Result()
+	// 1.A) Get Live Followers
+	live_followers := s.TwitchGetLiveFollowers()
+	fmt.Println( "live followers ===" , live_followers )
+	// 1.B.) Filter Live Followers to Only those in Currated Library List
+	live_followers_currated := s.TwitchFilterCurratedFollers( live_followers )
+	live_followers_currated_map := make( map[ string ]int )
+	for i , user := range live_followers_currated {
+		live_followers_currated_map[ user ] = i
+	}
+	fmt.Println( "live followers currated ===" , live_followers_currated )
+
+	// 2.) Get Cached Followers
+	var context = context.Background()
+	cached_followers , _ := s.DB.ZRangeWithScores( context , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , 0 , -1 ).Result()
 	fmt.Println( "cached ===" , cached_followers )
-	cached_index := circular_set.Index( s.DB , "STATE.TWITCH.FOLLOWING.LIVE.INDEX" )
+	cached_index := circular_set.Index( s.DB , ( R_KEY_STATE_TWITCH_FOLLOWING_LIVE + ".INDEX" ) )
 	fmt.Println( "cached index ===" , cached_index )
-	cached_current := circular_set.Current( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+	cached_current := circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 	fmt.Println( "cached current ===" , cached_current )
 
-
-
 	// 5.) The actuall point of this function
-	// do something
+	// 5.1) if the cache is empty , use the new list ( result ) , return
+	// if len( cached_followers ) == 0 { return }
+	// 5.2) if there are people in the cache that ARE NOT in the new list , we need to eject them
+	// https://pkg.go.dev/github.com/redis/go-redis/v9#Z
+	cached_list_with_offline_removed := []string{}
+	cached_list_with_offline_removed_map := make( map[ string ]int )
+	for i := range cached_followers {
+		i_username := cached_followers[ i ].Member.( string )
+		if _ , exists := live_followers_currated_map[ i_username ]; exists {
+			cached_list_with_offline_removed = append( cached_list_with_offline_removed , i_username )
+			cached_list_with_offline_removed_map[ i_username ] = i
+		}
+	}
+	fmt.Println( "cached list with offline removed ===" , cached_list_with_offline_removed )
+
+	// 5.3) find new online users
+	// this is where it gets debatable on what you want to do
+	// we could resort , or just add people who are newly online to the end , etc
+	new_online_users := []string{}
+	new_online_users_map := make( map[ string ]int )
+	for _ , user := range live_followers_currated {
+		if i , exists := live_followers_currated_map[ user ]; !exists {
+			new_online_users = append( new_online_users , user )
+			new_online_users_map[ user ] = i
+		}
+	}
+	// i think its already sorted , because its in the same order as 'live_followers_currated'
+	// sort.Slice( new_online_users , func( i , j int ) bool {
+	// 	return currated_followers_map[ new_online_users[ i ] ] < currated_followers_map[ new_online_users[ j ] ]
+	// })
+	fmt.Println( "new online currated users since last cache ===" , new_online_users )
+
+	cached_list_with_offline_removed_and_new_online_added := append( cached_list_with_offline_removed , new_online_users... )
+	fmt.Println( "cached list with offline removed and new online added ===" , cached_list_with_offline_removed_and_new_online_added )
+
+	// 5.4) our dumbass circular list package doesn't have a remove
+	// so just rebuild from scratch
+
 
 	return
 }
