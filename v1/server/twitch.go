@@ -6,6 +6,8 @@ import (
 	context "context"
 	sort "sort"
 	rand "math/rand"
+	strconv "strconv"
+	// json "encoding/json"
 	// url "net/url"
 	// "math"
 	// "image/color"
@@ -48,9 +50,11 @@ func ( s *Server ) TwitchContinuousOpen() {
 		time.Sleep( 500 * time.Millisecond )
 	} else {
 		log.Debug( "twitch was already open" )
+		// s.TwitchLiveUpdate()
+		// we don't want a destructive update , we just need a cleansing of stale offline usernames
+
 	}
 }
-
 
 func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 
@@ -221,12 +225,26 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 // -H 'Client-Id: asdf'
 
 func ( s *Server ) TwitchRefreshAuthToken() ( access_token string ) {
+	time_now := time.Now()
 	access_token = s.Get( "STATE.TWITCH.ACCESS_TOKEN" )
 	refresh_token := s.Get( "STATE.TWITCH.REFRESH_TOKEN" )
 	if access_token == "" || refresh_token == "" {
 		access_token = s.Config.TwitchAccessToken
 		refresh_token = s.Config.TwitchRefreshToken
 	}
+	refresh_token_expires_at := s.Get( "STATE.TWITCH.REFRESH_TOKEN.EXPIRES_AT" )
+	if refresh_token_expires_at != "" {
+		refresh_token_expires_at_int64 , _ := strconv.ParseInt( refresh_token_expires_at , 10 , 64 )
+		refresh_token_expire_time := time.Unix( refresh_token_expires_at_int64 , 0 )
+		remaining_time := refresh_token_expire_time.Sub( time_now )
+		buffer_window := ( 30 * time.Second )
+		if remaining_time >= buffer_window {
+			// fmt.Println( "the token is still valid , and doesn't expire in the next 30 seconds , reusing" )
+			// fmt.Println( ( remaining_time - 30 ) , "=== seconds remaining until refresh needed" )
+			return
+		}
+	}
+	// fmt.Println( "access token expired , refreshing" )
 	headers := map[string]string{}
 	data := map[string]string{
 		"grant_type": "refresh_token" ,
@@ -235,6 +253,18 @@ func ( s *Server ) TwitchRefreshAuthToken() ( access_token string ) {
 		"client_secret": s.Config.TwitchClientSecret ,
 	}
 	new := utils.PostJSON( "https://id.twitch.tv/oauth2/token" , headers , data );
+
+	// adding - 13JAN2024
+	// new_json_print , _ := json.MarshalIndent( new , "" , "    " )
+	// fmt.Println( string( new_json_print ) )
+
+	expires_in_seconds := new.(map[string]interface{})[ "expires_in" ].(float64)
+	time_expires := time_now.Add( time.Second * time.Duration( expires_in_seconds ) )
+	time_expires_unix := time_expires.Unix()
+	// fmt.Println( "expires in ===" , expires_in_seconds )
+	// fmt.Println( "expires @ ===" , time_expires , time_expires_unix )
+	s.Set( "STATE.TWITCH.REFRESH_TOKEN.EXPIRES_AT" , time_expires_unix )
+
 	new_access_token := new.(map[string]interface{})[ "access_token" ]
 	new_refresh_token := new.(map[string]interface{})[ "refresh_token" ]
 	if new_access_token != nil && new_refresh_token != nil {
@@ -246,6 +276,23 @@ func ( s *Server ) TwitchRefreshAuthToken() ( access_token string ) {
 	return
 }
 
+func ( s *Server ) TwitchGetLiveFollowers() ( result []string ) {
+	access_token := s.TwitchRefreshAuthToken()
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf( "Bearer %s" , access_token ) ,
+		"Client-Id": s.Config.TwitchClientID ,
+	}
+	params := map[string]string{
+		"user_id": s.Config.TwitchUserID ,
+	}
+	live_followers_json := utils.GetJSON( "https://api.twitch.tv/helix/streams/followed" , headers , params )
+	live_followers := live_followers_json.(map[string]interface{})[ "data" ].( []interface{} )
+	for _ , user := range live_followers {
+		user_name := user.(map[string]interface{})["user_login"].(string)
+		result = append( result , user_name )
+	}
+	return
+}
 
 // Update DB With List of Currated Live Followers
 func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
@@ -278,7 +325,8 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 		user_name := user.(map[string]interface{})["user_login"].(string)
 		live_index_map[user_name] = i;
 
-	} // lookup table
+	}
+	// lookup table
 	for _ , user := range currated_followers {
 		if _ , exists := live_index_map[ user ]; exists {
 			result = append( result , user )
@@ -300,10 +348,71 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	return
 }
 
+func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
+
+	// 1.) Get Live Followers
+	live_followers := s.TwitchGetLiveFollowers()
+	fmt.Println( "live followers ===" , live_followers )
+	live_followers_map := make( map[ string ]int )
+	for i , user := range live_followers {
+		live_followers_map[ user ] = i;
+	}
+
+	// 2.) Filter Live Followers to Only those in Currated Library List
+	var context = context.Background()
+	currated_followers , _ := s.DB.ZRangeByScore(
+		context ,
+		"LIBRARY.TWITCH.FOLLOWING.CURRATED" ,
+		&redis.ZRangeBy{
+			Min: "-inf" ,
+			Max: "+inf" ,
+		} ,
+	).Result()
+	for _ , user := range currated_followers {
+		if _ , exists := live_followers_map[ user ]; exists {
+			result = append( result , user )
+		}
+	}
+
+	// 3.) Sort Currated List ( result ) by Scores
+	currated_followers_map := make( map[ string ]int )
+	for i , user := range currated_followers {
+		currated_followers_map[ user ] = i
+	}
+	sort.Slice( result , func( i , j int ) bool {
+		return currated_followers_map[ result[ i ] ] < currated_followers_map[ result[ j ] ]
+	})
+	fmt.Println( "live followers currated ===" , result )
+
+
+	cached_followers , _ := s.DB.ZRangeWithScores( context , "STATE.TWITCH.FOLLOWING.LIVE" , 0 , -1 ).Result()
+	fmt.Println( "cached ===" , cached_followers )
+	cached_index := circular_set.Index( s.DB , "STATE.TWITCH.FOLLOWING.LIVE.INDEX" )
+	fmt.Println( "cached index ===" , cached_index )
+	cached_current := circular_set.Current( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+	fmt.Println( "cached current ===" , cached_current )
+
+
+
+	// 5.) The actuall point of this function
+	// do something
+
+	return
+}
+
 func ( s *Server ) GetTwitchLiveUpdate( c *fiber.Ctx ) ( error ) {
 	live := s.TwitchLiveUpdate()
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/update" ,
+		"currated": live ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) GetTwitchLiveRefresh( c *fiber.Ctx ) ( error ) {
+	live := s.TwitchLiveRefresh()
+	return c.JSON( fiber.Map{
+		"url": "/twitch/live/refresh" ,
 		"currated": live ,
 		"result": true ,
 	})

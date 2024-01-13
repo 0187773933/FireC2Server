@@ -1,4 +1,4 @@
-package server
+ package server
 
 import (
 	// "fmt"
@@ -71,6 +71,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	twitch.Get( "/next" , s.TwitchLiveNext )
 	twitch.Get( "/previous" , s.TwitchLivePrevious )
 	twitch.Get( "/update" , s.GetTwitchLiveUpdate )
+	twitch.Get( "/refresh" , s.GetTwitchLiveRefresh )
 	twitch.Get( "/set/quality/max" , s.TwitchLiveSetQualityMax )
 	twitch.Get( "/view/:username" , s.TwitchLiveUser )
 
