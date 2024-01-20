@@ -95,6 +95,4 @@ func ( s *Server ) SetupAdminRoutes() {
 	vlc.Use( validate_admin_mw )
 	vlc.Get( "/url/*" , s.VLCPlayURL )
 
-	// s.FiberApp.Get( "/streamdeck" , s.StreamDeck )
-
 }

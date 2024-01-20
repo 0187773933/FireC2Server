@@ -431,10 +431,14 @@ func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
 	cached_list_with_offline_removed_and_new_online_added := append( cached_list_with_offline_removed , new_online_users... )
 	fmt.Println( "cached list with offline removed and new online added ===" , cached_list_with_offline_removed_and_new_online_added )
 
-	// 5.4) our dumbass circular list package doesn't have a remove
-	// so just rebuild from scratch
+	// 5.4) circular list package doesn't have a remove
+	result = cached_list_with_offline_removed_and_new_online_added
 
-
+	s.DB.Del( context , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+	for _ , user := range result {
+		circular_set.Add( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , user )
+	}
+	s.Set( ( R_KEY_STATE_TWITCH_FOLLOWING_LIVE + ".INDEX" ) , cached_index )
 	return
 }
 
