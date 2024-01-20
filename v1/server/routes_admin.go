@@ -91,8 +91,15 @@ func ( s *Server ) SetupAdminRoutes() {
 	youtube.Get( "/update/live" , s.GetYouTubeLiveUpdate )
 	// s.SetupMediaPlayerRoutes( youtube , "youtube" )
 
+	// VLC
 	vlc := s.FiberApp.Group( "/vlc" )
 	vlc.Use( validate_admin_mw )
 	vlc.Get( "/url/*" , s.VLCPlayURL )
+
+	// ReStreamer
+	restreamer := s.FiberApp.Group( "/restream" )
+	restreamer.Use( validate_admin_mw )
+	restreamer.Get( "/url/*" , s.ReStreamURL )
+
 
 }

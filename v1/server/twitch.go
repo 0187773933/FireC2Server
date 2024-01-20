@@ -63,12 +63,12 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "TwitchLiveNext()" )
 	s.TwitchContinuousOpen()
 
-	next_stream := circular_set.Next( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+	next_stream := circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 	log.Debug( "Next === " , next_stream )
 	if next_stream == "" {
 		log.Debug( "Empty , Refreshing" )
 		s.TwitchLiveUpdate()
-		next_stream = circular_set.Current( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+		next_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 		if next_stream == "" {
 			log.Debug( "nobody is live ...." )
 			return c.JSON( fiber.Map{
@@ -79,7 +79,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 		}
 	}
 	// force refresh on last
-	first_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , "STATE.TWITCH.FOLLOWING.LIVE" , 0 , 0 ).Result()
+	first_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , 0 , 0 ).Result()
 	first_in_set := first_in_set_z[0].Member.(string)
 	if first_in_set == next_stream {
 		log.Debug( "recycled list" )
@@ -116,12 +116,12 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( "TwitchLivePrevious()" )
 	s.TwitchContinuousOpen()
 
-	next_stream := circular_set.Previous( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+	next_stream := circular_set.Previous( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 	log.Debug( "Next === " , next_stream )
 	if next_stream == "" {
 		log.Debug( "Empty , Refreshing" )
 		s.TwitchLiveUpdate()
-		next_stream = circular_set.Previous( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" )
+		next_stream = circular_set.Previous( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 		if next_stream == "" {
 			log.Debug( "nobody is live ...." )
 			return c.JSON( fiber.Map{
@@ -132,7 +132,7 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 		}
 	}
 	// force refresh on last
-	last_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , "STATE.TWITCH.FOLLOWING.LIVE" , -1 , -1 ).Result()
+	last_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , -1 , -1 ).Result()
 	last_in_set := last_in_set_z[0].Member.(string)
 	if last_in_set == next_stream {
 		log.Debug( "recycled list" )
@@ -336,9 +336,9 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	sort.Slice(result, func(i, j int) bool {
 		return currated_map[result[i]] < currated_map[result[j]]
 	})
-	s.DB.Del( context , "STATE.TWITCH.FOLLOWING.LIVE" )
+	s.DB.Del( context , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 	for _ , user := range result {
-		circular_set.Add( s.DB , "STATE.TWITCH.FOLLOWING.LIVE" , user )
+		circular_set.Add( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , user )
 	}
 	log.Debug( result )
 	return
@@ -433,12 +433,12 @@ func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
 
 	// 5.4) circular list package doesn't have a remove
 	result = cached_list_with_offline_removed_and_new_online_added
-
 	s.DB.Del( context , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 	for _ , user := range result {
 		circular_set.Add( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , user )
 	}
 	s.Set( ( R_KEY_STATE_TWITCH_FOLLOWING_LIVE + ".INDEX" ) , cached_index )
+
 	return
 }
 
