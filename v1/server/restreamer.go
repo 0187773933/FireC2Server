@@ -18,10 +18,11 @@ func ( s *Server ) ReStreamURL( c *fiber.Ctx ) ( error ) {
 	log.Debug( fmt.Sprintf( "ReStreamURL( %s )" , x_url ) )
 
 	// 1.) Call https://ReStreamURL/que/url
-	url := fmt.Sprintf( "%s/que/url/%s?k=%s" , s.Config.ReStreamServerUrl , s.Config.ReStreamServerAPIKey )
+	url := fmt.Sprintf( "%s/que/url/%s?k=%s" , s.Config.ReStreamServerUrl , x_url , s.Config.ReStreamServerAPIKey )
 	log.Debug( url )
-	utils.GetJSON( url , nil , nil )
-	time.Sleep( 5 * time.Second )
+	go utils.GetJSON( url , nil , nil )
+	fmt.Println( "Sleeping 6 Seconds for Stream to Hopefully Be Ready" )
+	time.Sleep( 6 * time.Second )
 
 	// 2.) Call VLC Load https://ReStreamURL/hls/stream.m3u8
 	s.VLCContinuousOpen()

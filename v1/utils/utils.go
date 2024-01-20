@@ -123,7 +123,7 @@ func RemoveNonASCII( input string ) ( result string ) {
 const SanitizedStringSizeLimit = 100
 func SanitizeInputString( input string ) ( result string ) {
 	trimmed := strings.TrimSpace( input )
-    if len( trimmed ) > SanitizedStringSizeLimit { trimmed = strings.TrimSpace( trimmed[ 0 : SanitizedStringSizeLimit ] ) }
+	if len( trimmed ) > SanitizedStringSizeLimit { trimmed = strings.TrimSpace( trimmed[ 0 : SanitizedStringSizeLimit ] ) }
 	result = RemoveNonASCII( trimmed )
 	return
 }
@@ -255,7 +255,9 @@ func WakeOnLan( mac_address string ) {
 
 
 func GetJSON( baseURL string , headers map[string]string , params map[string]string ) ( target interface{} ) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	u , err := url.Parse( baseURL )
 	if err != nil { fmt.Println( err ); return }
 	q := u.Query()
