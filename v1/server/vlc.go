@@ -73,3 +73,19 @@ func ( s *Server ) VLCPrevious( c *fiber.Ctx ) ( error ) {
 		"result": true ,
 	})
 }
+
+func ( s *Server ) VLCPlayURL( c *fiber.Ctx ) ( error ) {
+	x_url := c.Params( "*" )
+	log.Debug( fmt.Sprintf( "VLCPlayURL( %s )" , x_url ) )
+	s.VLCContinuousOpen()
+	uri := fmt.Sprintf( "vlc://%s" , x_url )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+	s.Set( "active_player_now_playing_id" , x_url )
+	s.Set( "active_player_now_playing_uri" , uri )
+	return c.JSON( fiber.Map{
+		"url": "/vlc/url/:url" ,
+		"param_url": x_url ,
+		"result": true ,
+	})
+}
