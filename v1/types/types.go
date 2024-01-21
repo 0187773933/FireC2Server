@@ -73,6 +73,7 @@ type ConfigFile struct {
 	RedisAddress string `yaml:"redis_address"`
 	RedisDBNumber int `yaml:"redis_db_number"`
 	RedisPassword string `yaml:"redis_password"`
+	ReStreamServerUrlLocal string `yaml:"restream_server_url_local"`
 	ReStreamServerUrl string `yaml:"restream_server_url"`
 	ReStreamServerAPIKey string `yaml:"restream_server_api_key"`
 	ReStreamServerHLSURLPrefix string `yaml:"restream_server_hls_url_prefix"`

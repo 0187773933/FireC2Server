@@ -18,7 +18,7 @@ func ( s *Server ) ReStreamURL( c *fiber.Ctx ) ( error ) {
 	log.Debug( fmt.Sprintf( "ReStreamURL( %s )" , x_url ) )
 
 	// 1.) Call https://ReStreamURL/que/url
-	url := fmt.Sprintf( "%s/que/url/%s?k=%s" , s.Config.ReStreamServerUrl , x_url , s.Config.ReStreamServerAPIKey )
+	url := fmt.Sprintf( "%s/que/url/%s?k=%s" , s.Config.ReStreamServerUrlLocal , x_url , s.Config.ReStreamServerAPIKey )
 	log.Debug( url )
 	go utils.GetJSON( url , nil , nil )
 	log.Debug( "Sleeping 15 Seconds for ReStream to Hopefully Be Ready" )
