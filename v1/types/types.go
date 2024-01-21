@@ -75,6 +75,7 @@ type ConfigFile struct {
 	RedisPassword string `yaml:"redis_password"`
 	ReStreamServerUrl string `yaml:"restream_server_url"`
 	ReStreamServerAPIKey string `yaml:"restream_server_api_key"`
+	ReStreamServerHLSURLPrefix string `yaml:"restream_server_hls_url_prefix"`
 	StreamDeckServerUrl string `yaml:"stream_deck_server_url"`
 	StreamDeckServerAPIKey string `yaml:"stream_deck_server_api_key"`
 	TVWakeOnLan bool `yaml:"tv_wake_on_lan"`

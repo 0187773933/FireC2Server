@@ -26,7 +26,7 @@ func ( s *Server ) ReStreamURL( c *fiber.Ctx ) ( error ) {
 
 	// 2.) Call VLC Load https://ReStreamURL/hls/stream.m3u8
 	s.VLCContinuousOpen()
-	uri := fmt.Sprintf( "vlc://%s/hls/stream.m3u8" , s.Config.ReStreamServerUrl )
+	uri := fmt.Sprintf( "vlc://%s/%s/stream.m3u8" , s.Config.ReStreamServerUrl , s.Config.ReStreamServerHLSURLPrefix )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , x_url )
@@ -46,7 +46,7 @@ func ( s *Server ) ReStreamRestart( c *fiber.Ctx ) ( error ) {
 	log.Debug( "ReStreamRestart()" )
 
 	s.VLCContinuousOpen()
-	uri := fmt.Sprintf( "vlc://%s/hls/stream.m3u8" , s.Config.ReStreamServerUrl )
+	uri := fmt.Sprintf( "vlc://%s/%s/stream.m3u8" , s.Config.ReStreamServerUrl , s.Config.ReStreamServerHLSURLPrefix )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 
