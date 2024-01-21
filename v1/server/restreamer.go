@@ -61,3 +61,14 @@ func ( s *Server ) ReStreamRestart( c *fiber.Ctx ) ( error ) {
 		"result": true ,
 	})
 }
+
+func ( s *Server ) ReStreamStop( c *fiber.Ctx ) ( error ) {
+	log.Debug( "ReStreamStop()" )
+	url := fmt.Sprintf( "%s/stop?k=%s" , s.Config.ReStreamServerUrlLocal , s.Config.ReStreamServerAPIKey )
+	log.Debug( url )
+	utils.GetJSON( url , nil , nil )
+	return c.JSON( fiber.Map{
+		"url": "/restream/stop" ,
+		"result": true ,
+	})
+}

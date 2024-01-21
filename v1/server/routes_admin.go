@@ -101,5 +101,6 @@ func ( s *Server ) SetupAdminRoutes() {
 	restreamer.Use( validate_admin_mw )
 	restreamer.Get( "/url/*" , s.ReStreamURL )
 	restreamer.Get( "/restart" , s.ReStreamRestart )
+	restreamer.Get( "/stop" , s.ReStreamStop )
 
 }
