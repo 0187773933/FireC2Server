@@ -50,7 +50,10 @@ func ( s *Server ) ReStreamRestart( c *fiber.Ctx ) ( error ) {
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
 
+	// it works , but you don't want it. PepeWideMode
 	// 3.) If URL=TikTok Rotate Screen to Landscape ???
+	// s.ADB.Shell( "settings" , "put" , "system" , "accelerometer_rotation" , "0" )
+	// s.ADB.Landscape()
 
 	// 4.) Return
 	return c.JSON( fiber.Map{
