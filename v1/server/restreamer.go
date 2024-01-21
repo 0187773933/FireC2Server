@@ -21,8 +21,8 @@ func ( s *Server ) ReStreamURL( c *fiber.Ctx ) ( error ) {
 	url := fmt.Sprintf( "%s/que/url/%s?k=%s" , s.Config.ReStreamServerUrl , x_url , s.Config.ReStreamServerAPIKey )
 	log.Debug( url )
 	go utils.GetJSON( url , nil , nil )
-	fmt.Println( "Sleeping 6 Seconds for Stream to Hopefully Be Ready" )
-	time.Sleep( 6 * time.Second )
+	log.Debug( "Sleeping 15 Seconds for ReStream to Hopefully Be Ready" )
+	time.Sleep( 15 * time.Second )
 
 	// 2.) Call VLC Load https://ReStreamURL/hls/stream.m3u8
 	s.VLCContinuousOpen()
@@ -38,6 +38,23 @@ func ( s *Server ) ReStreamURL( c *fiber.Ctx ) ( error ) {
 	return c.JSON( fiber.Map{
 		"url": "/restream/url/:url" ,
 		"param_url": x_url ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) ReStreamRestart( c *fiber.Ctx ) ( error ) {
+	log.Debug( "ReStreamRestart()" )
+
+	s.VLCContinuousOpen()
+	uri := fmt.Sprintf( "vlc://%s/hls/stream.m3u8" , s.Config.ReStreamServerUrl )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+
+	// 3.) If URL=TikTok Rotate Screen to Landscape ???
+
+	// 4.) Return
+	return c.JSON( fiber.Map{
+		"url": "/restream/restart" ,
 		"result": true ,
 	})
 }

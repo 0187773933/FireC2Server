@@ -100,6 +100,6 @@ func ( s *Server ) SetupAdminRoutes() {
 	restreamer := s.FiberApp.Group( "/restream" )
 	restreamer.Use( validate_admin_mw )
 	restreamer.Get( "/url/*" , s.ReStreamURL )
-
+	restreamer.Get( "/restart" , s.ReStreamRestart )
 
 }
