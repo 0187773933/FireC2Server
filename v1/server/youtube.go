@@ -5,12 +5,11 @@ import (
 	time "time"
 	"math/rand"
 	"strings"
-	// "context"
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"context"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
 	// redis "github.com/redis/go-redis/v9"
@@ -53,13 +52,114 @@ func ( s *Server ) YouTubeContinuousOpen() {
 	}
 }
 
-var RESET_COUNTER = 0;
+// This is not a youtube playlist , this is our own "playlist"
+// android youtube app still doesn't have intents for playlist loading
+func ( s *Server ) YouTubePlaylistNext( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubePlaylistNext()" )
+	playlist_name := c.Params( "name" )
+	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
+	video_id := circular_set.Next( s.DB , key )
+	available := s.YouTubeIsVideoIdAvailable( video_id )
+	if available == false {
+		return c.JSON( fiber.Map{
+			"url": "/youtube/playlist/:name/next" ,
+			"playlist_name": playlist_name ,
+			"video_id": video_id ,
+			"video_available": available ,
+			"result": false ,
+		})
+	}
+	s.YouTubeContinuousOpen()
+	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+	s.Set( "active_player_now_playing_id" , video_id )
+	s.Set( "active_player_now_playing_text" , "" )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/playlist/:name/next" ,
+		"playlist_name": playlist_name ,
+		"video_id": video_id ,
+		"video_available": available ,
+		"result": false ,
+	})
+}
 
+func ( s *Server ) YouTubePlaylistPrevious( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubePlaylistPrevious()" )
+	playlist_name := c.Params( "name" )
+	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
+	video_id := circular_set.Previous( s.DB , key )
+	available := s.YouTubeIsVideoIdAvailable( video_id )
+	if available == false {
+		return c.JSON( fiber.Map{
+			"url": "/youtube/playlist/:name/previous" ,
+			"playlist_name": playlist_name ,
+			"video_id": video_id ,
+			"video_available": available ,
+			"result": false ,
+		})
+	}
+	s.YouTubeContinuousOpen()
+	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+	s.Set( "active_player_now_playing_id" , video_id )
+	s.Set( "active_player_now_playing_text" , "" )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/playlist/:name/previous" ,
+		"playlist_name": playlist_name ,
+		"video_id": video_id ,
+		"video_available": available ,
+		"result": false ,
+	})
+}
+
+func ( s *Server ) YouTubePlaylistAddVideo( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubePlaylistAddVideo()" )
+	playlist_name := c.Params( "name" )
+	video_id := c.Params( "id" )
+	available := s.YouTubeIsVideoIdAvailable( video_id )
+	if available == false {
+		return c.JSON( fiber.Map{
+			"url": "/youtube/playlist/:name/add/:id" ,
+			"playlist_name": playlist_name ,
+			"video_id": video_id ,
+			"video_available": available ,
+			"result": false ,
+		})
+	}
+	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
+	circular_set.Add( s.DB , key , video_id )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/playlist/:name/add/:id" ,
+		"playlist_name": playlist_name ,
+		"video_id": video_id ,
+		"video_available": available ,
+		"result": false ,
+	})
+}
+
+func ( s *Server ) YouTubePlaylistGet( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubePlaylistGet()" )
+	playlist_name := c.Params( "name" )
+	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
+	videos := s.DB.ZRange( context.Background() , key , 0 , -1 ).Val()
+	return c.JSON( fiber.Map{
+		"url": "/youtube/playlist/:name/get" ,
+		"playlist_name": playlist_name ,
+		"videos": videos ,
+		"result": false ,
+	})
+}
+
+
+var RESET_COUNTER = 0;
 func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubeLiveNext()" )
 	s.YouTubeContinuousOpen()
 	video_id := circular_set.Next( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" )
 	available := s.YouTubeIsVideoIdAvailable( video_id )
+	// IF None Available 5 Times in A Row
 	if available == false {
 		RESET_COUNTER += 1
 		if RESET_COUNTER > 5 {
@@ -149,15 +249,13 @@ func ( s *Server ) YouTubeIsVideoIdAvailable( video_id string ) ( result bool ) 
 	req.Header.Add( "Accept" , "application/json" )
 	resp , _ := http.DefaultClient.Do( req )
 	defer resp.Body.Close()
-
 	if resp.StatusCode == 403 {
 		fmt.Println( "api key banned ???" , next_api_key )
 		return s.YouTubeIsVideoIdAvailable( video_id )
 	}
-
 	var video_info YoutubeVideoInfo
 	body , _ := ioutil.ReadAll( resp.Body )
-	fmt.Println( string( body ) )
+	// fmt.Println( string( body ) )
 	json.Unmarshal( body , &video_info )
 	if len( video_info.Items ) >= 1 {
 		result = true

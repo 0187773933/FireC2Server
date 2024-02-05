@@ -80,16 +80,25 @@ func ( s *Server ) SetupAdminRoutes() {
 	disney.Use( validate_admin_mw )
 	disney.Get( "/next" , s.DisneyMovieNext )
 	disney.Get( "/previous" , s.DisneyMoviePrevious )
-	disney.Get( "/movie/:movie_id" , s.DisneyMovie )
+	disney.Get( "/movie/:id" , s.DisneyMovie )
 
 	// YouTube
 	youtube := s.FiberApp.Group( "/youtube" )
 	youtube.Use( validate_admin_mw )
-	youtube.Get( "/:video_id" , s.YouTubeVideo )
+		// Misc
+	// youtube.Get( "/search/:query" , s.YouTubeSearch )
+		// Live
 	youtube.Get( "/live/next" , s.YouTubeLiveNext )
 	youtube.Get( "/live/previous" , s.YouTubeLivePrevious )
-	youtube.Get( "/update/live" , s.GetYouTubeLiveUpdate )
-	// s.SetupMediaPlayerRoutes( youtube , "youtube" )
+	youtube.Get( "/live/update" , s.GetYouTubeLiveUpdate )
+		// Our Custom Playlist Wrapper
+	youtube.Get( "/playlist/:name/add/:id" , s.YouTubePlaylistAddVideo )
+	youtube.Get( "/playlist/:name/get" , s.YouTubePlaylistGet )
+	// youtube.Get( "/playlist/:name/delete/:video_id" , s.GetYouTubePlaylistNext )
+	// youtube.Get( "/playlist/:name/index/get" , s.GetYouTubePlaylistNext )
+	// youtube.Get( "/playlist/:name/index/set/:index" , s.GetYouTubePlaylistNext )
+	youtube.Get( "/playlist/:name/next" , s.YouTubePlaylistNext )
+	youtube.Get( "/playlist/:name/previous" , s.YouTubePlaylistPrevious )
 
 	// VLC
 	vlc := s.FiberApp.Group( "/vlc" )

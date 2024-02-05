@@ -99,7 +99,7 @@ func ( s *Server ) DisneyMoviePrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) DisneyMovie( c *fiber.Ctx ) ( error ) {
-	movie_id := c.Params( "movie_id" )
+	movie_id := c.Params( "id" )
 	log.Debug( fmt.Sprintf( "DisneyMovie( %s )" , movie_id ) )
 	s.DisneyContinuousOpen()
 	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , movie_id )
