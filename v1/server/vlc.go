@@ -89,3 +89,18 @@ func ( s *Server ) VLCPlayURL( c *fiber.Ctx ) ( error ) {
 		"result": true ,
 	})
 }
+
+// Custom Playlist Stuff
+func ( s *Server ) VLCPlaylistAddURL( c *fiber.Ctx ) ( error ) {
+	log.Debug( "VLCPlaylistAddURL()" )
+	playlist_name := c.Params( "name" )
+	sent_url := c.Params( "*" )
+	// key := fmt.Sprintf( "LIBRARY.VLC.PLAYLISTS.%s" , playlist_name )
+	// circular_set.Add( s.DB , key , video_id )
+	return c.JSON( fiber.Map{
+		"url": "/vlc/playlist/:name/add/url/*" ,
+		"playlist_name": playlist_name ,
+		"sent_url": sent_url ,
+		"result": true ,
+	})
+}

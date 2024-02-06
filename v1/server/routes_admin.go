@@ -105,6 +105,13 @@ func ( s *Server ) SetupAdminRoutes() {
 	vlc := s.FiberApp.Group( "/vlc" )
 	vlc.Use( validate_admin_mw )
 	vlc.Get( "/url/*" , s.VLCPlayURL )
+	vlc.Get( "/playlist/:name/add/url/*" , s.VLCPlaylistAddURL )
+	// vlc.Get( "/playlist/:name/get" , s.VLCPlaylistGet )
+	// vlc.Get( "/playlist/:name/delete/:video_id" , s.VLCPlaylistDeleteVideo )
+	// vlc.Get( "/playlist/:name/index/get" , s.VLCPlaylistGetIndex )
+	// vlc.Get( "/playlist/:name/index/set/:index" , s.VLCPlaylistSetIndex )
+	// vlc.Get( "/playlist/:name/next" , s.VLCPlaylistNext )
+	// vlc.Get( "/playlist/:name/previous" , s.VLCPlaylistPrevious )
 
 	// ReStreamer
 	restreamer := s.FiberApp.Group( "/restream" )
@@ -112,5 +119,12 @@ func ( s *Server ) SetupAdminRoutes() {
 	restreamer.Get( "/url/*" , s.ReStreamURL )
 	restreamer.Get( "/restart" , s.ReStreamRestart )
 	restreamer.Get( "/stop" , s.ReStreamStop )
+
+	// Firefox Focus
+	s.FiberApp.Get( "/firefox-focus/audio/*" , s.GetFireFoxFocusAudioPlayer )
+	s.FiberApp.Get( "/firefox-focus/video/*" , s.GetFireFoxFocusVideoPlayer )
+	firefoxfocus := s.FiberApp.Group( "/firefox-focus" )
+	firefoxfocus.Use( validate_admin_mw )
+	firefoxfocus.Get( "/url/*" , s.FireFoxFocusOpenURL )
 
 }
