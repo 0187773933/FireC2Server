@@ -91,12 +91,13 @@ func ( s *Server ) SetupAdminRoutes() {
 	youtube.Get( "/live/next" , s.YouTubeLiveNext )
 	youtube.Get( "/live/previous" , s.YouTubeLivePrevious )
 	youtube.Get( "/live/update" , s.GetYouTubeLiveUpdate )
-		// Our Custom Playlist Wrapper
+		// Custom Playlist Wrapper
 	youtube.Get( "/playlist/:name/add/:id" , s.YouTubePlaylistAddVideo )
+	youtube.Get( "/playlist/:name/add/playlist/:id" , s.YouTubePlaylistAddPlaylist )
 	youtube.Get( "/playlist/:name/get" , s.YouTubePlaylistGet )
-	// youtube.Get( "/playlist/:name/delete/:video_id" , s.GetYouTubePlaylistNext )
-	// youtube.Get( "/playlist/:name/index/get" , s.GetYouTubePlaylistNext )
-	// youtube.Get( "/playlist/:name/index/set/:index" , s.GetYouTubePlaylistNext )
+	youtube.Get( "/playlist/:name/delete/:video_id" , s.YouTubePlaylistDeleteVideo )
+	youtube.Get( "/playlist/:name/index/get" , s.YouTubePlaylistGetIndex )
+	youtube.Get( "/playlist/:name/index/set/:index" , s.YouTubePlaylistSetIndex )
 	youtube.Get( "/playlist/:name/next" , s.YouTubePlaylistNext )
 	youtube.Get( "/playlist/:name/previous" , s.YouTubePlaylistPrevious )
 

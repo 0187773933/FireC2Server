@@ -52,23 +52,47 @@ func ( s *Server ) YouTubeContinuousOpen() {
 	}
 }
 
+func ( s *Server ) YouTubePlaylistGetNextAvailableVideoID( playlist_key string ) ( video_id string ) {
+	for {
+		video_id = circular_set.Next( s.DB , playlist_key )
+		available := s.YouTubeIsVideoIdAvailable( video_id )
+		fmt.Println( video_id , available )
+		if available == false {
+			circular_set.Remove( s.DB , playlist_key , video_id )
+			total_items := s.DB.ZCard( context.Background() , playlist_key ).Val()
+			if total_items == 0 { return }
+			time.Sleep( 3 * time.Second )
+		} else {
+			return
+		}
+	}
+}
+
+func ( s *Server ) YouTubePlaylistGetPreviousAvailableVideoID( playlist_key string ) ( video_id string ) {
+	for {
+		video_id = circular_set.Previous( s.DB , playlist_key )
+		available := s.YouTubeIsVideoIdAvailable( video_id )
+		fmt.Println( video_id , available )
+		if available == false {
+			circular_set.Remove( s.DB , playlist_key , video_id )
+			total_items := s.DB.ZCard( context.Background() , playlist_key ).Val()
+			if total_items == 0 { return }
+			time.Sleep( 3 * time.Second )
+		} else {
+			return
+		}
+	}
+}
+
 // This is not a youtube playlist , this is our own "playlist"
 // android youtube app still doesn't have intents for playlist loading
 func ( s *Server ) YouTubePlaylistNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubePlaylistNext()" )
 	playlist_name := c.Params( "name" )
 	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
-	video_id := circular_set.Next( s.DB , key )
-	available := s.YouTubeIsVideoIdAvailable( video_id )
-	if available == false {
-		return c.JSON( fiber.Map{
-			"url": "/youtube/playlist/:name/next" ,
-			"playlist_name": playlist_name ,
-			"video_id": video_id ,
-			"video_available": available ,
-			"result": false ,
-		})
-	}
+	key_index := key + ".INDEX"
+	playlist_index := s.DB.Get( context.Background() , key_index ).Val()
+	video_id := s.YouTubePlaylistGetNextAvailableVideoID( key )
 	s.YouTubeContinuousOpen()
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
 	log.Debug( uri )
@@ -78,9 +102,9 @@ func ( s *Server ) YouTubePlaylistNext( c *fiber.Ctx ) ( error ) {
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/next" ,
 		"playlist_name": playlist_name ,
+		"playlist_index": playlist_index ,
 		"video_id": video_id ,
-		"video_available": available ,
-		"result": false ,
+		"result": true ,
 	})
 }
 
@@ -88,17 +112,9 @@ func ( s *Server ) YouTubePlaylistPrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubePlaylistPrevious()" )
 	playlist_name := c.Params( "name" )
 	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
-	video_id := circular_set.Previous( s.DB , key )
-	available := s.YouTubeIsVideoIdAvailable( video_id )
-	if available == false {
-		return c.JSON( fiber.Map{
-			"url": "/youtube/playlist/:name/previous" ,
-			"playlist_name": playlist_name ,
-			"video_id": video_id ,
-			"video_available": available ,
-			"result": false ,
-		})
-	}
+	key_index := key + ".INDEX"
+	playlist_index := s.DB.Get( context.Background() , key_index ).Val()
+	video_id := s.YouTubePlaylistGetPreviousAvailableVideoID( key )
 	s.YouTubeContinuousOpen()
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
 	log.Debug( uri )
@@ -108,9 +124,9 @@ func ( s *Server ) YouTubePlaylistPrevious( c *fiber.Ctx ) ( error ) {
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/previous" ,
 		"playlist_name": playlist_name ,
+		"playlist_index": playlist_index ,
 		"video_id": video_id ,
-		"video_available": available ,
-		"result": false ,
+		"result": true ,
 	})
 }
 
@@ -135,20 +151,85 @@ func ( s *Server ) YouTubePlaylistAddVideo( c *fiber.Ctx ) ( error ) {
 		"playlist_name": playlist_name ,
 		"video_id": video_id ,
 		"video_available": available ,
-		"result": false ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) YouTubePlaylistAddPlaylist( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubePlaylistAddPlaylist()" )
+	playlist_name := c.Params( "name" )
+	playlist_id := c.Params( "id" )
+	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
+	playlist_videos := s.YouTubeGetPlaylistVideos( playlist_id )
+	for _ , video := range playlist_videos {
+		circular_set.Add( s.DB , key , video.Id )
+	}
+	return c.JSON( fiber.Map{
+		"url": "/youtube/playlist/:name/add/playlist/:id" ,
+		"playlist_name": playlist_name ,
+		"playlist_id": playlist_id ,
+		"playlist_videos": playlist_videos ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) YouTubePlaylistDeleteVideo( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubePlaylistDeleteVideo()" )
+	playlist_name := c.Params( "name" )
+	video_id := c.Params( "id" )
+	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
+	circular_set.Remove( s.DB , key , video_id )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/playlist/:name/delete/:id" ,
+		"playlist_name": playlist_name ,
+		"video_id": video_id ,
+		"result": true ,
 	})
 }
 
 func ( s *Server ) YouTubePlaylistGet( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubePlaylistGet()" )
 	playlist_name := c.Params( "name" )
+	var ctx = context.Background()
 	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
-	videos := s.DB.ZRange( context.Background() , key , 0 , -1 ).Val()
+	key_index := key + ".INDEX"
+	videos := s.DB.ZRange( ctx , key , 0 , -1 ).Val()
+	current_index := s.DB.Get( ctx , key_index ).Val()
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/get" ,
 		"playlist_name": playlist_name ,
+		"current_index": current_index ,
 		"videos": videos ,
-		"result": false ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) YouTubePlaylistGetIndex( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubePlaylistGetIndex()" )
+	playlist_name := c.Params( "name" )
+	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
+	key_index := key + ".INDEX"
+	index := s.DB.Get( context.Background() , key_index ).Val()
+	return c.JSON( fiber.Map{
+		"url": "/youtube/playlist/:name/index/get" ,
+		"playlist_name": playlist_name ,
+		"index": index ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) YouTubePlaylistSetIndex( c *fiber.Ctx ) ( error ) {
+	log.Debug( "YouTubePlaylistSetIndex()" )
+	playlist_name := c.Params( "name" )
+	set_index := c.Params( "index" )
+	key := fmt.Sprintf( "LIBRARY.YOUTUBE.PLAYLISTS.%s" , playlist_name )
+	key_index := key + ".INDEX"
+	s.DB.Set( context.Background() , key_index , set_index , 0 )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/playlist/:name/index/set/:index" ,
+		"playlist_name": playlist_name ,
+		"set_index": set_index ,
+		"result": true ,
 	})
 }
 
@@ -308,10 +389,6 @@ func ( s *Server ) YouTubeGetChannelId( channel_name string ) ( result string ) 
 	return
 }
 
-type YoutubeVideo struct {
-	Id string `json:"id"`
-	Name string `json:"name"`
-}
 type YouTubeResponseItem struct {
 	Id struct {
 		VideoId string `json:"videoId"`
@@ -359,12 +436,12 @@ func ( s *Server ) YouTubeGetChannelsLiveVideos( channel_id string ) ( result []
 				result = append( result , video )
 			}
 			return result
-        } else {
-            fmt.Println( "failed. Retrying..." )
-            next_api_key = circular_set.Next( s.DB , "CONFIG.YOUTUBE.API_KEYS" )
-            // fmt.Println( string( body ) )
-            time.Sleep( 2 * time.Second )
-        }
+		} else {
+			fmt.Println( "failed. Retrying..." )
+			next_api_key = circular_set.Next( s.DB , "CONFIG.YOUTUBE.API_KEYS" )
+			// fmt.Println( string( body ) )
+			time.Sleep( 2 * time.Second )
+		}
 	}
 	fmt.Println( "Max retries reached. No live videos found." )
 	return
@@ -403,4 +480,81 @@ func ( s *Server ) GetYouTubeLiveUpdate( c *fiber.Ctx ) ( error ) {
 		"live": live ,
 		"result": true ,
 	})
+}
+
+type YoutubePlaylistResponse struct {
+	NextPageToken string `json:"nextPageToken"`
+	Items         []struct {
+		Snippet struct {
+			ResourceId struct {
+				VideoId string `json:"videoId"`
+			} `json:"resourceId"`
+			Title string `json:"title"`
+		} `json:"snippet"`
+	} `json:"items"`
+}
+
+type YoutubeVideo struct {
+	Id   string
+	Name string
+}
+
+func ( s *Server ) YouTubeGetPlaylistVideos( playlist_id string ) ( result []YoutubeVideo ) {
+	next_api_key := circular_set.Next( s.DB , "CONFIG.YOUTUBE.API_KEYS" )
+	base_url := "https://www.googleapis.com/youtube/v3/playlistItems"
+	params := url.Values{}
+	params.Add( "part" , "snippet" )
+	params.Add( "playlistId" , playlist_id )
+	params.Add( "maxResults" , "50" )
+	params.Add( "key" , next_api_key )
+
+	var nextPageToken string
+	max_retries := 5 // Consider adjusting based on your error handling strategy
+
+	for i := 0; i < max_retries; i++ {
+		if nextPageToken != "" {
+			params.Set("pageToken", nextPageToken)
+		}
+
+		full_url := fmt.Sprintf("%s?%s", base_url, params.Encode())
+		req, _ := http.NewRequest("GET", full_url, nil)
+		req.Header.Add("Accept", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			fmt.Println("Error making request:", err)
+			time.Sleep(2 * time.Second) // Backoff before retry
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == 403 {
+			fmt.Println("API key banned ???", next_api_key)
+			next_api_key = circular_set.Next(s.DB, "CONFIG.YOUTUBE.API_KEYS")
+			params.Set("key", next_api_key) // Update API key and retry
+			continue
+		}
+
+		body, _ := ioutil.ReadAll(resp.Body)
+		var playlistResponse YoutubePlaylistResponse
+		json.Unmarshal(body, &playlistResponse)
+
+		for _, item := range playlistResponse.Items {
+			video := YoutubeVideo{
+				Id:   item.Snippet.ResourceId.VideoId,
+				Name: item.Snippet.Title,
+			}
+			fmt.Println( video )
+			result = append(result, video)
+		}
+
+		nextPageToken = playlistResponse.NextPageToken
+		if nextPageToken == "" {
+			break // Exit the loop if there's no next page
+		}
+	}
+
+	if len(result) == 0 {
+		fmt.Println("No videos found in playlist or max retries reached.")
+	}
+	return
 }
