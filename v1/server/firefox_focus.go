@@ -59,6 +59,8 @@ func ( s *Server ) FireFoxFocusOpenURL( c *fiber.Ctx ) ( error ) {
 	})
 }
 
+// http://localhost:5954/firefox-focus/audio/https://files.34353.org/AudioBooks/CarlosCastaneda/01-The-Teachings-of-Don-Juan-A-Yaqui-Way-of-Knowledge.mp3
+// http://192.168.4.23:5954/firefox-focus/audio/https://files.34353.org/AudioBooks/CarlosCastaneda/01-The-Teachings-of-Don-Juan-A-Yaqui-Way-of-Knowledge.mp3
 func ( s *Server ) GetFireFoxFocusAudioPlayer( context *fiber.Ctx ) ( error ) {
 	return context.SendFile( "./v1/server/html/firefox_focus_audio_player.html" )
 }

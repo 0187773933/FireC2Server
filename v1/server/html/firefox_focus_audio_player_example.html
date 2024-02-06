@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Firefox Focus Audio Player</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- <link href="/cdn/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+		<script src="/cdn/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+		<script src="/cdn/jquery.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js" integrity="sha256-c2wzlETIi6rVk+JK/fHW6PV0AZtON6EQ7LRT/3Rf/UE=" crossorigin="anonymous"></script>
+		<style type="text/css">
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  outline: 0;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  background: #bb71f3;
+  background: -moz-linear-gradient(-45deg, #bb71f3 0%, #3d4d91 100%);
+  background: -webkit-linear-gradient(-45deg, #bb71f3 0%, #3d4d91 100%);
+  background: linear-gradient(135deg, #bb71f3 0%, #3d4d91 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bb71f3', endColorstr='#3d4d91', GradientType=1);
+  font-family: "Helvetica Neue", "Futura", "Trebuchet MS", Arial;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+}
+
+/* Top Info */
+#title {
+  position: absolute;
+  width: 100%;
+  top: 3%;
+  line-height: 34px;
+  height: 34px;
+  text-align: center;
+  font-size: 34px;
+  opacity: 0.9;
+  font-weight: 300;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.33);
+}
+#timer {
+  position: absolute;
+  top: 0;
+  left: 3%;
+  text-align: left;
+  font-size: 26px;
+  opacity: 0.9;
+  font-weight: 300;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.33);
+}
+#duration {
+  position: absolute;
+  top: 0;
+  right: 3%;
+  text-align: right;
+  font-size: 26px;
+  opacity: 0.5;
+  font-weight: 300;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.33);
+}
+
+/* Controls */
+.controlsOuter {
+  position: absolute;
+  width: 100%;
+  height: 70px;
+  bottom: 3%;
+}
+.controlsInner {
+  position: absolute;
+  width: 340px;
+  height: 70px;
+  left: 50%;
+  margin: 0 -170px;
+}
+.btn {
+  position: absolute;
+  cursor: pointer;
+  opacity: 0.9;
+  -webkit-filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.33));
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.33));
+  -webkit-user-select: none;
+  user-select: none;
+}
+.btn:hover {
+  opacity: 1;
+}
+#playBtn {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEUAAABGCAYAAACaGVmHAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTExIDc5LjE1ODMyNSwgMjAxNS8wOS8xMC0wMToxMDoyMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QThERThENUFDNkJEMTFFNTk2RTBDMTRBMkYyNjVGMzQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QThERThENUJDNkJEMTFFNTk2RTBDMTRBMkYyNjVGMzQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBOERFOEQ1OEM2QkQxMUU1OTZFMEMxNEEyRjI2NUYzNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBOERFOEQ1OUM2QkQxMUU1OTZFMEMxNEEyRjI2NUYzNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PnFM7yIAAAFWSURBVHja7NRJDoMwDEDRcPL2ZoVeLEUtCyoCZPBsf8mS10+Wp5zzK6X0XGdJ0bdpRcnbPgfOESUFzjmKe5wrFLc4NSjucFpQ3OD0oJjHGUExiwOBYg4HEsUMDgaKehxMFLU4FCjqcChR1OBwoIjH4UQRiyMBRRyOJBQxOBJR2HEko7DhaEAhx9GEQoajEQUdRzMKGo4FFHAcSyhgOBZRhnEso3TjeEBpxvGEUo3jEeUWxzPKKU6gFHACpYATKMfegbLDWOcRl/Jr2X7JHI+2gOEZ5RTDI8othieUagwPKM0YllG6MSyiDGNYQgHDsIACjqEZBQ1DIwo6hiYUMgwNKOQYklHYMCSisGNIQhGDIQFFHAYnilgMDhTxGJQoajAoUNRhYKKoxcBAUY8BiWIGAwLFHMYIilmMHhTzGC0objBqUNxhXKG4xSihuMfYo8yB8d9HgAEATyefBJWpw70AAAAASUVORK5CYII=');
+  width: 69px;
+  height: 70px;
+  left: 50%;
+  margin: auto -34.5px;
+}
+#pauseBtn {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEUAAABGCAYAAACaGVmHAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTExIDc5LjE1ODMyNSwgMjAxNS8wOS8xMC0wMToxMDoyMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MDE4MjkzRjNDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MDE4MjkzRjRDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBOERFOEQ1Q0M2QkQxMUU1OTZFMEMxNEEyRjI2NUYzNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDowMTgyOTNGMkM3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pne5d1AAAAB8SURBVHja7NCxCQAwAALBuP/QZoEUlinua0G4tD1j83Asv/4GChQoUKBAgQIFChQoUKBAgQIFChQoUKBAgQIFChQoUKBAgQIFChQoUKBAgQIFChQoUKBAgQIFChQoUKBAgQIFChQoUKBAgQIFChQoUKBAgQIFCpRXV4ABAOgpXYTDYwEwAAAAAElFTkSuQmCC');
+  width: 69px;
+  height: 70px;
+  left: 50%;
+  margin: auto -34.5px;
+  display: none;
+}
+#prevBtn {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACMAAAAjCAYAAAAe2bNZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTExIDc5LjE1ODMyNSwgMjAxNS8wOS8xMC0wMToxMDoyMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MDE4MjkzRkJDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MDE4MjkzRkNDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDowMTgyOTNGOUM3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDowMTgyOTNGQUM3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PndeAH8AAACtSURBVHja7NXJCcAgEAVQEevK0lk6M1aW6CGQQBBn+ephBv7F0wNn8Vd7OWCWnOjd2FpzYk7K2cJAxFEA78cwA6I3porohWlCoDEkBArDQmhjRAgtjApCilFFcDEQBAcTUYinKLcJCqFinGEMYxjDgDFpJkzZwDsSRf2mE4ni9gwEJW1gVZTWNKmgtEdbhELtGRYKvfRIqF4buAnV+xxUUaNu0y9q9KH8oG4BBgDjdpk0jMoz1gAAAABJRU5ErkJggg==');
+  width: 35px;
+  height: 35px;
+  left: 0;
+  top: 50%;
+  margin: -17.5px auto;
+}
+#nextBtn {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACMAAAAjCAYAAAAe2bNZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTExIDc5LjE1ODMyNSwgMjAxNS8wOS8xMC0wMToxMDoyMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MDE4MjkzRjdDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MDE4MjkzRjhDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDowMTgyOTNGNUM3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDowMTgyOTNGNkM3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PiFbkXsAAACvSURBVHja7NZBDoAgDARA9GPiz/yZ8DKsxgMHY1rYBQ5sshdCwiQcWpdSOqWb1BGrSn6RiTJjmKhiDANVjUGiYBgECo6pQdEwJSg6xoJqhtGgVFkeETZBekhjdqZ6g4H5QnXH5Cg/CkadiZmYiZkYdtYGb8QRMDdi144C1jfFd0AG69RG7jNB6nsvV3+IZhgNgo6xIGiYEgQcU4OAYRCIagwSUYxhIMwYJsKEuQQYABTs+qTMuF1rAAAAAElFTkSuQmCC');
+  width: 35px;
+  height: 35px;
+  right: 0;
+  top: 50%;
+  margin: -17.5px auto;
+}
+#playlistBtn {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACMAAAAjCAYAAAAe2bNZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTExIDc5LjE1ODMyNSwgMjAxNS8wOS8xMC0wMToxMDoyMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MUVBQzMwNzRDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MUVBQzMwNzVDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDoxRUFDMzA3MkM3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDoxRUFDMzA3M0M3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PnWBPa0AAADGSURBVHjaYvz//z/DYAFMDIMIjDpm1DHDwjH/0fDugXAMCxK7AojPAnEHmpo0IFaisTsqIEECLPT+Q4ALlL0bihmQ+LQGYLsYoSXwf2iovAdiYyjbdaCiaQ+S2FkopjtgHK2bCESTC5r4+4GIKuQEjAz2DGQCHhTlDAtaLtoDjSJkoATN7iMzmjrRxO+NljODsZzpwBJNs0bLGShwhToCvWHVQYes7YruGJiFgljKmpEbTa5YKsrRcmbUMaOOGXUMNQBAgAEAm2XFJrn+jrsAAAAASUVORK5CYII=');
+  width: 35px;
+  height: 35px;
+  top: 50%;
+  left: 3%;
+  margin: -17.5px auto;
+}
+#volumeBtn {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACMAAAAjCAYAAAAe2bNZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTExIDc5LjE1ODMyNSwgMjAxNS8wOS8xMC0wMToxMDoyMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MUVBQzMwNzBDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MUVBQzMwNzFDNzI0MTFFNTk2RTBDMTRBMkYyNjVGMzQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDoxRUFDMzA2RUM3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDoxRUFDMzA2RkM3MjQxMUU1OTZFMEMxNEEyRjI2NUYzNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PtAZ+FgAAAHRSURBVHja7FjRbYMwEIWqC7CCO4IzgjMCHYEV6AjuCHSEMAKMkIwAI5ARXFt9rox1phDA5KMnPSGwOZ4fx/mOVCmVPIu9JE9ke5GRGpejyeQanUapkXlj5lzEIMM1GqjRAyG1eNCLCeAVyDQq9WOdRoHrDeDP7YCM8reGiNQYQER6D6DIGHDc02xFJsfqjF00GDEnRCaBegp+RmMp8oyYERcmAAvMvWl8aLSBuQ2O58D4Ff7eqJiZa4MTF1OYUsZAwF9BKaOw0tsf6pjx+wwVXWU41Pwk1DF2opQRK7+skDIyECMlrv8GfoztwMaW9K7XTqKMujeZV8SQma31eO0iNpkW8L/a3t02Yu7aITL8CDL2S2VE/jqsnnHJ3I8urnpKldhkOEFmdB6TTO7kFveVRScjoExLqBWVTIbsax765RFh7n74GoFMiQefCLXcbWFEhs/MFfeFZGon9fsx1I78PVDPyA3qmXyqnhEzV1lgRT124/rBSq+Dj/Pa7sDUPVesrEGRvUSZMlQ/rSmgCqc7qBZ0B7aQ37RVsb2QJOIp1DcNUDXbg4wFw2qV06j5ZCqQYSE/yYZ1LxVPvjJ86v50p/8ztr96X3JT+v+zKGDfAgwAZkMcn0x+AsMAAAAASUVORK5CYII=');
+  width: 35px;
+  height: 35px;
+  top: 50%;
+  right: 3%;
+  margin: -17.5px auto;
+}
+
+/* Progress */
+#waveform {
+  width: 100%;
+  height: 30%;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  margin: -15% auto;
+  display: none;
+  cursor: pointer;
+  opacity: 0.8;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#waveform:hover {
+  opacity: 1;
+}
+#bar {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.33);
+  opacity: 0.9;
+}
+#progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.1);
+  z-index: -1;
+}
+
+/* Loading */
+#loading {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -35px;
+  width: 70px;
+  height: 70px;
+  background-color: #fff;
+  border-radius: 100%;
+  -webkit-animation: sk-scaleout 1.0s infinite ease-in-out;
+  animation: sk-scaleout 1.0s infinite ease-in-out;
+  display: none;
+}
+@-webkit-keyframes sk-scaleout {
+  0% { -webkit-transform: scale(0) }
+  100% {
+    -webkit-transform: scale(1.0);
+    opacity: 0;
+  }
+}
+@keyframes sk-scaleout {
+  0% {
+    -webkit-transform: scale(0);
+    transform: scale(0);
+  } 100% {
+    -webkit-transform: scale(1.0);
+    transform: scale(1.0);
+    opacity: 0;
+  }
+}
+
+/* Plylist */
+#playlist {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+}
+#list {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+.list-song {
+  width: 100%;
+  height: 120px;
+  font-size: 50px;
+  line-height: 120px;
+  text-align: center;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.33);
+}
+.list-song:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+/* Volume */
+#volume {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  touch-action: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  display: none;
+}
+.bar {
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  margin: -5px auto;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.33);
+}
+#barEmpty {
+  width: 90%;
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: pointer;
+}
+#barFull {
+  width: 90%;
+}
+#sliderBtn {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 50%;
+  left: 93.25%;
+  margin: -25px auto;
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.33);
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+/* Fade-In */
+.fadeout {
+  webkit-animation: fadeout 0.5s;
+  -ms-animation: fadeout 0.5s;
+  animation: fadeout 0.5s;
+}
+.fadein {
+  webkit-animation: fadein 0.5s;
+  -ms-animation: fadein 0.5s;
+  animation: fadein 0.5s;
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@-webkit-keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@-ms-keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fadeout {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@-webkit-keyframes fadeout {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@-ms-keyframes fadeout {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+		</style>
+	</head>
+	<body>
+		<!-- <h1>Firefox Focus Audio Player</h1> -->
+
+  <div id="title">
+    <span id="track"></span>
+    <div id="timer">0:00</div>
+    <div id="duration">0:00</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controlsOuter">
+    <div class="controlsInner">
+      <div id="loading"></div>
+      <div class="btn" id="playBtn"></div>
+      <div class="btn" id="pauseBtn"></div>
+      <div class="btn" id="prevBtn"></div>
+      <div class="btn" id="nextBtn"></div>
+    </div>
+    <div class="btn" id="playlistBtn"></div>
+    <div class="btn" id="volumeBtn"></div>
+  </div>
+
+  <!-- Progress -->
+  <div id="waveform"></div>
+  <div id="bar"></div>
+  <div id="progress"></div>
+
+  <!-- Playlist -->
+  <div id="playlist">
+    <div id="list"></div>
+  </div>
+
+  <!-- Volume -->
+  <div id="volume" class="fadeout">
+    <div id="barFull" class="bar"></div>
+    <div id="barEmpty" class="bar"></div>
+    <div id="sliderBtn"></div>
+  </div>
+		<script type="text/javascript">
+			let sent_url = location.pathname.split( "/firefox-focus/audio/" )[ 1 ];
+			window.SENT_URL = sent_url;
+			console.log( sent_url );
+		</script>
+		<script type="text/javascript">
+/* Modified from https://github.com/CaffeinaLab/SiriWaveJS */
+
+(function() {
+
+function SiriWave(opt) {
+  opt = opt || {};
+
+  this.phase = 0;
+  this.run = false;
+
+  // UI vars
+
+  this.ratio = opt.ratio || window.devicePixelRatio || 1;
+
+  this.width = this.ratio * (opt.width || 320);
+  this.width_2 = this.width / 2;
+  this.width_4 = this.width / 4;
+
+  this.height = this.ratio * (opt.height || 100);
+  this.height_2 = this.height / 2;
+
+  this.MAX = (this.height_2) - 4;
+
+  // Constructor opt
+
+  // this.amplitude = opt.amplitude || 1;
+  this.amplitude = 0.5
+  console.log( this.speed );
+  this.speed = opt.speed || 0.2;
+  this.frequency = opt.frequency || 6;
+  console.log( this.frequency );
+  this.color = (function hex2rgb(hex){
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function(m,r,g,b) { return r + r + g + g + b + b; });
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ?
+    parseInt(result[1],16).toString()+','+parseInt(result[2], 16).toString()+','+parseInt(result[3], 16).toString()
+    : null;
+  })(opt.color || '#fff') || '255,255,255';
+
+  // Canvas
+
+  this.canvas = document.createElement('canvas');
+  this.canvas.width = this.width;
+  this.canvas.height = this.height;
+  if (opt.cover) {
+    this.canvas.style.width = this.canvas.style.height = '100%';
+  } else {
+    this.canvas.style.width = (this.width / this.ratio) + 'px';
+    this.canvas.style.height = (this.height / this.ratio) + 'px';
+  };
+
+  this.container = opt.container || document.body;
+  this.container.appendChild(this.canvas);
+
+  this.ctx = this.canvas.getContext('2d');
+
+  // Start
+
+  if (opt.autostart) {
+    this.start();
+  }
+}
+
+SiriWave.prototype._GATF_cache = {};
+SiriWave.prototype._globAttFunc = function(x) {
+  if (SiriWave.prototype._GATF_cache[x] == null) {
+    SiriWave.prototype._GATF_cache[x] = Math.pow(4/(4+Math.pow(x,4)), 4);
+  }
+  return SiriWave.prototype._GATF_cache[x];
+};
+
+SiriWave.prototype._xpos = function(i) {
+  return this.width_2 + i * this.width_4;
+};
+
+SiriWave.prototype._ypos = function(i, attenuation) {
+  var att = (this.MAX * this.amplitude) / attenuation;
+  return this.height_2 + this._globAttFunc(i) * att * Math.sin(this.frequency * i - this.phase);
+};
+
+SiriWave.prototype._drawLine = function(attenuation, color, width){
+  this.ctx.moveTo(0,0);
+  this.ctx.beginPath();
+  this.ctx.strokeStyle = color;
+  this.ctx.lineWidth = width || 1;
+
+  var i = -2;
+  while ((i += 0.01) <= 2) {
+    var y = this._ypos(i, attenuation);
+    if (Math.abs(i) >= 1.90) y = this.height_2;
+    this.ctx.lineTo(this._xpos(i), y);
+  }
+
+  this.ctx.stroke();
+};
+
+SiriWave.prototype._clear = function() {
+  this.ctx.globalCompositeOperation = 'destination-out';
+  this.ctx.fillRect(0, 0, this.width, this.height);
+  this.ctx.globalCompositeOperation = 'source-over';
+};
+
+SiriWave.prototype._draw = function() {
+  if (this.run === false) return;
+
+  this.phase = (this.phase + Math.PI*this.speed) % (2*Math.PI);
+
+  this._clear();
+  this._drawLine(-2, 'rgba(' + this.color + ',0.1)');
+  this._drawLine(-6, 'rgba(' + this.color + ',0.2)');
+  this._drawLine(4, 'rgba(' + this.color + ',0.4)');
+  this._drawLine(2, 'rgba(' + this.color + ',0.6)');
+  this._drawLine(1, 'rgba(' + this.color + ',1)', 1.5);
+
+  if (window.requestAnimationFrame) {
+    requestAnimationFrame(this._draw.bind(this));
+    return;
+  };
+  setTimeout(this._draw.bind(this), 20);
+};
+
+/* API */
+
+SiriWave.prototype.start = function() {
+  this.phase = 0;
+  this.run = true;
+  this._draw();
+};
+
+SiriWave.prototype.stop = function() {
+  this.phase = 0;
+  this.run = false;
+};
+
+SiriWave.prototype.setSpeed = function(v) {
+  this.speed = v;
+};
+
+SiriWave.prototype.setNoise = SiriWave.prototype.setAmplitude = function(v) {
+  this.amplitude = Math.max(Math.min(v, 1), 0);
+};
+
+
+if (typeof define === 'function' && define.amd) {
+  define(function(){ return SiriWave; });
+  return;
+};
+window.SiriWave = SiriWave;
+
+})();
+		</script>
+		<script type="text/javascript">
+// Cache references to DOM elements.
+var elms = ['track', 'timer', 'duration', 'playBtn', 'pauseBtn', 'prevBtn', 'nextBtn', 'playlistBtn', 'volumeBtn', 'progress', 'bar', 'wave', 'loading', 'playlist', 'list', 'volume', 'barEmpty', 'barFull', 'sliderBtn'];
+elms.forEach(function(elm) {
+  window[elm] = document.getElementById(elm);
+});
+
+/**
+ * Player class containing the state of our playlist and where we are in it.
+ * Includes all methods for playing, skipping, updating the display, etc.
+ * @param {Array} playlist Array of objects with playlist song details ({title, file, howl}).
+ */
+var Player = function(playlist) {
+  this.playlist = playlist;
+  this.index = 0;
+
+  // Display the title of the first track.
+  // track.innerHTML = '1. ' + playlist[0].title;
+  track.innerHTML = `<h3 style="padding-top: 2em;">${window.SENT_URL}</h3>`;
+
+  // Setup the playlist display.
+  playlist.forEach(function(song) {
+    var div = document.createElement('div');
+    div.className = 'list-song';
+    div.innerHTML = song.title;
+    div.onclick = function() {
+      player.skipTo(playlist.indexOf(song));
+    };
+    list.appendChild(div);
+  });
+};
+Player.prototype = {
+  /**
+   * Play a song in the playlist.
+   * @param  {Number} index Index of the song in the playlist (leave empty to play the first or current).
+   */
+  play: function(index) {
+    var self = this;
+    var sound;
+
+    index = typeof index === 'number' ? index : self.index;
+    var data = self.playlist[index];
+
+    // If we already loaded this track, use the current one.
+    // Otherwise, setup and load a new Howl.
+    if (data.howl) {
+      sound = data.howl;
+    } else {
+      sound = data.howl = new Howl({
+        src: [ sent_url ],
+        html5: true, // Force to HTML5 so that the audio can stream in (best for large files).
+        onplay: function() {
+          // Display the duration.
+          duration.innerHTML = self.formatTime(Math.round(sound.duration()));
+
+          // Start updating the progress of the track.
+          requestAnimationFrame(self.step.bind(self));
+
+          // Start the wave animation if we have already loaded
+          wave.container.style.display = 'block';
+          bar.style.display = 'none';
+          pauseBtn.style.display = 'block';
+        },
+        onload: function() {
+          // Start the wave animation.
+          wave.container.style.display = 'block';
+          bar.style.display = 'none';
+          loading.style.display = 'none';
+        },
+        onend: function() {
+          // Stop the wave animation.
+          wave.container.style.display = 'none';
+          bar.style.display = 'block';
+          self.skip('next');
+        },
+        onpause: function() {
+          // Stop the wave animation.
+          wave.container.style.display = 'none';
+          bar.style.display = 'block';
+        },
+        onstop: function() {
+          // Stop the wave animation.
+          wave.container.style.display = 'none';
+          bar.style.display = 'block';
+        },
+        onseek: function() {
+          // Start updating the progress of the track.
+          requestAnimationFrame(self.step.bind(self));
+        }
+      });
+    }
+
+    // Begin playing the sound.
+    sound.play();
+
+    // Update the track display.
+    track.innerHTML = (index + 1) + '. ' + data.title;
+
+    // Show the pause button.
+    if (sound.state() === 'loaded') {
+      playBtn.style.display = 'none';
+      pauseBtn.style.display = 'block';
+    } else {
+      loading.style.display = 'block';
+      playBtn.style.display = 'none';
+      pauseBtn.style.display = 'none';
+    }
+
+    // Keep track of the index we are currently playing.
+    self.index = index;
+  },
+
+  /**
+   * Pause the currently playing track.
+   */
+  pause: function() {
+    var self = this;
+
+    // Get the Howl we want to manipulate.
+    var sound = self.playlist[self.index].howl;
+
+    // Puase the sound.
+    sound.pause();
+
+    // Show the play button.
+    playBtn.style.display = 'block';
+    pauseBtn.style.display = 'none';
+  },
+
+  /**
+   * Skip to the next or previous track.
+   * @param  {String} direction 'next' or 'prev'.
+   */
+  skip: function(direction) {
+    var self = this;
+
+    // Get the next track based on the direction of the track.
+    var index = 0;
+    if (direction === 'prev') {
+      index = self.index - 1;
+      if (index < 0) {
+        index = self.playlist.length - 1;
+      }
+    } else {
+      index = self.index + 1;
+      if (index >= self.playlist.length) {
+        index = 0;
+      }
+    }
+
+    self.skipTo(index);
+  },
+
+  /**
+   * Skip to a specific track based on its playlist index.
+   * @param  {Number} index Index in the playlist.
+   */
+  skipTo: function(index) {
+    var self = this;
+
+    // Stop the current track.
+    if (self.playlist[self.index].howl) {
+      self.playlist[self.index].howl.stop();
+    }
+
+    // Reset progress.
+    progress.style.width = '0%';
+
+    // Play the new track.
+    self.play(index);
+  },
+
+  /**
+   * Set the volume and update the volume slider display.
+   * @param  {Number} val Volume between 0 and 1.
+   */
+  volume: function(val) {
+    var self = this;
+
+    // Update the global volume (affecting all Howls).
+    Howler.volume(val);
+
+    // Update the display on the slider.
+    var barWidth = (val * 90) / 100;
+    barFull.style.width = (barWidth * 100) + '%';
+    sliderBtn.style.left = (window.innerWidth * barWidth + window.innerWidth * 0.05 - 25) + 'px';
+  },
+
+  /**
+   * Seek to a new position in the currently playing track.
+   * @param  {Number} per Percentage through the song to skip.
+   */
+  seek: function(per) {
+    var self = this;
+
+    // Get the Howl we want to manipulate.
+    var sound = self.playlist[self.index].howl;
+
+    // Convert the percent into a seek position.
+    if (sound.playing()) {
+      sound.seek(sound.duration() * per);
+    }
+  },
+
+  /**
+   * The step called within requestAnimationFrame to update the playback position.
+   */
+  step: function() {
+    var self = this;
+
+    // Get the Howl we want to manipulate.
+    var sound = self.playlist[self.index].howl;
+
+    // Determine our current seek position.
+    var seek = sound.seek() || 0;
+    timer.innerHTML = self.formatTime(Math.round(seek));
+    progress.style.width = (((seek / sound.duration()) * 100) || 0) + '%';
+
+    // If the sound is still playing, continue stepping.
+    if (sound.playing()) {
+      requestAnimationFrame(self.step.bind(self));
+    }
+  },
+
+  /**
+   * Toggle the playlist display on/off.
+   */
+  togglePlaylist: function() {
+    var self = this;
+    var display = (playlist.style.display === 'block') ? 'none' : 'block';
+
+    setTimeout(function() {
+      playlist.style.display = display;
+    }, (display === 'block') ? 0 : 500);
+    playlist.className = (display === 'block') ? 'fadein' : 'fadeout';
+  },
+
+  /**
+   * Toggle the volume display on/off.
+   */
+  toggleVolume: function() {
+    var self = this;
+    var display = (volume.style.display === 'block') ? 'none' : 'block';
+
+    setTimeout(function() {
+      volume.style.display = display;
+    }, (display === 'block') ? 0 : 500);
+    volume.className = (display === 'block') ? 'fadein' : 'fadeout';
+  },
+
+  /**
+   * Format the time from seconds to M:SS.
+   * @param  {Number} secs Seconds to format.
+   * @return {String}      Formatted time.
+   */
+  formatTime: function(secs) {
+    var minutes = Math.floor(secs / 60) || 0;
+    var seconds = (secs - minutes * 60) || 0;
+
+    return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+  }
+};
+
+// Setup our new audio player class and pass it the playlist.
+var player = new Player([
+  {
+    title: 'Remote Audio',
+    file: 'remote_audio',
+    howl: null
+  },
+  {
+    title: '80s Vibe',
+    file: '80s_vibe',
+    howl: null
+  },
+  {
+    title: 'Running Out',
+    file: 'running_out',
+    howl: null
+  }
+]);
+
+// Bind our player controls.
+playBtn.addEventListener('click', function() {
+  player.play();
+});
+pauseBtn.addEventListener('click', function() {
+  player.pause();
+});
+prevBtn.addEventListener('click', function() {
+  player.skip('prev');
+});
+nextBtn.addEventListener('click', function() {
+  player.skip('next');
+});
+waveform.addEventListener('click', function(event) {
+  player.seek(event.clientX / window.innerWidth);
+});
+playlistBtn.addEventListener('click', function() {
+  player.togglePlaylist();
+});
+playlist.addEventListener('click', function() {
+  player.togglePlaylist();
+});
+volumeBtn.addEventListener('click', function() {
+  player.toggleVolume();
+});
+volume.addEventListener('click', function() {
+  player.toggleVolume();
+});
+
+// Setup the event listeners to enable dragging of volume slider.
+barEmpty.addEventListener('click', function(event) {
+  var per = event.layerX / parseFloat(barEmpty.scrollWidth);
+  player.volume(per);
+});
+sliderBtn.addEventListener('mousedown', function() {
+  window.sliderDown = true;
+});
+sliderBtn.addEventListener('touchstart', function() {
+  window.sliderDown = true;
+});
+volume.addEventListener('mouseup', function() {
+  window.sliderDown = false;
+});
+volume.addEventListener('touchend', function() {
+  window.sliderDown = false;
+});
+
+var move = function(event) {
+  if (window.sliderDown) {
+    var x = event.clientX || event.touches[0].clientX;
+    var startX = window.innerWidth * 0.05;
+    var layerX = x - startX;
+    var per = Math.min(1, Math.max(0, layerX / parseFloat(barEmpty.scrollWidth)));
+    player.volume(per);
+  }
+};
+
+volume.addEventListener('mousemove', move);
+volume.addEventListener('touchmove', move);
+
+// Setup the "waveform" animation.
+var wave = new SiriWave({
+  container: waveform,
+  width: window.innerWidth,
+  height: window.innerHeight * 0.3,
+  cover: true,
+  speed: 0.03,
+  amplitude: 0.7,
+  frequency: 2
+});
+wave.start();
+
+// Update the height of the wave animation.
+// These are basically some hacks to get SiriWave.js to do what we want.
+var resize = function() {
+  var height = window.innerHeight * 0.3;
+  var width = window.innerWidth;
+  wave.height = height;
+  wave.height_2 = height / 2;
+  wave.MAX = wave.height_2 - 4;
+  wave.width = width;
+  wave.width_2 = width / 2;
+  wave.width_4 = width / 4;
+  wave.canvas.height = height;
+  wave.canvas.width = width;
+  wave.container.style.margin = -(height / 2) + 'px auto';
+
+  // Update the position of the slider.
+  var sound = player.playlist[player.index].howl;
+  if (sound) {
+    var vol = sound.volume();
+    var barWidth = (vol * 0.9);
+    sliderBtn.style.left = (window.innerWidth * barWidth + window.innerWidth * 0.05 - 25) + 'px';
+  }
+};
+window.addEventListener('resize', resize);
+resize();
+
+		</script>
+	</body>
+</html>

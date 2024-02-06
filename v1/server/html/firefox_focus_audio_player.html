@@ -4,13 +4,150 @@
 		<title>Firefox Focus Audio Player</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link href="/cdn/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-		<script src="/cdn/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
-		<script src="/cdn/jquery.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha256-MBffSnbbXwHCuZtgPYiwMQbfE7z+GOZ7fBPCNB06Z98=" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha256-gvZPYrsDwbwYJLD5yeBfcNujPhRoGOY831wwbIzz3t0=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js" integrity="sha256-c2wzlETIi6rVk+JK/fHW6PV0AZtON6EQ7LRT/3Rf/UE=" crossorigin="anonymous"></script>
 		<style type="text/css">
 		</style>
 	</head>
 	<body>
-		<h1>Firefox Focus Audio Player</h1>
+		<br>
+		<div class="row">
+			<div class="col-1"></div>
+			<div class="col-10">
+				<center><h3 id="title">Firefox Focus Audio Player</h3></center>
+			</div>
+			<div class="col-1"></div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-4"></div>
+			<div class="col-4">
+				<center>
+					<button class="btn btn-success" id="play">Play</button>
+					<button class="btn btn-warning" id="pause">Pause</button>
+					<button class="btn btn-danger" id="stop">Stop</button>
+				</center>
+				<br>
+				<label for="time" class="form-label">Time</label>
+				<input type="range" class="form-range" id="time" step="0.1" value="0">
+				<span id="time-label">0:00</span> / <span id="duration">0:00</span>
+				<br>
+				<br>
+				<label for="volume" class="form-label">Volume</label>
+				<input type="range" class="form-range" id="volume" min="0" max="1" step="0.1" value="1">
+			</div>
+			<div class="col-4"></div>
+		</div>
+		<script type="text/javascript">
+			function format_time( i_seconds ) {
+				let days = Math.floor( i_seconds / ( 3600 * 24 ) );
+				let hours = Math.floor( i_seconds % ( 3600 * 24 ) / 3600 );
+				let minutes = Math.floor( i_seconds % 3600 / 60 );
+				let seconds = Math.floor( i_seconds % 60 );
+				let parts = [];
+				if ( days > 0 ) parts.push( days + "d" );
+				if ( hours > 0 ) parts.push( hours + "h" );
+				if ( minutes > 0 ) parts.push( minutes + "m" );
+				parts.push( seconds + "s" );
+				return parts.join( " " );
+			}
+			function ui_tick() {
+				let seek = this.seek() || 0;
+				// console.log( seek );
+				document.getElementById( "time" ).value = ( seek / this.duration() ) * 100 || 0;
+				document.getElementById( "time-label" ).textContent = format_time( seek );
+				let playing = this.playing();
+				if ( playing ) {
+					requestAnimationFrame( ui_tick.bind( this ) );
+				}
+			}
+		</script>
+		<script type="text/javascript">
+			// Init
+			window.SENT_URL = location.pathname.split( "/firefox-focus/audio/" )[ 1 ];
+			console.log( window.SENT_URL );
+			window.SOUND = new Howl({
+				src: [ window.SENT_URL ] ,
+				volume: 1.0 ,
+				html5: true ,
+				autoplay: true ,
+				muted: true ,
+				onplay: function() {
+					window.DURATION = this.duration()
+					window.DURATION_TIME_STRING = format_time( Math.round( window.DURATION ) );
+					document.getElementById( "duration" ).innerText = window.DURATION_TIME_STRING;
+					requestAnimationFrame( ui_tick.bind( this ) );
+				} ,
+				onload: function() {
+					console.log( "Loaded" );
+				} ,
+				onend: function() {
+					console.log( "Ended" );
+				} ,
+				onpause: function() {
+					console.log( "Paused" );
+				} ,
+				onstop: function() {
+					console.log( "Stopped" );
+				} ,
+				onseek: function() {
+					requestAnimationFrame( function() {
+						let seek = this.seek()
+						console.log( seek );
+						document.getElementById( 'time' ).value = ( seek / this.duration() ) * 100 || 0;
+						document.getElementById( 'time-label' ).textContent = format_time( seek );
+					}.bind( this ) );
+				}
+			});
+
+			// Hooks
+			document.getElementById( "play" ).addEventListener( "click" , function() {
+				window.SOUND.play();
+			});
+			document.getElementById( "pause" ).addEventListener( "click" , function() {
+				window.SOUND.pause();
+			});
+			document.getElementById( "stop" ).addEventListener( "click" , function() {
+				window.SOUND.stop();
+			});
+			document.getElementById( "time" ).addEventListener( "change" , function() {
+				let seek_to = ( window.DURATION * ( this.value / 100 ) );
+				window.SOUND.seek( seek_to );
+			});
+			document.getElementById( "volume" ).addEventListener( "input" , function() {
+				window.SOUND.volume( this.value );
+			});
+			document.addEventListener( "keydown" , function( event ) {
+				let ekl = event.key.toLowerCase();
+				switch( ekl ) {
+					case "p":
+					case " ":
+						let is_playing = window.SOUND.playing();
+						if ( is_playing ) {
+							window.SOUND.pause();
+						} else {
+							window.SOUND.play();
+						}
+						break;
+					case "s":
+						window.SOUND.stop();
+						break;
+				}
+			});
+
+			// Start
+			console.log( window.SOUND );
+
+			document.getElementById( "title" ).innerText = window.SENT_URL;
+
+			// Preloads Don't Work
+			window.DURATION = window.SOUND.duration();
+			window.DURATION_TIME_STRING = format_time( Math.round( window.DURATION ) );
+			console.log( "Duration ===" , window.DURATION_TIME_STRING );
+			document.getElementById( "duration" ).innerText = window.DURATION_TIME_STRING;
+			// window.SOUND.play();
+		</script>
 	</body>
 </html>
