@@ -17,8 +17,8 @@ import (
 
 // const FIREFOX_FOCUS_ACTIVITY = "org.mozilla.focus/org.mozilla.focus.activity.MainActivity"
 // const FIREFOX_FOCUS_APP_NAME = "org.mozilla.focus"
-// const FIREFOX_FOCUS_ACTIVITY = "org.mozilla.firefox/org.mozilla.fenix.customtabs.ExternalAppBrowserActivity"
-// const FIREFOX_FOCUS_APP_NAME = "org.mozilla.firefox"
+// const FIREFOX_ACTIVITY = "org.mozilla.firefox/org.mozilla.fenix.customtabs.ExternalAppBrowserActivity"
+// const FIREFOX_APP_NAME = "org.mozilla.firefox"
 const BROWSER_ACTIVITY = "com.amazon.cloud9/com.amazon.slate.fire_tv.FireTvSlateActivity"
 const BROWSER_APP_NAME = "com.amazon.cloud9"
 

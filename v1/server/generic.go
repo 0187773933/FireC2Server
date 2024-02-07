@@ -82,6 +82,12 @@ func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
 		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
 			break;
+		case "browser":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+			break;
+		default:
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+			break;
 	}
 	return c.JSON( fiber.Map{
 		"url": "/play" ,
@@ -217,6 +223,12 @@ func ( s *Server ) Pause( c *fiber.Ctx ) ( error ) {
 		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 			break;
+		case "browser":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+			break;
+		default:
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+			break;
 	}
 	return c.JSON( fiber.Map{
 		"url": "/pause" ,
@@ -327,6 +339,12 @@ func ( s *Server ) Stop( c *fiber.Ctx ) ( error ) {
 		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
 			break;
+		case "browser":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
+			break;
+		default:
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
+			break;
 	}
 	return c.JSON( fiber.Map{
 		"url": "/stop" ,
@@ -354,6 +372,12 @@ func ( s *Server ) Next( c *fiber.Ctx ) ( error ) {
 		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
 			break;
+		case "browser":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
+			break;
+		default:
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
+			break;
 	}
 	return c.JSON( fiber.Map{
 		"url": "/next" ,
@@ -379,6 +403,12 @@ func ( s *Server ) Previous( c *fiber.Ctx ) ( error ) {
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
 			break;
 		case "vlc":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
+			break;
+		case "browser":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
+			break;
+		default:
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
 			break;
 	}
