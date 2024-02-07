@@ -82,10 +82,9 @@
 				}
 			}
 			function get_sent_url() {
-				let params = new URLSearchParams( window.location.search );
 				let result = "";
-				if ( params ) {
-					result = params.get( "url" );
+				if ( window.URL_PARAMS ) {
+					result = window.URL_PARAMS.get( "url" );
 					if ( result !== null ) {
 						try {
 							let x = atob( result );
@@ -108,8 +107,11 @@
 		<script type="text/javascript">
 		( ()=> {
 			// Init
+			window.URL_PARAMS = new URLSearchParams( window.location.search );
 			window.SENT_URL = get_sent_url();
-			console.log( window.SENT_URL );
+			window.K = window.URL_PARAMS.get( "k" )
+			window.P = window.URL_PARAMS.get( "p" ) || 0;
+			console.log( window.SENT_URL , window.P );
 			window.UPDATE_FREQUENCY = ( 1 * 60 ); // 1 minutes
 			window.LAST_UPDATE_TIME = ( -1 * window.UPDATE_FREQUENCY );
 			window.SOUND = new Howl({
@@ -192,6 +194,9 @@
 
 			// Start
 			console.log( window.SOUND );
+			if ( window.P > 0 ) {
+				window.SOUND.seek( window.P );
+			}
 
 			document.getElementById( "title" ).innerText = window.SENT_URL;
 

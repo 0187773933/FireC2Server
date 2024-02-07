@@ -99,7 +99,7 @@ func ( s *Server ) BrowserOpenAudioPlayer( c *fiber.Ctx ) ( error ) {
 }
 
 // https://9304d5ed.34353.org/Tracy%20Chapman%20with%20Luke%20Combs%20-%20Fast%20Car.mp4
-func ( s *Server ) GetBrowserFocusVideoPlayer( context *fiber.Ctx ) ( error ) {
+func ( s *Server ) GetBrowserVideoPlayer( context *fiber.Ctx ) ( error ) {
 	return context.SendFile( "./v1/server/html/browser_video_player.html" )
 }
 func ( s *Server ) BrowserOpenVideoPlayer( c *fiber.Ctx ) ( error ) {
