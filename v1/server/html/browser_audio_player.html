@@ -100,6 +100,13 @@
 				}
 				return;
 			}
+			function start_blur_timeout() {
+				clearTimeout( window.BLUR_TIMEOUT );
+				window.BLUR_TIMEOUT = setTimeout(() => {
+					document.getElementById( "time" ).blur();
+					document.getElementById( "volume" ).blur();
+				} , 3000 );
+			}
 			function update_position( position ) {
 				console.log( `update_position( ${position} )` );
 			}
@@ -114,6 +121,7 @@
 			console.log( window.SENT_URL , window.P );
 			window.UPDATE_FREQUENCY = ( 1 * 60 ); // 1 minutes
 			window.LAST_UPDATE_TIME = ( -1 * window.UPDATE_FREQUENCY );
+			window.BLUR_TIMEOUT;
 			window.SOUND = new Howl({
 				src: [ window.SENT_URL ] ,
 				volume: 1.0 ,
@@ -158,13 +166,19 @@
 			document.getElementById( "stop" ).addEventListener( "click" , function() {
 				window.SOUND.stop();
 			});
-			document.getElementById( "time" ).addEventListener( "change" , function() {
+			let time_elem = document.getElementById( "time" );
+			time_elem.addEventListener( "change" , function() {
 				let seek_to = ( window.DURATION * ( this.value / 100 ) );
 				window.SOUND.seek( seek_to );
+				start_blur_timeout();
 			});
-			document.getElementById( "volume" ).addEventListener( "input" , function() {
+			time_elem.addEventListener( "focus" , start_blur_timeout );
+			let volume_elem = document.getElementById( "volume" );
+			volume_elem.addEventListener( "input" , function() {
 				window.SOUND.volume( this.value );
+				start_blur_timeout();
 			});
+			volume_elem.addEventListener( "focus" , start_blur_timeout );
 			document.addEventListener( "keydown" , function( event ) {
 				let ekl = event.key.toLowerCase();
 				switch( ekl ) {
