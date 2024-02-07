@@ -121,10 +121,12 @@ func ( s *Server ) SetupAdminRoutes() {
 	restreamer.Get( "/stop" , s.ReStreamStop )
 
 	// Firefox Focus
-	s.FiberApp.Get( "/firefox-focus/audio/*" , s.GetFireFoxFocusAudioPlayer )
-	s.FiberApp.Get( "/firefox-focus/video/*" , s.GetFireFoxFocusVideoPlayer )
+	s.FiberApp.Get( "/firefox-focus/audio" , s.GetFireFoxFocusAudioPlayer )
+	s.FiberApp.Get( "/firefox-focus/video" , s.GetFireFoxFocusVideoPlayer )
 	firefoxfocus := s.FiberApp.Group( "/firefox-focus" )
 	firefoxfocus.Use( validate_admin_mw )
 	firefoxfocus.Get( "/url/*" , s.FireFoxFocusOpenURL )
+	firefoxfocus.Get( "/audio/*" , s.FireFoxFocusOpenAudioPlayer )
+	firefoxfocus.Get( "/video/*" , s.FireFoxFocusOpenVideoPlayer )
 
 }

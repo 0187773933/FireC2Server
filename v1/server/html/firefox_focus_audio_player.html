@@ -63,17 +63,49 @@
 					requestAnimationFrame( ui_tick.bind( this ) );
 				}
 			}
+			function play_pause() {
+				let is_playing = window.SOUND.playing();
+				if ( is_playing ) {
+					window.SOUND.pause();
+				} else {
+					window.SOUND.play();
+				}
+			}
+			function get_sent_url() {
+				let params = new URLSearchParams( window.location.search );
+				let result = "";
+				if ( params ) {
+					result = params.get( "url" );
+					if ( result !== null ) {
+						try {
+							let x = atob( result );
+							result = x;
+						} catch( e ) {}
+						return result;
+					}
+				}
+				let path_test = location.pathname.split( "/firefox-focus/audio/" );
+				if ( path_test.length > 0 ) {
+					result = path_test[ 1 ];
+					return;
+				}
+				result = "https://files.34353.org/AudioBooks/CarlosCastaneda/01-The-Teachings-of-Don-Juan-A-Yaqui-Way-of-Knowledge.mp3";
+				return;
+			}
 		</script>
 		<script type="text/javascript">
+		( async ()=> {
+
+			// https://files.34353.org/AudioBooks/CarlosCastaneda/01-The-Teachings-of-Don-Juan-A-Yaqui-Way-of-Knowledge.mp3
 			// Init
-			window.SENT_URL = location.pathname.split( "/firefox-focus/audio/" )[ 1 ];
+			window.SENT_URL = get_sent_url();
 			console.log( window.SENT_URL );
 			window.SOUND = new Howl({
 				src: [ window.SENT_URL ] ,
 				volume: 1.0 ,
 				html5: true ,
-				autoplay: true ,
-				muted: true ,
+				// autoplay: true ,
+				// muted: true ,
 				onplay: function() {
 					window.DURATION = this.duration()
 					window.DURATION_TIME_STRING = format_time( Math.round( window.DURATION ) );
@@ -122,20 +154,29 @@
 			document.addEventListener( "keydown" , function( event ) {
 				let ekl = event.key.toLowerCase();
 				switch( ekl ) {
+					// case "enter":
 					case "p":
 					case " ":
-						let is_playing = window.SOUND.playing();
-						if ( is_playing ) {
-							window.SOUND.pause();
-						} else {
-							window.SOUND.play();
-						}
+						play_pause();
 						break;
 					case "s":
 						window.SOUND.stop();
 						break;
 				}
 			});
+			if ( "mediaSession" in navigator ) {
+				navigator.mediaSession.setActionHandler( "play" , function() {
+					window.SOUND.play();
+				});
+				navigator.mediaSession.setActionHandler( "pause" , function() {
+					window.SOUND.pause();
+				});
+				navigator.mediaSession.setActionHandler( "stop" , function() {
+					window.SOUND.stop();
+				});
+				// navigator.mediaSession.setActionHandler('previoustrack', function() { ... });
+				// navigator.mediaSession.setActionHandler('nexttrack', function() { ... });
+			}
 
 			// Start
 			console.log( window.SOUND );
@@ -148,6 +189,8 @@
 			console.log( "Duration ===" , window.DURATION_TIME_STRING );
 			document.getElementById( "duration" ).innerText = window.DURATION_TIME_STRING;
 			// window.SOUND.play();
+
+		})();
 		</script>
 	</body>
 </html>

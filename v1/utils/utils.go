@@ -34,6 +34,26 @@ func SetupStackTraceReport() {
 	}
 }
 
+func FingerPrint( config *types.ConfigFile ) {
+	fmt.Println( GetLocalIPAddresses() )
+}
+
+func GetLocalIPAddresses() ( ip_addresses []string ) {
+	host , _ := os.Hostname()
+	addrs , _ := net.LookupIP( host )
+	encountered := make( map[ string ]bool )
+	for _ , addr := range addrs {
+		if ipv4 := addr.To4(); ipv4 != nil {
+			ip := ipv4.String()
+			if !encountered[ ip ] {
+				encountered[ ip ] = true
+				ip_addresses = append( ip_addresses , ip )
+			}
+		}
+	}
+	return
+}
+
 // var location , _ = tz.LoadLocation( "America/New_York" )
 var location , _ = time.LoadLocation( "America/New_York" )
 var month_map = map[string]time.Month{

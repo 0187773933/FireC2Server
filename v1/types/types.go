@@ -58,6 +58,8 @@ type ConfigFile struct {
 	ServerName string `yaml:"server_name"`
 	ServerBaseUrl string `yaml:"server_base_url"`
 	ServerLiveUrl string `yaml:"server_live_url"`
+	ServerPrivateUrl string `yaml:"server_private_url"`
+	ServerPublicUrl string `yaml:"server_public_url"`
 	ServerPort string `yaml:"server_port"`
 	ServerAPIKey string `yaml:"server_api_key"`
 	ServerLoginUrlPrefix string `yaml:"server_login_url_prefix"`

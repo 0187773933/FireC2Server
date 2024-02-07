@@ -54,6 +54,7 @@ func main() {
 	config := utils.ParseConfig( config_file_path )
 	logger.Log.Printf( "Loaded Config File From : %s" , config_file_path )
 	utils.WriteLoginURLPrefix( config.ServerLoginUrlPrefix )
+	utils.FingerPrint( &config )
 
 	SetupCloseHandler()
 	SetupDB( &config )

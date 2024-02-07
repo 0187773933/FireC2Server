@@ -13,10 +13,12 @@ import (
 	// adb_wrapper "ADBWrapper/v1/wrapper"
 	adb_wrapper "github.com/0187773933/ADBWrapper/v1/wrapper"
 	tv "github.com/0187773933/FireC2Server/v1/tv"
+	// utils "github.com/0187773933/FireC2Server/v1/utils"
 )
 
 var GlobalServer *Server
 var log = logger.GetLogger()
+// var LocalIPS = utils.GetLocalIPAddresses()
 
 const ACTIVITY_PROFILE_PICKER = "com.amazon.ftv.profilepicker/com.amazon.ftv.profilepicker.ui.PickerActivity"
 
