@@ -29,6 +29,7 @@ func ( s *Server ) ReStreamURL( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "vlc://%s/%s/stream.m3u8" , s.Config.ReStreamServerUrl , s.Config.ReStreamServerHLSURLPrefix )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
+	s.Set( "active_player_name" , "restream" )
 	s.Set( "active_player_now_playing_id" , x_url )
 	s.Set( "active_player_now_playing_uri" , uri )
 

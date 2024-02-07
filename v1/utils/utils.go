@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"net/url"
 	"encoding/json"
+	sha256 "crypto/sha256"
 	// "strings"
 	"io/ioutil"
 	yaml "gopkg.in/yaml.v2"
@@ -36,6 +37,14 @@ func SetupStackTraceReport() {
 
 func FingerPrint( config *types.ConfigFile ) {
 	fmt.Println( GetLocalIPAddresses() )
+}
+
+func Sha256( input string ) ( result string ) {
+	hasher := sha256.New()
+	hasher.Write( []byte( input ) )
+	hash_bytes := hasher.Sum( nil )
+	result = fmt.Sprintf( "%x" , hash_bytes )
+	return
 }
 
 func GetLocalIPAddresses() ( ip_addresses []string ) {
@@ -197,12 +206,15 @@ func GenerateNewKeys() {
 	server_api_key := encryption.GenerateRandomString( 16 )
 	admin_username := encryption.GenerateRandomString( 16 )
 	admin_password := encryption.GenerateRandomString( 16 )
+	browser_api_key := encryption.GenerateRandomString( 16 )
 	fmt.Println( "Generated New Keys :" )
 	fmt.Printf( "\tFiber Cookie Key === %s\n" , fiber_cookie_key )
 	fmt.Printf( "\tBolt DB Key === %s\n" , bolt_db_key )
 	fmt.Printf( "\tServer API Key === %s\n" , server_api_key )
 	fmt.Printf( "\tAdmin Username === %s\n" , admin_username )
 	fmt.Printf( "\tAdmin Password === %s\n\n" , admin_password )
+	fmt.Println( "" )
+	fmt.Printf( "\tBrowser API Key === %s\n" , browser_api_key )
 }
 
 func WriteLoginURLPrefixWG( wg *sync.WaitGroup , server_login_url_prefix string ) {

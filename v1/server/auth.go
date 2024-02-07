@@ -113,3 +113,13 @@ func validate_admin_mw( context *fiber.Ctx ) ( error ) {
 	}
 	return context.Status( fiber.StatusUnauthorized ).SendString( "why" )
 }
+
+func validate_browser_mw( context *fiber.Ctx ) ( error ) {
+	browser_api_key_header := context.Get( "key" )
+	if browser_api_key_header != "" {
+		if browser_api_key_header == GlobalServer.Config.BrowserAPIKey {
+			return context.Next()
+		}
+	}
+	return context.Status( fiber.StatusUnauthorized ).SendString( "why" )
+}

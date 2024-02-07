@@ -68,7 +68,7 @@
 				document.getElementById( "time" ).value = ( ( seek / window.DURATION ) * 100 ) || 0;
 				document.getElementById( "time-label" ).textContent = format_time( seek );
 				if ( ( seek - window.LAST_UPDATE_TIME ) >= window.UPDATE_FREQUENCY ) {
-					update_position( seek );
+					api_update_position( seek );
 					window.LAST_UPDATE_TIME = ( seek - ( seek % window.UPDATE_FREQUENCY ) );
 				}
 				requestAnimationFrame( ui_tick.bind( this ) );
@@ -107,8 +107,22 @@
 					document.getElementById( "volume" ).blur();
 				} , 3000 );
 			}
-			function update_position( position ) {
-				console.log( `update_position( ${position} )` );
+			function api_update_position( position ) {
+				return new Promise( async function( resolve , reject ) {
+					try {
+						console.log( `api_update_position( ${window.H} , ${position} )` );
+						let _url = `/browser/audio/set/${window.H}/position/${Math.round(position)}`;
+						let _response = await fetch( _url , {
+							method: "GET" ,
+							headers: { "Content-Type": "application/json" , "key": window.K }
+						});
+						let response_json = await _response.json();
+						let user = response_json[ "result" ];
+						resolve( user );
+						return;
+					}
+					catch( error ) { console.log( error ); resolve( false ); return; }
+				});
 			}
 		</script>
 		<script type="text/javascript">
@@ -116,8 +130,9 @@
 			// Init
 			window.URL_PARAMS = new URLSearchParams( window.location.search );
 			window.SENT_URL = get_sent_url();
-			window.K = window.URL_PARAMS.get( "k" )
+			window.K = window.URL_PARAMS.get( "k" );
 			window.P = window.URL_PARAMS.get( "p" ) || 0;
+			window.H = window.URL_PARAMS.get( "h" );
 			console.log( window.SENT_URL , window.P );
 			window.UPDATE_FREQUENCY = ( 1 * 60 ); // 1 minutes
 			window.LAST_UPDATE_TIME = ( -1 * window.UPDATE_FREQUENCY );
@@ -139,19 +154,22 @@
 				} ,
 				onend: function() {
 					console.log( "Ended" );
+					api_update_position( this.seek() );
 				} ,
 				onpause: function() {
 					console.log( "Paused" );
+					api_update_position( this.seek() );
 				} ,
 				onstop: function() {
 					console.log( "Stopped" );
+					api_update_position( this.seek() );
 				} ,
 				onseek: function() {
 					requestAnimationFrame( function() {
 						let seek = this.seek()
-						console.log( seek );
 						document.getElementById( "time" ).value = ( ( seek / this.duration() ) * 100 ) || 0;
 						document.getElementById( "time-label" ).textContent = format_time( seek );
+						api_update_position( seek );
 					}.bind( this ) );
 				}
 			});

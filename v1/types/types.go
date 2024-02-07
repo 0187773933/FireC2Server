@@ -106,5 +106,6 @@ type ConfigFile struct {
 	TwitchOAUTHToken string `yaml:"twitch_oauth_token"`
 	TwitchAccessToken string `yaml:"twitch_access_token"`
 	TwitchRefreshToken string `yaml:"twitch_refresh_token"`
+	BrowserAPIKey string `yaml:"browser_api_key"` // silk browser audio/video player re-auth
 	Library Library `yaml:"library"`
 }
