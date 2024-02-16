@@ -4,11 +4,13 @@ import (
 	fmt "fmt"
 	time "time"
 	base64 "encoding/base64"
+	json "encoding/json"
 	// url "net/url"
 	// "math"
 	// "image/color"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
+	websocket "github.com/gofiber/contrib/websocket"
 	// redis "github.com/redis/go-redis/v9"
 	// circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
@@ -143,6 +145,16 @@ func ( s *Server ) BrowserAudioPlayerSetPosition( c *fiber.Ctx ) ( error ) {
 	log.Debug( fmt.Sprintf( "BrowserAudioPlayerSetPosition( %s , %s )" , x_hash , x_position ) )
 	dbk := fmt.Sprintf( "HISTORY.BROWSER.AUDIO.%s" , x_hash )
 	dbk_position := ( dbk + ".POSITION" )
+	old_position := s.Get( dbk_position )
+	// if its never had a position stored , because its never been started , then return
+	if old_position == "" {
+		return c.JSON( fiber.Map{
+			"url": "/browser/audio/set/:hash/position/:position" ,
+			"hash": x_hash ,
+			"position": -1 ,
+			"result": false ,
+		})
+	}
 	s.Set( dbk_position , x_position )
 	return c.JSON( fiber.Map{
 		"url": "/browser/audio/set/:hash/position/:position" ,
@@ -173,3 +185,26 @@ func ( s *Server ) BrowserOpenVideoPlayer( c *fiber.Ctx ) ( error ) {
 	})
 }
 
+// https://docs.gofiber.io/contrib/websocket/
+func ( s *Server ) BrowserWebSocketHandler( c *websocket.Conn ) {
+	var (
+		mt  int
+		msg []byte
+		err error
+	)
+	for {
+		if mt , msg , err = c.ReadMessage(); err != nil {
+			log.Debug( "read:" , err )
+			break
+		}
+		// log.Debug( fmt.Sprintf( "recv: %s", msg ) )
+		// if err = c.WriteMessage(mt, msg); err != nil {
+		// 	log.Debug( "write:" , err )
+		// 	break
+		// }
+		var decoded_message map[ string ]interface{}
+		decode_error := json.Unmarshal( msg , &decoded_message )
+		if decode_error != nil { log.Debug( "json decode error" , decode_error ); break; }
+		fmt.Println( decoded_message )
+	}
+}

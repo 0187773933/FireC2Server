@@ -40,6 +40,11 @@
 		- https://github.com/MichaelPote/arduino-hdmi-irw
 		- https://github.com/s-moch/CEC
 		- https://github.com/floe/CEC
+	- IR
+		- https://irdroid.com/irdroid-usb-ir-transceiver
+		- https://irdroid.com/irdroid-wifi-version-3-0
+		- https://www.lirc.org/software.html
+		- https://github.com/Irdroid/Irdroid-USB/blob/master/app/src/main/java/com/microcontrollerbg/usbirtoy/IrToy.java
 - VLC
 	- Random M3U8 Music Tracks
 - Spotify
