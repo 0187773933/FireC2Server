@@ -194,7 +194,7 @@ func ( s *Server ) BrowserWebSocketHandler( c *websocket.Conn ) {
 	)
 	for {
 		if mt , msg , err = c.ReadMessage(); err != nil {
-			log.Debug( "read:" , err )
+			log.Debug( "read:" , err , mt )
 			break
 		}
 		// log.Debug( fmt.Sprintf( "recv: %s", msg ) )

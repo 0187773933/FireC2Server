@@ -45,6 +45,8 @@
 		- https://irdroid.com/irdroid-wifi-version-3-0
 		- https://www.lirc.org/software.html
 		- https://github.com/Irdroid/Irdroid-USB/blob/master/app/src/main/java/com/microcontrollerbg/usbirtoy/IrToy.java
+		- https://github.com/ww24/lirc-web-api/blob/master/lirc/client.go
+		- https://github.com/ww24/lirc-web-api/blob/master/lirc/test/lircd.conf
 - VLC
 	- Random M3U8 Music Tracks
 - Spotify
