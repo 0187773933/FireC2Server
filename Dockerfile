@@ -84,6 +84,8 @@ RUN apt-get update -y && apt-get install -y \
 	udev \
 	alsa-utils \
 	cec-utils \
+	ir-keytable \
+	v4l-utils \
 	&& rm -rf /var/lib/apt/lists/*
 
 ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
