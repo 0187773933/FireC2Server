@@ -86,6 +86,7 @@ RUN apt-get update -y && apt-get install -y \
 	cec-utils \
 	ir-keytable \
 	v4l-utils \
+	libusb-1.0-0-dev \
 	&& rm -rf /var/lib/apt/lists/*
 
 ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
