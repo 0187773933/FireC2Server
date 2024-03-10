@@ -58,4 +58,6 @@
 2. Accept the connection on the Fire Cube TV
 3. Confirm Connection :
 	`adb devices`
-4.
+4. `sudo docker cp public-fire-c2-server:/home/morphs/.android ADB_KEYS`
+5. `sudo chown -R 1000:1000 ADB_KEYS/`
+6. Change dockerRun.sh to mount the ADB_KEYS folder
