@@ -11,6 +11,7 @@ func ( s *Server ) StreamDeckPrepare() {
 	time_since_last_start := s.TimeSinceLastStart()
 	fmt.Println( "time since last start ===" , time_since_last_start )
 	if time_since_last_start > 30 * time.Minute {
+		log.Debug( "Refreshing Environment" )
 		go s.TV.QuickResetVideo()
 		s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
 	}
@@ -47,6 +48,7 @@ func ( s *Server ) StreamDeckTwitch( c *fiber.Ctx ) ( error ) {
 	time_since_last_start := s.TimeSinceLastStart()
 	fmt.Println( "time since last start ===" , time_since_last_start )
 	if time_since_last_start > 30 * time.Minute {
+		log.Debug( "Refreshing Twitch Environment" )
 		go s.TV.QuickResetVideo()
 		s.TwitchLiveRefresh()
 		s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
