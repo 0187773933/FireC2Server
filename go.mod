@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/0187773933/ADBWrapper v1.0.31
 	github.com/0187773933/RedisCircular v1.0.7
-	github.com/0187773933/TVController v1.0.7
+	github.com/0187773933/TVController v1.0.8
 	github.com/boltdb/bolt v1.3.1
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.52.2

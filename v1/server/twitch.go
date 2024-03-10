@@ -84,6 +84,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	// force refresh on last
 	first_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , 0 , 0 ).Result()
 	first_in_set := first_in_set_z[0].Member.(string)
+	// if len( circular_set? ) && first_in_set == next_stream {
 	if first_in_set == next_stream {
 		log.Debug( "recycled list" )
 		s.TwitchLiveUpdate()
