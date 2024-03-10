@@ -49,6 +49,7 @@ func ( s *Server ) VLCContinuousOpen() {
 }
 
 func ( s *Server ) VLCNext( c *fiber.Ctx ) ( error ) {
+	s.StateMutex.Lock()
 	log.Debug( "VLCNext()" )
 	s.VLCContinuousOpen()
 	// next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
@@ -59,6 +60,7 @@ func ( s *Server ) VLCNext( c *fiber.Ctx ) ( error ) {
 	// s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
 	// s.Set( "active_player_now_playing_id" , next_movie )
 	// s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/vlc/next" ,
 		"result": true ,
@@ -66,8 +68,10 @@ func ( s *Server ) VLCNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) VLCPrevious( c *fiber.Ctx ) ( error ) {
+	s.StateMutex.Lock()
 	log.Debug( "VLCPrevious()" )
 	s.VLCContinuousOpen()
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/vlc/previous" ,
 		"result": true ,
@@ -75,6 +79,7 @@ func ( s *Server ) VLCPrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) VLCPlayURL( c *fiber.Ctx ) ( error ) {
+	s.StateMutex.Lock()
 	x_url := c.Params( "*" )
 	log.Debug( fmt.Sprintf( "VLCPlayURL( %s )" , x_url ) )
 	s.VLCContinuousOpen()
@@ -83,6 +88,7 @@ func ( s *Server ) VLCPlayURL( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , x_url )
 	s.Set( "active_player_now_playing_uri" , uri )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/vlc/url/:url" ,
 		"param_url": x_url ,
@@ -92,11 +98,13 @@ func ( s *Server ) VLCPlayURL( c *fiber.Ctx ) ( error ) {
 
 // Custom Playlist Stuff
 func ( s *Server ) VLCPlaylistAddURL( c *fiber.Ctx ) ( error ) {
+	s.StateMutex.Lock()
 	log.Debug( "VLCPlaylistAddURL()" )
 	playlist_name := c.Params( "name" )
 	sent_url := c.Params( "*" )
 	// key := fmt.Sprintf( "LIBRARY.VLC.PLAYLISTS.%s" , playlist_name )
 	// circular_set.Add( s.DB , key , video_id )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/vlc/playlist/:name/add/url/*" ,
 		"playlist_name": playlist_name ,

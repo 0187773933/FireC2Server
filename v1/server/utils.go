@@ -77,6 +77,8 @@ func ( s *Server ) Printf( format_string string , args ...interface{} ) {
 // }
 
 func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
+	log.Debug( "ADB Connecting" )
+	log.Debug( s.Config.ADBPath )
 	done := make( chan adb_wrapper.Wrapper , 1 )
 	go func() {
 		var conn adb_wrapper.Wrapper
@@ -91,7 +93,7 @@ func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 	select {
 		case connection = <-done:
 			s.ADB = connection
-			log.Debug( "ADB Connected" )
+			log.Debug( fmt.Sprintf( "ADB Connected === %t\n" , s.ADB.Connected ) )
 			return
 		case <-time.After( timeout_duration ):
 			log.Debug( "Timed Out Connecting to ADB" )
@@ -101,6 +103,15 @@ func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 			}
 			return
 	}
+}
+
+func ( s *Server ) TimeSinceLastStart() ( result time.Duration ) {
+	_ , now := utils.GetFormattedTimeStringOBJ()
+	last_start_time_string := s.Get( "active_player_start_time" )
+	if last_start_time_string == "" { return }
+	last_start_time := utils.ParseFormattedTimeString( last_start_time_string )
+	result = now.Sub( last_start_time )
+	return
 }
 
 func ( s *Server ) GetStatus() ( result Status ) {
@@ -140,7 +151,7 @@ func ( s *Server ) GetStatus() ( result Status ) {
 	result.ADB = s.ADB.GetStatus()
 
 	// 3.) Get TV Status
-	result.TV = s.TV.Status()
+	// result.TV = s.TV.Status()
 
 	s.Status = result
 	return

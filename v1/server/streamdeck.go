@@ -1,14 +1,23 @@
 package server
 
 import (
-	// "fmt"
+	"fmt"
+	"time"
 	fiber "github.com/gofiber/fiber/v2"
 	// utils "github.com/0187773933/FireC2Server/v1/utils"
 )
 
+func ( s *Server ) StreamDeckPrepare() {
+	time_since_last_start := s.TimeSinceLastStart()
+	fmt.Println( "time since last start ===" , time_since_last_start )
+	if time_since_last_start > 30 * time.Minute {
+		go s.TV.QuickResetVideo()
+		s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
+	}
+}
+
 func ( s *Server ) StreamDeckSpotify( c *fiber.Ctx ) ( error ) {
-	go s.TV.Prepare()
-	s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
+	s.StreamDeckPrepare()
 	s.SpotifyNextPlaylistWithShuffle( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/spotify" ,
@@ -17,8 +26,7 @@ func ( s *Server ) StreamDeckSpotify( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) StreamDeckYouTube( c *fiber.Ctx ) ( error ) {
-	go s.TV.Prepare()
-	s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
+	s.StreamDeckPrepare()
 	s.YouTubeLiveNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/youtube" ,
@@ -27,8 +35,7 @@ func ( s *Server ) StreamDeckYouTube( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) StreamDeckDisney( c *fiber.Ctx ) ( error ) {
-	go s.TV.Prepare()
-	s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
+	s.StreamDeckPrepare()
 	s.DisneyMovieNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/disney" ,
@@ -37,8 +44,13 @@ func ( s *Server ) StreamDeckDisney( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) StreamDeckTwitch( c *fiber.Ctx ) ( error ) {
-	go s.TV.Prepare()
-	s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
+	time_since_last_start := s.TimeSinceLastStart()
+	fmt.Println( "time since last start ===" , time_since_last_start )
+	if time_since_last_start > 30 * time.Minute {
+		go s.TV.QuickResetVideo()
+		s.TwitchLiveRefresh()
+		s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
+	}
 	s.TwitchLiveNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/twitch" ,

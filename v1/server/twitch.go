@@ -35,6 +35,8 @@ func ( s *Server ) TwitchReopenApp() {
 func ( s *Server ) TwitchContinuousOpen() {
 	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
 	log.Debug( "TwitchContinuousOpen()" )
+	s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
+	// why ?? ok ??
 	s.GetStatus()
 	log.Debug( s.Status )
 	s.Set( "active_player_name" , "twitch" )
@@ -59,11 +61,12 @@ func ( s *Server ) TwitchContinuousOpen() {
 }
 
 func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
-
+	s.StateMutex.Lock()
 	log.Debug( "TwitchLiveNext()" )
 	s.TwitchContinuousOpen()
 
 	next_stream := circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+
 	log.Debug( "Next === " , next_stream )
 	if next_stream == "" {
 		log.Debug( "Empty , Refreshing" )
@@ -104,6 +107,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
 	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/next" ,
 		"stream": next_stream ,
@@ -112,7 +116,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
-
+	s.StateMutex.Lock()
 	log.Debug( "TwitchLivePrevious()" )
 	s.TwitchContinuousOpen()
 
@@ -154,6 +158,7 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
 	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
 	// Right , Down , Right , Enter , Down , Enter
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/next" ,
 		"stream": next_stream ,
@@ -463,6 +468,7 @@ func ( s *Server ) GetTwitchLiveRefresh( c *fiber.Ctx ) ( error ) {
 // literally trolling ,
 // we have to get pixel values to know where we are being bullied in the quality selection menu
 func ( s *Server ) TwitchLiveSetQualityMax( c *fiber.Ctx ) ( error ) {
+	s.StateMutex.Lock()
 	// Right , Down , Right , Enter , Down , Enter
 	rand.Seed( time.Now().UnixNano() )
 	min_sleep := 200
@@ -496,14 +502,15 @@ func ( s *Server ) TwitchLiveSetQualityMax( c *fiber.Ctx ) ( error ) {
 	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
 	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/set/quality/max" ,
 		"result": true ,
 	})
 }
 
-func ( s *Server ) TwitchLiveUser( c *fiber.Ctx ) ( error ) {
-	username := c.Params( "username" )
+func ( s *Server ) TwitchLiveUser( username string ) {
+	s.StateMutex.Lock()
 	log.Debug( fmt.Sprintf( "TwitchLiveUser( %s )" , username ) )
 	s.TwitchContinuousOpen()
 	uri := fmt.Sprintf( "twitch://stream/%s" , username )
@@ -512,6 +519,13 @@ func ( s *Server ) TwitchLiveUser( c *fiber.Ctx ) ( error ) {
 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , username )
 	s.Set( "active_player_now_playing_id" , username )
 	s.Set( "active_player_now_playing_text" , "" )
+	s.StateMutex.Unlock()
+}
+
+
+func ( s *Server ) GetTwitchLiveUser( c *fiber.Ctx ) ( error ) {
+	username := c.Params( "username" )
+	s.TwitchLiveUser( username )
 	return c.JSON( fiber.Map{
 		"url": "/twitch/view/:username" ,
 		"stream": username ,

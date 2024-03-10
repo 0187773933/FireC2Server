@@ -47,6 +47,13 @@
 		- https://github.com/Irdroid/Irdroid-USB/blob/master/app/src/main/java/com/microcontrollerbg/usbirtoy/IrToy.java
 		- https://github.com/ww24/lirc-web-api/blob/master/lirc/client.go
 		- https://github.com/ww24/lirc-web-api/blob/master/lirc/test/lircd.conf
+		- https://lirc-remotes.sourceforge.net/remotes-table.html
+		- https://github.com/Irdroid/USB_IR_Toy
+		- https://irdroid.com/2016/10/how-to-turn-your-raspberry-pi-into-a-fully-functional-infrared-remote-control/
+		- https://anibit.com/product/ptt08001
+		- https://www.lirc.org/html/irtoy.html
+		- https://github.com/irdroid/usb_infrared_transceiver
+		- https://community.home-assistant.io/t/how-to-add-ir-tranmitter-to-enhance-your-audio-video-experince/446033
 - VLC
 	- Random M3U8 Music Tracks
 - Spotify
@@ -72,6 +79,10 @@
 	- `adb shell settings put secure sleep_timeout 2147483647`
 - PushOver Notifications
 - Automatic Staging on HDMI of Twitch Live Streams
+- SSH ?
+	- https://arachnoid.com/android/SSHelper/index.html
+		- https://arachnoid.com/android/SSHelper/resources/SSHelper.apk
+		- https://arachnoid.com/android/SSHelper/resources/SSHelper_source.tar.bz2
 
 ## ADB First Time Connection
 

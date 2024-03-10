@@ -1,5 +1,8 @@
 package types
 
+import (
+	tv_controller_types "github.com/0187773933/TVController/v1/types"
+)
 
 type SpotifyItem struct {
 	Name string `yaml:"name"`
@@ -81,16 +84,7 @@ type ConfigFile struct {
 	ReStreamServerHLSURLPrefix string `yaml:"restream_server_hls_url_prefix"`
 	StreamDeckServerUrl string `yaml:"stream_deck_server_url"`
 	StreamDeckServerAPIKey string `yaml:"stream_deck_server_api_key"`
-	TVWakeOnLan bool `yaml:"tv_wake_on_lan"`
-	TVBrand string `yaml:"tv_brand"`
-	TVIP string `yaml:"tv_ip"`
-	TVWebSocketPort string `yaml:"tv_websocket_port"`
-	TVMAC string `yaml:"tv_mac"`
-	TVDefaultVolume int `yaml:"tv_default_volume"`
-	TVDefaultInput int `yaml:"tv_default_input"`
-	TVLGClientKey string `yaml:"tv_lg_client_key"`
-	TVVizioAuthToken string `yaml:"tv_vizio_auth_token"`
-	TVTimeoutSeconds int `yaml:"tv_timeout_seconds"`
+	TV tv_controller_types.ConfigFile `yaml:"tv"`
 	ADBPath string `yaml:"adb_path"`
 	ADBConnectionType string `yaml:"adb_connection_type"`
 	ADBSerial string `yaml:"adb_serial"`

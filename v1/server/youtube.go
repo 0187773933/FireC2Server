@@ -99,6 +99,7 @@ func ( s *Server ) YouTubePlaylistNext( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/next" ,
 		"playlist_name": playlist_name ,
@@ -121,6 +122,7 @@ func ( s *Server ) YouTubePlaylistPrevious( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/previous" ,
 		"playlist_name": playlist_name ,
@@ -262,6 +264,7 @@ func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/youtube/live/next" ,
 		"video_id": video_id ,
@@ -285,6 +288,7 @@ func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/youtube/live/previous" ,
 		"video_id": video_id ,
@@ -293,6 +297,7 @@ func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) YouTubeVideo( c *fiber.Ctx ) ( error ) {
+	s.StateMutex.Lock()
 	video_id := c.Params( "video_id" )
 	log.Debug( fmt.Sprintf( "YouTubeVideo( %s )" , video_id ) )
 	s.YouTubeContinuousOpen()
@@ -302,6 +307,7 @@ func ( s *Server ) YouTubeVideo( c *fiber.Ctx ) ( error ) {
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
 	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.StateMutex.Unlock()
 	return c.JSON( fiber.Map{
 		"url": "/youtube/:video_id" ,
 		"video_id": video_id ,

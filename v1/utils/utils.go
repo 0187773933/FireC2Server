@@ -39,6 +39,11 @@ func FingerPrint( config *types.ConfigFile ) {
 	fmt.Println( GetLocalIPAddresses() )
 }
 
+func PrettyPrint( input interface{} ) {
+	jd , _ := json.MarshalIndent( input , "" , "  " )
+	fmt.Println( string( jd ) )
+}
+
 func Sha256( input string ) ( result string ) {
 	hasher := sha256.New()
 	hasher.Write( []byte( input ) )
