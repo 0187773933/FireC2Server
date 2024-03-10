@@ -1,6 +1,5 @@
 module github.com/0187773933/FireC2Server
 
-<!-- go 1.22.0 -->
 go 1.20
 
 require (
