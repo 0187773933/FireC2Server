@@ -11,10 +11,16 @@
 	# sudo chown -R 1000:1000 ADB_KEYS/
 	# sudo chown -R 1000:1000 SAVE_FILES/
 
+EVENT_DEVICE=$(readlink -f /dev/input/by-id/usb-Pulse-Eight_USB-CEC_Adapter_v7-if02-event-mouse)
+#--device=$EVENT_DEVICE:/dev/input/event \
+#MOUSE_DEVICE=$(readlink -f /dev/input/by-id/usb-Pulse-Eight_USB-CEC_Adapter_v7-if02-mouse)
+#--privileged \
+
 APP_NAME="public-fire-c2-server"
 sudo docker rm -f $APP_NAME || echo ""
 id=$(sudo docker run -dit \
 --user=morphs \
+--privileged \
 --name $APP_NAME \
 --restart='always' \
 --device=/dev/snd \
@@ -22,9 +28,9 @@ id=$(sudo docker run -dit \
 -v $(pwd)/SAVE_FILES:/home/morphs/SAVE_FILES:rw \
 -v $(pwd)/ADB_KEYS:/home/morphs/.android:ro \
 --mount type=bind,source="$(pwd)"/config.yaml,target=/home/morphs/config.yaml \
---network=6105-buttons-1 \
+--network=6105-buttons \
 -p 5954:5954 \
 $APP_NAME /home/morphs/config.yaml)
 sudo docker logs -f $id
 
-# sudo docker network create 6105-buttons-1
+# sudo docker network create 6105-buttons
