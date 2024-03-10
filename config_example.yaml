@@ -1,0 +1,90 @@
+server_name: "Fire C2"
+server_base_url: "http://localhost:1234"
+server_live_url: "http://localhost:1234"
+server_private_url: "http://192.168.1.23:1234"
+server_public_url: "https://fc2.example.com"
+server_port: "1234"
+server_api_key: "asdf"
+browser_api_key: "asdf"
+server_login_url_prefix: "asdf"
+server_cookie_name: "fire-c2-server"
+server_cookie_secret: "asdf"
+server_cookie_secret_message: "asdf"
+admin_username: "asdf"
+admin_password: "asdf"
+time_zone: "America/New_York"
+bolt_db_path: "./bolt.db"
+bolt_db_encryption_key: "asdf"
+redis_address: "localhost:6379"
+# redis_address: "private-redis:6379"
+redis_db_number: 1
+redis_password: ""
+restream_server_url_local: "http://restreamer:1235"
+restream_server_url: "http://192.168.1.23:1235"
+restream_server_api_key: "asdf"
+restream_server_hls_url_prefix: "asdf"
+stream_deck_server_url: "http://localhost:1234"
+stream_deck_server_api_key: "asdf"
+tv:
+  brand: "IR+HDMICEC"
+  ip: "192.168.1.123"
+  mac: "00:00:00:00:00:00"
+  timeout_seconds: 10
+  default_input: 1
+  default_volume: 11
+  volume_reset_limit: 30
+  wake_on_lan: true
+  lg_websocket_port: 3000
+  lg_client_key: "asdf"
+  vizio_auth_token: "asdf"
+  ir:
+    key_save_file_base_path: "./KEYS"
+    default_remote: "samsung"
+    remotes:
+      samsung:
+        keys:
+          power:
+            code: "necx:0x70702"
+          volume_up:
+            code: "necx:0x70707"
+          volume_down:
+            code: "necx:0x7070b"
+          mute:
+            code: "necx:0x7070f"
+          left:
+            code: "necx:0x70765"
+          right:
+            code: "necx:0x70762"
+          up:
+            code: "necx:0x70760"
+          down:
+            code: "necx:0x70761"
+          enter:
+            code: "necx:0x70768"
+          return:
+            code: "necx:0x70758"
+          exit:
+            code: "necx:0x7072d"
+          menu:
+            code: "necx:0x7071a"
+          source:
+            code: "necx:0x70701"
+          test_raw:
+            key_path: "test_raw"
+adb_path: "/usr/local/bin/adb"
+adb_connection_type: "tcp" # tcp or usb
+adb_server_ip: "192.168.1.44"
+adb_server_port: "5555"
+adb_serial: "asdf"
+adb_timeout_seconds: 4
+firecube_total_user_profiles: 2
+firecube_user_profile_index: 0
+youtube_api_keys:
+  - asdf-1
+  - asdf-2
+twitch_user_id: "asdf"
+twitch_client_id: "asdf"
+twitch_client_secret: "asdf"
+twitch_oauth_token: "asdf"
+twitch_access_token: "asdf"
+twitch_refresh_token: "asdf"
