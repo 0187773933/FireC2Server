@@ -46,11 +46,19 @@ func SetupDB( config *types.ConfigFile ) {
 }
 
 func main() {
-
 	defer utils.SetupStackTraceReport()
-
-	config_file_path , _ := filepath.Abs( "./config.yaml" )
-	if len( os.Args ) > 1 { config_file_path , _ = filepath.Abs( os.Args[ 1 ] ) }
+	var config_file_path string
+	if len( os.Args ) > 1 {
+		config_file_path , _ = filepath.Abs( os.Args[ 1 ] )
+	} else {
+		config_file_path , _ = filepath.Abs( "./config.yaml" )
+		if _ , err := os.Stat( config_file_path ); os.IsNotExist( err ) {
+			config_file_path , _ = filepath.Abs( "./SAVE_FILES/config.yaml" )
+			if _ , err := os.Stat( config_file_path ); os.IsNotExist( err ) {
+				panic( "Config File Not Found" )
+			}
+		}
+	}
 	config := utils.ParseConfig( config_file_path )
 	logger.Log.Printf( "Loaded Config File From : %s" , config_file_path )
 	utils.WriteLoginURLPrefix( config.ServerLoginUrlPrefix )
@@ -63,5 +71,4 @@ func main() {
 	s = server.New( DB , config )
 	logger.Log.Printf( "Starting Server" )
 	s.Start()
-
 }
