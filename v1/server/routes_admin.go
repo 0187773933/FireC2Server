@@ -32,6 +32,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	tv.Get( "/mute/off" , s.TVMuteOff )
 	tv.Get( "/volume" , s.TVGetVolume )
 	tv.Get( "/volume/:volume" , s.TVSetVolume )
+	tv.Get( "/ir/:code" , s.TVIRSendCode )
 
 	// Generic ADB Media Buttons
 	adb := s.FiberApp.Group( "/adb" )

@@ -27,6 +27,8 @@ id=$(sudo docker run -dit \
 --device=/dev/lirc0:/dev/lirc0 \
 -v $(pwd)/SAVE_FILES:/home/morphs/SAVE_FILES:rw \
 -v $(pwd)/ADB_KEYS:/home/morphs/.android:ro \
+-v $(pwd)/library:/home/morphs/FireC2Server/ \
+-v $(pwd)/screenshots:/home/morphs/FireC2Server/ \
 --mount type=bind,source="$(pwd)"/config.yaml,target=/home/morphs/config.yaml \
 --network=6105-buttons \
 -p 5954:5954 \

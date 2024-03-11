@@ -87,3 +87,14 @@ func ( s *Server ) TVSetVolume( c *fiber.Ctx ) ( error ) {
 		"result": true ,
 	})
 }
+
+func ( s *Server ) TVIRSendCode( c *fiber.Ctx ) ( error ) {
+	code := c.Params( "code" )
+	ir_code := s.Config.TV.IRConfig.Remotes[ s.Config.TV.IRConfig.DefaultRemote ].Keys[ code ].Code
+	s.TV.IR.Transmit( ir_code )
+	return c.JSON( fiber.Map{
+		"url": "/tv/ir/:code" ,
+		"code": code ,
+		"result": true ,
+	})
+}
