@@ -28,8 +28,9 @@ id=$(sudo docker run -dit \
 -v $(pwd)/SAVE_FILES/ADB_KEYS:/home/morphs/.android:ro \
 -v $(pwd)/SAVE_FILES/:/home/morphs/SAVE_FILES:rw \
 --mount type=bind,source="$(pwd)"/SAVE_FILES/config.yaml,target=/home/morphs/config.yaml \
---network=6105-buttons-3 \
+--network=6105-buttons \
 -p 5954:5954 \
+-e LOG_LEVEL=debug \
 $APP_NAME /home/morphs/config.yaml)
 sudo docker logs -f $id
 # sudo docker network create 6105-buttons

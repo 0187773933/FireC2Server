@@ -173,31 +173,31 @@ func ParseConfig( file_path string ) ( result types.ConfigFile ) {
 	if error != nil { panic( error ) }
 
 	var spotify_library types.SpotifyLibrary
-	spotify_library_file , _ := ioutil.ReadFile( "./library/spotify.yaml" )
+	spotify_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/spotify.yaml" )
 	error = yaml.Unmarshal( spotify_library_file , &spotify_library )
 	if error != nil { panic( error ) }
 	result.Library.Spotify = spotify_library
 
 	var twitch_library types.TwitchLibrary
-	twitch_library_file , _ := ioutil.ReadFile( "./library/twitch.yaml" )
+	twitch_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/twitch.yaml" )
 	error = yaml.Unmarshal( twitch_library_file , &twitch_library )
 	if error != nil { panic( error ) }
 	result.Library.Twitch = twitch_library
 
 	var disney_library types.DisneyLibrary
-	disney_library_file , _ := ioutil.ReadFile( "./library/disney.yaml" )
+	disney_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/disney.yaml" )
 	error = yaml.Unmarshal( disney_library_file , &disney_library )
 	if error != nil { panic( error ) }
 	result.Library.Disney = disney_library
 
 	var youtube_library types.YouTubeLibrary
-	youtube_library_file , _ := ioutil.ReadFile( "./library/youtube.yaml" )
+	youtube_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/youtube.yaml" )
 	error = yaml.Unmarshal( youtube_library_file , &youtube_library )
 	if error != nil { panic( error ) }
 	result.Library.YouTube = youtube_library
 
 	var vlc_library types.VLCLibrary
-	vlc_library_file , _ := ioutil.ReadFile( "./library/vlc.yaml" )
+	vlc_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/vlc.yaml" )
 	error = yaml.Unmarshal( vlc_library_file , &vlc_library )
 	if error != nil { panic( error ) }
 	result.Library.VLC = vlc_library

@@ -1,6 +1,6 @@
 module github.com/0187773933/FireC2Server
 
-go 1.20
+go 1.22.0
 
 require (
 	github.com/0187773933/ADBWrapper v1.0.31

@@ -65,22 +65,84 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "TwitchLiveNext()" )
 	s.TwitchContinuousOpen()
 
-	next_stream := circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+	// next_stream := circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 
-	log.Debug( "Next === " , next_stream )
-	if next_stream == "" {
-		log.Debug( "Empty , Refreshing" )
-		s.TwitchLiveUpdate()
-		next_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
-		if next_stream == "" {
-			log.Debug( "nobody is live ...." )
-			return c.JSON( fiber.Map{
-				"url": "/twitch/live/next" ,
-				"stream": "nobody is live ...." ,
-				"result": false ,
-			})
-		}
+	// log.Debug( "Next === " , next_stream )
+	// if next_stream == "" {
+	// 	log.Debug( "Empty , Refreshing" )
+	// 	s.TwitchLiveUpdate()
+	// 	next_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+	// 	if next_stream == "" {
+	// 		log.Debug( "nobody is live ...." )
+	// 		return c.JSON( fiber.Map{
+	// 			"url": "/twitch/live/next" ,
+	// 			"stream": "nobody is live ...." ,
+	// 			"result": false ,
+	// 		})
+	// 	}
+	// }
+
+	// // sanity check to make sure they are still online
+	// is_stream_live := s.TwitchIsUserLive( next_stream )
+	// if is_stream_live == false {
+	// 	log.Debug( "stream is offline ... now what ?" )
+	// }
+
+	// who knows if this is fine
+	var initial_stream string = circular_set.Next(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+	var next_stream string = initial_stream
+	var refreshed bool = false
+
+	if initial_stream == "" {
+	    log.Debug("The initial stream is empty, indicating no streams are being followed or all are offline.")
+	    s.TwitchLiveUpdate() // Try updating once to check for live streams again after the update.
+	    initial_stream = circular_set.Current(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+	    if initial_stream == "" {
+	        return c.JSON(fiber.Map{
+	            "url": "/twitch/live/next",
+	            "stream": "nobody is live after initial check and update...",
+	            "result": false,
+	        })
+	    }
 	}
+
+	for {
+	    log.Debug( next_stream )
+	    is_stream_live := s.TwitchIsUserLive( next_stream )
+	    if is_stream_live == true {
+	        log.Debug( fmt.Sprintf( "%s === live" , next_stream ) )
+	        break
+	    } else {
+	        log.Debug( fmt.Sprintf( "%s === offline" , next_stream ) )
+	        next_stream = circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+
+	        // Check if we've looped through all streams or the list is empty.
+	        if next_stream == "" || next_stream == initial_stream {
+	            if refreshed {
+	                log.Debug( "No live streams found after a complete cycle and refresh." )
+	                return c.JSON(fiber.Map{
+	                    "url": "/twitch/live/next",
+	                    "stream": "nobody is live after cycling through all options.",
+	                    "result": false,
+	                })
+	            }
+	            log.Debug( "Attempting to refresh the stream list." )
+	            s.TwitchLiveUpdate()
+	            next_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+	            refreshed = true
+	            // Check again if no streams are available after the refresh.
+	            if next_stream == "" || next_stream == initial_stream {
+	                log.Debug( "No live streams found after refresh." )
+	                return c.JSON(fiber.Map{
+	                    "url": "/twitch/live/next",
+	                    "stream": "nobody is live after refresh.",
+	                    "result": false,
+	                })
+	            }
+	        }
+	    }
+	}
+
 	// force refresh on last
 	first_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , 0 , 0 ).Result()
 	first_in_set := first_in_set_z[0].Member.(string)
@@ -136,11 +198,12 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 			})
 		}
 	}
+
 	// force refresh on last
 	last_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , -1 , -1 ).Result()
 	last_in_set := last_in_set_z[0].Member.(string)
 	if last_in_set == next_stream {
-		log.Debug( "recycled list" )
+		log.Debug( "updating list" )
 		s.TwitchLiveUpdate()
 	}
 	log.Debug( fmt.Sprintf( "TwitchLivePrevious( %s )" , next_stream ) )
@@ -241,8 +304,10 @@ func ( s *Server ) TwitchRefreshAuthToken() ( access_token string ) {
 		remaining_time := refresh_token_expire_time.Sub( time_now )
 		buffer_window := ( 30 * time.Second )
 		if remaining_time >= buffer_window {
-			// fmt.Println( "the token is still valid , and doesn't expire in the next 30 seconds , reusing" )
-			// fmt.Println( ( remaining_time - 30 ) , "=== seconds remaining until refresh needed" )
+			// log.Debug( "the token is still valid , and doesn't expire in the next 30 seconds , reusing" )
+			log.Debug( fmt.Sprintf( "%d remaining until refresh needed" , ( remaining_time - 30 ) ) )
+			// log.Debug( fmt.Sprintf( "old access_token === %s" , access_token ) )
+			// log.Debug( fmt.Sprintf( "old refresh_token === %s" , refresh_token ) )
 			return
 		}
 	}
@@ -273,6 +338,8 @@ func ( s *Server ) TwitchRefreshAuthToken() ( access_token string ) {
 		access_token = new_access_token.(string)
 		refresh_token = new_refresh_token.(string)
 	}
+	log.Debug( fmt.Sprintf( "new access_token === %s" , access_token ) )
+	log.Debug( fmt.Sprintf( "new refresh_token === %s" , refresh_token ) )
 	s.Set( "STATE.TWITCH.ACCESS_TOKEN" , access_token )
 	s.Set( "STATE.TWITCH.REFRESH_TOKEN" , refresh_token )
 	return
@@ -296,6 +363,74 @@ func ( s *Server ) TwitchGetLiveFollowers() ( result []string ) {
 	return
 }
 
+// Token Validation
+// curl -X GET 'https://id.twitch.tv/oauth2/validate' \
+// -H 'Authorization: OAuth asdf'
+func ( s *Server ) TwitchValidateToken( access_token string ) ( result int ) {
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf( "OAuth %s" , access_token ) ,
+	}
+	response_json := utils.GetJSON( "https://id.twitch.tv/oauth2/validate" , headers , nil )
+	expires_in_f64 := response_json.(map[string]interface{})[ "expires_in" ].( float64 )
+	result = int( expires_in_f64 )
+	return
+}
+
+// curl -H 'Client-ID: your_client_id' \
+// -H 'Authorization: Bearer your_access_token' \
+// -X GET 'https://api.twitch.tv/helix/streams?user_login=user_login_name'
+type Stream struct {
+	ID           string   `json:"id"`
+	UserID       string   `json:"user_id"`
+	UserLogin    string   `json:"user_login"`
+	UserName     string   `json:"user_name"`
+	GameID       string   `json:"game_id"`
+	GameName     string   `json:"game_name"`
+	Type         string   `json:"type"`
+	Title        string   `json:"title"`
+	ViewerCount  int      `json:"viewer_count"`
+	StartedAt    string   `json:"started_at"`
+	Language     string   `json:"language"`
+	ThumbnailURL string   `json:"thumbnail_url"`
+	IsMature     bool     `json:"is_mature"`
+}
+func ( s *Server ) TwitchGetUserInfo( username string ) ( result Stream ) {
+	access_token := s.TwitchRefreshAuthToken()
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf( "Bearer %s" , access_token ) ,
+		"Client-Id": s.Config.TwitchClientID ,
+	}
+	url := fmt.Sprintf( "https://api.twitch.tv/helix/streams?user_login=%s" , username )
+	response_body := utils.GetJSON( url , headers , nil )
+	response_data := response_body.(map[string]interface{})[ "data" ].( []interface{} )
+	// utils.PrettyPrint( response_data )
+	if len( response_data ) < 1 { return }
+	result.ID = response_data[0].(map[string]interface{})[ "id" ].(string)
+	result.UserID = response_data[0].(map[string]interface{})[ "user_id" ].(string)
+	result.UserLogin = response_data[0].(map[string]interface{})[ "user_login" ].(string)
+	viewer_count_f64 := response_data[0].(map[string]interface{})[ "viewer_count" ].(float64)
+	result.ViewerCount = int( viewer_count_f64 )
+	result.StartedAt = response_data[0].(map[string]interface{})[ "started_at" ].(string)
+	result.Title = response_data[0].(map[string]interface{})[ "title" ].(string)
+	result.Type = response_data[0].(map[string]interface{})[ "type" ].(string)
+	result.ThumbnailURL = response_data[0].(map[string]interface{})[ "thumbnail_url" ].(string)
+	result.IsMature = response_data[0].(map[string]interface{})[ "is_mature" ].(bool)
+	result.Language = response_data[0].(map[string]interface{})[ "language" ].(string)
+	result.GameID = response_data[0].(map[string]interface{})[ "game_id" ].(string)
+	result.GameName = response_data[0].(map[string]interface{})[ "game_name" ].(string)
+	return
+}
+
+func ( s *Server ) TwitchIsUserLive( username string ) ( result bool ) {
+	result = false
+	user_info := s.TwitchGetUserInfo( username )
+	if user_info.ID == "" { return }
+	// if user_info.ViewerCount < 3 { return }
+	result = true
+	return
+}
+
+
 // Update DB With List of Currated Live Followers
 func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	// 1.) Get Currated List
@@ -311,6 +446,7 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 
 	// 2.) Get Live Followers
 	access_token := s.TwitchRefreshAuthToken()
+	log.Debug( fmt.Sprintf( "access_token === %s" , access_token ) )
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf( "Bearer %s" , access_token ) ,
 		"Client-Id": s.Config.TwitchClientID ,
@@ -320,7 +456,6 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	}
 	live_followers_json := utils.GetJSON( "https://api.twitch.tv/helix/streams/followed" , headers , params )
 	live_followers := live_followers_json.(map[string]interface{})[ "data" ].( []interface{} )
-
 	// 3.) Get Live Currated List
 	live_index_map := make(map[string]int)
 	for i , user := range live_followers {
@@ -328,6 +463,9 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 		live_index_map[user_name] = i;
 
 	}
+	log.Debug( "Live Followers === " , live_index_map )
+	// log.Debug( "Currated Followers ===" )
+	// utils.PrettyPrint( currated_followers )
 	// lookup table
 	for _ , user := range currated_followers {
 		if _ , exists := live_index_map[ user ]; exists {
@@ -346,7 +484,7 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	for _ , user := range result {
 		circular_set.Add( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , user )
 	}
-	log.Debug( result )
+	log.Debug( "Live Currated Followers === " , result )
 	return
 }
 
@@ -390,16 +528,16 @@ func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
 	for i , user := range live_followers_currated {
 		live_followers_currated_map[ user ] = i
 	}
-	fmt.Println( "live followers currated ===" , live_followers_currated )
+	log.Debug( "live followers currated === " , live_followers_currated )
 
 	// 2.) Get Cached Followers
 	var context = context.Background()
 	cached_followers , _ := s.DB.ZRangeWithScores( context , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , 0 , -1 ).Result()
-	fmt.Println( "cached ===" , cached_followers )
+	log.Debug( "cached === " , cached_followers )
 	cached_index := circular_set.Index( s.DB , ( R_KEY_STATE_TWITCH_FOLLOWING_LIVE + ".INDEX" ) )
-	fmt.Println( "cached index ===" , cached_index )
+	log.Debug( "cached index === " , cached_index )
 	cached_current := circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
-	fmt.Println( "cached current ===" , cached_current )
+	log.Debug( "cached current === " , cached_current )
 
 	// 5.) The actuall point of this function
 	// 5.1) if the cache is empty , use the new list ( result ) , return
@@ -415,7 +553,7 @@ func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
 			cached_list_with_offline_removed_map[ i_username ] = i
 		}
 	}
-	fmt.Println( "cached list with offline removed ===" , cached_list_with_offline_removed )
+	log.Debug( "cached list with offline removed === " , cached_list_with_offline_removed )
 
 	// 5.3) find new online users
 	// this is where it gets debatable on what you want to do
@@ -432,10 +570,10 @@ func ( s *Server ) TwitchLiveRefresh() ( result []string ) {
 	// sort.Slice( new_online_users , func( i , j int ) bool {
 	// 	return currated_followers_map[ new_online_users[ i ] ] < currated_followers_map[ new_online_users[ j ] ]
 	// })
-	fmt.Println( "new online currated users since last cache ===" , new_online_users )
+	log.Debug( "new online currated users since last cache === " , new_online_users )
 
 	cached_list_with_offline_removed_and_new_online_added := append( cached_list_with_offline_removed , new_online_users... )
-	fmt.Println( "cached list with offline removed and new online added ===" , cached_list_with_offline_removed_and_new_online_added )
+	log.Debug( "cached list with offline removed and new online added === " , cached_list_with_offline_removed_and_new_online_added )
 
 	// 5.4) circular list package doesn't have a remove
 	result = cached_list_with_offline_removed_and_new_online_added
