@@ -4,6 +4,7 @@ FILE="./v1/server/html/login.html"
 NEW_LINE="\t\t\t\t\t<form id=\"form-login\" action=\"/ok???\" onSubmit=\"return on_submit();\" method=\"post\">"
 awk -v n=17 -v s="$NEW_LINE" '(NR == n) {$0 = s} 1' $FILE > temp.txt
 mv temp.txt $FILE
+sed -i '' '3s/.*/go 1.18/' go.mod # mac osx
 
 function is_int() { return $(test "$@" -eq "$@" > /dev/null 2>&1); }
 ssh-add -D
@@ -39,3 +40,5 @@ git remote add origin git@github.com:0187773933/FireC2Server.git
 # https://pkg.go.dev/github.com/0187773933/FireC2Server@v1.0.8
 git push origin --tags
 git push origin master
+
+sed -i '' '3s/.*/go 1.22.0/' go.mod # mac osx

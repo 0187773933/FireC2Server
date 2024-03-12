@@ -1,5 +1,6 @@
 #!/bin/bash
-GO_VERSION="1.20.1"
+# GO_VERSION="1.20.1"
+GO_VERSION="1.22.0"
 ARCH=$(dpkg --print-architecture)
 case $ARCH in
 	armhf)
