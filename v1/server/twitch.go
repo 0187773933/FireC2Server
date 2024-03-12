@@ -97,6 +97,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	    log.Debug("The initial stream is empty, indicating no streams are being followed or all are offline.")
 	    s.TwitchLiveUpdate() // Try updating once to check for live streams again after the update.
 	    initial_stream = circular_set.Current(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+	    next_stream = initial_stream
 	    if initial_stream == "" {
 	        return c.JSON(fiber.Map{
 	            "url": "/twitch/live/next",
@@ -477,6 +478,7 @@ func ( s *Server ) TwitchLiveUpdate() ( result []string ) {
 	for i, user := range currated_followers {
 		currated_map[user] = i
 	}
+	log.Debug( "Currated Followers List === " , currated_map )
 	sort.Slice(result, func(i, j int) bool {
 		return currated_map[result[i]] < currated_map[result[j]]
 	})

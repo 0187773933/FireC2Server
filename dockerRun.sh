@@ -16,6 +16,8 @@
 #MOUSE_DEVICE=$(readlink -f /dev/input/by-id/usb-Pulse-Eight_USB-CEC_Adapter_v7-if02-mouse)
 #--privileged \
 
+# sudo docker network create 6105-buttons
+
 APP_NAME="public-fire-c2-server"
 sudo docker rm -f $APP_NAME || echo ""
 id=$(sudo docker run -dit \
@@ -25,7 +27,7 @@ id=$(sudo docker run -dit \
 --restart="always" \
 --device=/dev/snd \
 --device=/dev/lirc0:/dev/lirc0 \
--v $(pwd)/SAVE_FILES/ADB_KEYS:/home/morphs/.android:ro \
+-v $(pwd)/SAVE_FILES/ADB_KEYS/:/home/morphs/.android:ro \
 -v $(pwd)/SAVE_FILES/:/home/morphs/SAVE_FILES:rw \
 --mount type=bind,source="$(pwd)"/SAVE_FILES/config.yaml,target=/home/morphs/config.yaml \
 --network=6105-buttons \
@@ -33,4 +35,3 @@ id=$(sudo docker run -dit \
 -e LOG_LEVEL=debug \
 $APP_NAME /home/morphs/config.yaml)
 sudo docker logs -f $id
-# sudo docker network create 6105-buttons
