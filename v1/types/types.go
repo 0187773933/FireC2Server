@@ -49,17 +49,23 @@ type VLCLibrary struct {
 	Videos []string `yaml:"videos"`
 }
 
-type HuluMovie struct {
+type HuluEpisode struct {
+	ID string `yaml:"id"`
 	Name string `yaml:"name"`
 }
 
 type HuluTVShowSeason struct {
-	Name string `yaml:"name"`
+	Number string `yaml:"number"`
+	Episodes []HuluEpisode `yaml:"episodes"`
 }
 
 type HuluTVShow struct {
 	Name string `yaml:"name"`
-	Seasons map[string]HuluTVShowSeason
+	Seasons []HuluTVShowSeason `yaml:"seasons"`
+}
+
+type HuluMovie struct {
+	Name string `yaml:"name"`
 }
 
 type HuluLibrary struct {

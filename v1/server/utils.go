@@ -236,6 +236,20 @@ func ( s *Server ) StoreLibrary() {
 
 	// VLC == TODO
 
+	// Hulu - Movies
+	// TODO
+	// Hulu - TV Shows
+	for tv_show_id , tv_show := range s.Config.Library.Hulu.TV {
+		r_tv_show := fmt.Sprintf( "LIBRARY.HULU.TV.%s" , tv_show_id )
+		for _ , season := range tv_show.Seasons {
+			for _ , episode := range season.Episodes {
+				// fmt.Println( episode.Name )
+				fmt.Println( "Adding to" , r_tv_show , episode.ID , episode.Name )
+				circular_set.Add( s.DB , r_tv_show , episode.ID )
+				s.DB.Set( ctx , fmt.Sprintf( "LIBRARY.HULU.TV.%s.%s" , tv_show_id , episode.ID ) , episode.Name , 0 )
+			}
+		}
+	}
 }
 
 func ( s *Server ) Set( key string , value interface{} ) ( result string ) {

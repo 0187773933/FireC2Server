@@ -179,6 +179,7 @@ func ParseConfig( file_path string ) ( result types.ConfigFile ) {
 	if error != nil { panic( error ) }
 
 	library_base_path := filepath.Join( result.SaveFilesPath , "library" )
+	fmt.Println( library_base_path )
 
 	var spotify_library types.SpotifyLibrary
 	spotify_library_file , _ := ioutil.ReadFile( filepath.Join( library_base_path , "spotify.yaml" ) )
@@ -211,9 +212,10 @@ func ParseConfig( file_path string ) ( result types.ConfigFile ) {
 	result.Library.VLC = vlc_library
 
 	var hulu_library types.HuluLibrary
-	hulu_library_file , _ := ioutil.ReadFile( filepath.Join( library_base_path , "hulu.yaml" ) )
-	error = yaml.Unmarshal( hulu_library_file , &hulu_library )
-	if error != nil { panic( error ) }
+	hulu_library_file , hulu_library_file_read_error := ioutil.ReadFile( filepath.Join( library_base_path , "hulu.yaml" ) )
+	if hulu_library_file_read_error != nil { panic( hulu_library_file_read_error ) }
+	error = yaml.UnmarshalStrict( hulu_library_file , &hulu_library )
+	if error != nil { fmt.Println( error ); panic( error ) }
 	result.Library.Hulu = hulu_library
 
 	return

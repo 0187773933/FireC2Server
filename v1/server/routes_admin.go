@@ -109,7 +109,8 @@ func ( s *Server ) SetupAdminRoutes() {
 	hulu.Get( "/next" , s.HuluMovieNext )
 	hulu.Get( "/previous" , s.HuluMoviePrevious )
 	hulu.Get( "/tv/:id/next" , s.HuluTVNext )
-	hulu.Get( "/tv/:id/previous" , s.HuluTVNext )
+	hulu.Get( "/tv/:id/previous" , s.HuluTVPrevious )
+	hulu.Get( "/tv/:series_id" , s.HuluTVID )
 	hulu.Get( "/*" , s.HuluID )
 
 	// VLC
