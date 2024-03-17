@@ -6,6 +6,7 @@ import (
 	// url "net/url"
 	// "math"
 	// "image/color"
+	filepath "path/filepath"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
 	// redis "github.com/redis/go-redis/v9"
@@ -46,7 +47,8 @@ func ( s *Server ) DisneyContinuousOpen() {
 		log.Debug( "disney was NOT already open" )
 		s.DisneyReopenApp()
 		time.Sleep( 500 * time.Millisecond )
-		s.ADB.WaitOnScreen( "./screenshots/disney/profile_selection.png" , ( 20 * time.Second ) )
+		pss_fp := filepath.Join( s.Config.SaveFilesPath , "screenshots" , "disney" , "profile_selection.png" )
+		s.ADB.WaitOnScreen( pss_fp , ( 20 * time.Second ) )
 		time.Sleep( 500 * time.Millisecond )
 		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
 		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )

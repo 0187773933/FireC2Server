@@ -25,13 +25,15 @@ id=$(sudo docker run -dit \
 --privileged \
 --name $APP_NAME \
 --restart="always" \
---device=/dev/snd \
---device=/dev/lirc0:/dev/lirc0 \
 -v $(pwd)/SAVE_FILES/ADB_KEYS/:/home/morphs/.android:ro \
 -v $(pwd)/SAVE_FILES/:/home/morphs/SAVE_FILES:rw \
---mount type=bind,source="$(pwd)"/SAVE_FILES/config.yaml,target=/home/morphs/config.yaml \
 --network=6105-buttons \
 -p 5954:5954 \
 -e LOG_LEVEL=debug \
-$APP_NAME /home/morphs/config.yaml)
+$APP_NAME /home/morphs/SAVE_FILES/config.yaml)
 sudo docker logs -f $id
+
+
+# --device=/dev/snd \
+# --device=/dev/lirc0:/dev/lirc0 \
+# --mount type=bind,source="$(pwd)"/SAVE_FILES/config.yaml,target=/home/morphs/config.yaml \

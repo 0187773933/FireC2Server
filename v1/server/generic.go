@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 	fiber "github.com/gofiber/fiber/v2"
+	utils "github.com/0187773933/FireC2Server/v1/utils"
 )
 
-var APP_NAMES = []string{ "twitch" , "disney" , "youtube" , "spotify" , "vlc" }
+var APP_NAMES = []string{ "twitch" , "disney" , "youtube" , "spotify" , "vlc" , "hulu" }
 
 type GenericInfo struct {
 	ADBStatus interface{} `json:"adb_status"`
@@ -80,6 +81,9 @@ func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
 			break;
 		case "vlc":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+			break;
+		case "hulu":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
 			break;
 		case "browser":
@@ -170,6 +174,7 @@ func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
 func ( s *Server ) Pause( c *fiber.Ctx ) ( error ) {
 	log.Debug( "Pause()" )
 	info := s.generic_get_current_info()
+	utils.PrettyPrint( info )
 	switch info.PlayerName {
 		case "youtube":
 			switch info.PlayerState {
@@ -222,6 +227,20 @@ func ( s *Server ) Pause( c *fiber.Ctx ) ( error ) {
 			break;
 		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+			break;
+		case "hulu":
+			switch info.PlayerState {
+				case "playing":
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+					break;
+				case "stopped":
+					// log.Debug( "hulu already stopped , not pausing" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+					break;
+				case "paused":
+					log.Debug( "hulu already paused" )
+					break;
+			}
 			break;
 		case "browser":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
@@ -307,6 +326,21 @@ func ( s *Server ) Resume( c *fiber.Ctx ) ( error ) {
 		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 			break;
+		case "hulu":
+			switch info.PlayerState {
+				case "playing":
+					log.Debug( "hulu already playing" )
+					break;
+				case "stopped":
+					log.Debug( "hulu stopped , not resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+				case "paused":
+					log.Debug( "hulu paused , resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+			}
+			break;
 	}
 	return c.JSON( fiber.Map{
 		"url": "/pause" ,
@@ -317,6 +351,7 @@ func ( s *Server ) Resume( c *fiber.Ctx ) ( error ) {
 func ( s *Server ) Stop( c *fiber.Ctx ) ( error ) {
 	log.Debug( "Stop()" )
 	info := s.generic_get_current_info()
+	utils.PrettyPrint( info )
 	switch info.PlayerName {
 		case "youtube":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
@@ -331,13 +366,17 @@ func ( s *Server ) Stop( c *fiber.Ctx ) ( error ) {
 			}
 			break;
 		case "disney":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 			break;
 		case "spotify":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 			break;
 		case "vlc":
-			s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+			break;
+		case "hulu":
+			fmt.Println( "hello ???" )
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 			break;
 		case "browser":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_STOP" )
@@ -372,6 +411,9 @@ func ( s *Server ) Next( c *fiber.Ctx ) ( error ) {
 		case "vlc":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
 			break;
+		case "hulu":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
+			break;
 		case "browser":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
 			break;
@@ -403,6 +445,9 @@ func ( s *Server ) Previous( c *fiber.Ctx ) ( error ) {
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
 			break;
 		case "vlc":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
+			break;
+		case "hulu":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
 			break;
 		case "browser":

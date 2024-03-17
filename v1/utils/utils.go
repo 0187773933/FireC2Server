@@ -12,7 +12,7 @@ import (
 	"net"
 	"runtime"
 	"math/rand"
-	// tz "4d63.com/tz"
+	filepath "path/filepath"
 	"bytes"
 	"net/http"
 	"net/url"
@@ -20,11 +20,12 @@ import (
 	sha256 "crypto/sha256"
 	// "strings"
 	"io/ioutil"
+	uuid "github.com/google/uuid"
 	yaml "gopkg.in/yaml.v2"
 	// hid "github.com/dh1tw/hid"
 	types "github.com/0187773933/FireC2Server/v1/types"
 	fiber_cookie "github.com/gofiber/fiber/v2/middleware/encryptcookie"
-	encryption "github.com/0187773933/FireC2Server/v1/encryption"
+	encryption "github.com/0187773933/encryption/v1/encryption"
 )
 
 func SetupStackTraceReport() {
@@ -50,6 +51,11 @@ func Sha256( input string ) ( result string ) {
 	hash_bytes := hasher.Sum( nil )
 	result = fmt.Sprintf( "%x" , hash_bytes )
 	return
+}
+
+func IsUUID( u string ) ( result bool ) {
+	_ , err := uuid.Parse( u )
+	return err == nil
 }
 
 func GetLocalIPAddresses() ( ip_addresses []string ) {
@@ -172,49 +178,57 @@ func ParseConfig( file_path string ) ( result types.ConfigFile ) {
 	error := yaml.Unmarshal( config_file , &result )
 	if error != nil { panic( error ) }
 
+	library_base_path := filepath.Join( result.SaveFilesPath , "library" )
+
 	var spotify_library types.SpotifyLibrary
-	spotify_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/spotify.yaml" )
+	spotify_library_file , _ := ioutil.ReadFile( filepath.Join( library_base_path , "spotify.yaml" ) )
 	error = yaml.Unmarshal( spotify_library_file , &spotify_library )
 	if error != nil { panic( error ) }
 	result.Library.Spotify = spotify_library
 
 	var twitch_library types.TwitchLibrary
-	twitch_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/twitch.yaml" )
+	twitch_library_file , _ := ioutil.ReadFile( filepath.Join( library_base_path , "twitch.yaml" ) )
 	error = yaml.Unmarshal( twitch_library_file , &twitch_library )
 	if error != nil { panic( error ) }
 	result.Library.Twitch = twitch_library
 
 	var disney_library types.DisneyLibrary
-	disney_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/disney.yaml" )
+	disney_library_file , _ := ioutil.ReadFile( filepath.Join( library_base_path , "disney.yaml" ) )
 	error = yaml.Unmarshal( disney_library_file , &disney_library )
 	if error != nil { panic( error ) }
 	result.Library.Disney = disney_library
 
 	var youtube_library types.YouTubeLibrary
-	youtube_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/youtube.yaml" )
+	youtube_library_file , _ := ioutil.ReadFile( filepath.Join( library_base_path , "youtube.yaml" ) )
 	error = yaml.Unmarshal( youtube_library_file , &youtube_library )
 	if error != nil { panic( error ) }
 	result.Library.YouTube = youtube_library
 
 	var vlc_library types.VLCLibrary
-	vlc_library_file , _ := ioutil.ReadFile( "./SAVE_FILES/library/vlc.yaml" )
+	vlc_library_file , _ := ioutil.ReadFile( filepath.Join( library_base_path , "vlc.yaml" ) )
 	error = yaml.Unmarshal( vlc_library_file , &vlc_library )
 	if error != nil { panic( error ) }
 	result.Library.VLC = vlc_library
+
+	var hulu_library types.HuluLibrary
+	hulu_library_file , _ := ioutil.ReadFile( filepath.Join( library_base_path , "hulu.yaml" ) )
+	error = yaml.Unmarshal( hulu_library_file , &hulu_library )
+	if error != nil { panic( error ) }
+	result.Library.Hulu = hulu_library
 
 	return
 }
 
 func GenerateNewKeys() {
 	fiber_cookie_key := fiber_cookie.GenerateKey()
-	bolt_db_key := encryption.GenerateRandomString( 32 )
+	encryption_key := encryption.GenerateRandomString( 32 )
 	server_api_key := encryption.GenerateRandomString( 16 )
 	admin_username := encryption.GenerateRandomString( 16 )
 	admin_password := encryption.GenerateRandomString( 16 )
 	browser_api_key := encryption.GenerateRandomString( 16 )
 	fmt.Println( "Generated New Keys :" )
 	fmt.Printf( "\tFiber Cookie Key === %s\n" , fiber_cookie_key )
-	fmt.Printf( "\tBolt DB Key === %s\n" , bolt_db_key )
+	fmt.Printf( "\tEncryption Key === %s\n" , encryption_key )
 	fmt.Printf( "\tServer API Key === %s\n" , server_api_key )
 	fmt.Printf( "\tAdmin Username === %s\n" , admin_username )
 	fmt.Printf( "\tAdmin Password === %s\n\n" , admin_password )

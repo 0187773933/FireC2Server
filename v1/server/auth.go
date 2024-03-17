@@ -5,7 +5,7 @@ import (
 	"time"
 	fiber "github.com/gofiber/fiber/v2"
 	bcrypt "golang.org/x/crypto/bcrypt"
-	encryption "github.com/0187773933/FireC2Server/v1/encryption"
+	encryption "github.com/0187773933/encryption/v1/encryption"
 )
 
 func validate_login_credentials( context *fiber.Ctx ) ( result bool ) {
@@ -42,7 +42,7 @@ func HandleLogin( context *fiber.Ctx ) ( error ) {
 	context.Cookie(
 		&fiber.Cookie{
 			Name: GlobalServer.Config.ServerCookieName ,
-			Value: encryption.SecretBoxEncrypt( GlobalServer.Config.BoltDBEncryptionKey , GlobalServer.Config.ServerCookieAdminSecretMessage ) ,
+			Value: encryption.SecretBoxEncrypt( GlobalServer.Config.EncryptionKey , GlobalServer.Config.ServerCookieAdminSecretMessage ) ,
 			Secure: true ,
 			Path: "/" ,
 			// Domain: "blah.ngrok.io" , // probably should set this for webkit
@@ -58,7 +58,7 @@ func validate_admin_cookie( context *fiber.Ctx ) ( result bool ) {
 	result = false
 	admin_cookie := context.Cookies( GlobalServer.Config.ServerCookieName )
 	if admin_cookie == "" { fmt.Println( "admin cookie was blank" ); return }
-	admin_cookie_value := encryption.SecretBoxDecrypt( GlobalServer.Config.BoltDBEncryptionKey , admin_cookie )
+	admin_cookie_value := encryption.SecretBoxDecrypt( GlobalServer.Config.EncryptionKey , admin_cookie )
 	if admin_cookie_value != GlobalServer.Config.ServerCookieAdminSecretMessage { fmt.Println( "admin cookie secret message was not equal" ); return }
 	result = true
 	return
@@ -68,7 +68,7 @@ func validate_admin( context *fiber.Ctx ) ( result bool ) {
 	result = false
 	admin_cookie := context.Cookies( GlobalServer.Config.ServerCookieName )
 	if admin_cookie != "" {
-		admin_cookie_value := encryption.SecretBoxDecrypt( GlobalServer.Config.BoltDBEncryptionKey , admin_cookie )
+		admin_cookie_value := encryption.SecretBoxDecrypt( GlobalServer.Config.EncryptionKey , admin_cookie )
 		if admin_cookie_value == GlobalServer.Config.ServerCookieAdminSecretMessage {
 			result = true
 			return
@@ -94,7 +94,7 @@ func validate_admin( context *fiber.Ctx ) ( result bool ) {
 func validate_admin_mw( context *fiber.Ctx ) ( error ) {
 	admin_cookie := context.Cookies( GlobalServer.Config.ServerCookieName )
 	if admin_cookie != "" {
-		admin_cookie_value := encryption.SecretBoxDecrypt( GlobalServer.Config.BoltDBEncryptionKey , admin_cookie )
+		admin_cookie_value := encryption.SecretBoxDecrypt( GlobalServer.Config.EncryptionKey , admin_cookie )
 		if admin_cookie_value == GlobalServer.Config.ServerCookieAdminSecretMessage {
 			return context.Next()
 		}

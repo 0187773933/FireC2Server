@@ -103,6 +103,15 @@ func ( s *Server ) SetupAdminRoutes() {
 	youtube.Get( "/playlist/:name/next" , s.YouTubePlaylistNext )
 	youtube.Get( "/playlist/:name/previous" , s.YouTubePlaylistPrevious )
 
+	// Hulu
+	hulu := s.FiberApp.Group( "/hulu" )
+	hulu.Use( validate_admin_mw )
+	hulu.Get( "/next" , s.HuluMovieNext )
+	hulu.Get( "/previous" , s.HuluMoviePrevious )
+	hulu.Get( "/tv/:id/next" , s.HuluTVNext )
+	hulu.Get( "/tv/:id/previous" , s.HuluTVNext )
+	hulu.Get( "/*" , s.HuluID )
+
 	// VLC
 	vlc := s.FiberApp.Group( "/vlc" )
 	vlc.Use( validate_admin_mw )

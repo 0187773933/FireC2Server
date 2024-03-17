@@ -20,6 +20,7 @@ require (
 	github.com/0187773933/IRController v1.0.7 // indirect
 	github.com/0187773933/LGTVController v0.0.0-20230917160125-3fd2f2b61451 // indirect
 	github.com/0187773933/VizioController v1.0.19 // indirect
+	github.com/0187773933/encryption v0.0.0-20230921140858-60fe28b9fcc0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect

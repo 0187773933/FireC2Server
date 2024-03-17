@@ -49,12 +49,31 @@ type VLCLibrary struct {
 	Videos []string `yaml:"videos"`
 }
 
+type HuluMovie struct {
+	Name string `yaml:"name"`
+}
+
+type HuluTVShowSeason struct {
+	Name string `yaml:"name"`
+}
+
+type HuluTVShow struct {
+	Name string `yaml:"name"`
+	Seasons map[string]HuluTVShowSeason
+}
+
+type HuluLibrary struct {
+	Movies map[string]HuluMovie `yaml:"movies"`
+	TV map[string]HuluTVShow `yaml:"tv"`
+}
+
 type Library struct {
 	Spotify SpotifyLibrary `yaml:"spotify"`
 	Twitch TwitchLibrary `yaml:"twitch"`
 	Disney DisneyLibrary `yaml:"disney"`
 	YouTube YouTubeLibrary `yaml:"youtube"`
 	VLC VLCLibrary `yaml:"vlc"`
+	Hulu HuluLibrary `yaml:"hulu"`
 }
 
 type ConfigFile struct {
@@ -73,8 +92,9 @@ type ConfigFile struct {
 	AdminUsername string `yaml:"admin_username"`
 	AdminPassword string `yaml:"admin_password"`
 	TimeZone string `yaml:"time_zone"`
+	SaveFilesPath string `yaml:"save_files_path"`
 	BoltDBPath string `yaml:"bolt_db_path"`
-	BoltDBEncryptionKey string `yaml:"bolt_db_encryption_key"`
+	EncryptionKey string `yaml:"encryption_key"`
 	RedisAddress string `yaml:"redis_address"`
 	RedisDBNumber int `yaml:"redis_db_number"`
 	RedisPassword string `yaml:"redis_password"`
@@ -93,6 +113,8 @@ type ConfigFile struct {
 	ADBTimeoutSeconds int `yaml:"adb_timeout_seconds"`
 	FireCubeTotalUserProfiles int `yaml:"firecube_total_user_profiles"`
 	FireCubeUserProfileIndex int `yaml:"firecube_user_profile_index"`
+	HuluTotalUserProfiles int `yaml:"hulu_total_user_profiles"`
+	HuluUserProfileIndex int `yaml:"hulu_user_profile_index"`
 	YouTubeAPIKeys []string `yaml:"youtube_api_keys"`
 	TwitchUserID string `yaml:"twitch_user_id"`
 	TwitchClientID string `yaml:"twitch_client_id"`

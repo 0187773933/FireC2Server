@@ -13,8 +13,9 @@ server_cookie_secret_message: "asdf"
 admin_username: "asdf"
 admin_password: "asdf"
 time_zone: "America/New_York"
-bolt_db_path: "./bolt.db"
-bolt_db_encryption_key: "asdf"
+save_files_path: "/home/morphs/SAVE_FILES"
+bolt_db_path: "bolt.db"
+encryption_key: "44a34a58da0a68f37b5507334381bef7766a0f48bfaf1876cab2b0b8cabb1092"
 redis_address: "localhost:6379"
 # redis_address: "private-redis:6379"
 redis_db_number: 1
@@ -79,6 +80,8 @@ adb_serial: "asdf"
 adb_timeout_seconds: 4
 firecube_total_user_profiles: 2
 firecube_user_profile_index: 0
+hulu_total_user_profiles: 5
+hulu_user_profile_index: 4
 youtube_api_keys:
   - asdf-1
   - asdf-2
