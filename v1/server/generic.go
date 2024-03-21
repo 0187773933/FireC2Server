@@ -7,7 +7,7 @@ import (
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 )
 
-var APP_NAMES = []string{ "twitch" , "disney" , "youtube" , "spotify" , "vlc" , "hulu" }
+var APP_NAMES = []string{ "twitch" , "disney" , "youtube" , "spotify" , "vlc" , "hulu" , "netflix" }
 
 type GenericInfo struct {
 	ADBStatus interface{} `json:"adb_status"`
@@ -84,6 +84,9 @@ func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
 			break;
 		case "hulu":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+			break;
+		case "netflix":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
 			break;
 		case "browser":
@@ -242,6 +245,20 @@ func ( s *Server ) Pause( c *fiber.Ctx ) ( error ) {
 					break;
 			}
 			break;
+		case "netflix":
+			switch info.PlayerState {
+				case "playing":
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+					break;
+				case "stopped":
+					// log.Debug( "netflix already stopped , not pausing" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+					break;
+				case "paused":
+					log.Debug( "netflix already paused" )
+					break;
+			}
+			break;
 		case "browser":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 			break;
@@ -341,6 +358,24 @@ func ( s *Server ) Resume( c *fiber.Ctx ) ( error ) {
 					break;
 			}
 			break;
+		case "netflix":
+			switch info.PlayerState {
+				case "playing":
+					log.Debug( "netflix already playing" )
+					break;
+				case "stopped":
+					log.Debug( "netflix stopped , not resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+				case "paused":
+					log.Debug( "netflix paused , resuming" )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					break;
+			}
+			break;
+		default:
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+			break;
 	}
 	return c.JSON( fiber.Map{
 		"url": "/pause" ,
@@ -375,7 +410,9 @@ func ( s *Server ) Stop( c *fiber.Ctx ) ( error ) {
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 			break;
 		case "hulu":
-			fmt.Println( "hello ???" )
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
+			break;
+		case "netflix":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PAUSE" )
 			break;
 		case "browser":
@@ -414,6 +451,9 @@ func ( s *Server ) Next( c *fiber.Ctx ) ( error ) {
 		case "hulu":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
 			break;
+		case "netflix":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
+			break;
 		case "browser":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" )
 			break;
@@ -448,6 +488,9 @@ func ( s *Server ) Previous( c *fiber.Ctx ) ( error ) {
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
 			break;
 		case "hulu":
+			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
+			break;
+		case "netflix":
 			s.ADB.PressKeyName( "KEYCODE_MEDIA_PREVIOUS" )
 			break;
 		case "browser":

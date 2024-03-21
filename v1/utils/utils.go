@@ -218,6 +218,13 @@ func ParseConfig( file_path string ) ( result types.ConfigFile ) {
 	if error != nil { fmt.Println( error ); panic( error ) }
 	result.Library.Hulu = hulu_library
 
+	var netflix_library types.NetflixLibrary
+	netflix_library_file , netflix_library_file_read_error := ioutil.ReadFile( filepath.Join( library_base_path , "netflix.yaml" ) )
+	if netflix_library_file_read_error != nil { panic( netflix_library_file_read_error ) }
+	error = yaml.UnmarshalStrict( netflix_library_file , &netflix_library )
+	if error != nil { fmt.Println( error ); panic( error ) }
+	result.Library.Netflix = netflix_library
+
 	return
 }
 

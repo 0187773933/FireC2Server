@@ -167,6 +167,8 @@ func ( s *Server ) GetStatusUrl( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) StoreLibrary() {
 
+	log.Debug( "StoreLibrary()" )
+
 	var ctx = context.Background()
 
 	// Should we delete everyting before hand? .... design question
@@ -237,19 +239,45 @@ func ( s *Server ) StoreLibrary() {
 	// VLC == TODO
 
 	// Hulu - Movies
-	// TODO
+	for movie_id , movie := range s.Config.Library.Hulu.Movies {
+		r_movie := "LIBRARY.HULU.MOVIES"
+		circular_set.Add( s.DB , r_movie , movie_id )
+		s.DB.Set( ctx , fmt.Sprintf( "LIBRARY.HULU.MOVIES.%s" , movie_id ) , movie.Name , 0 )
+	}
 	// Hulu - TV Shows
 	for tv_show_id , tv_show := range s.Config.Library.Hulu.TV {
 		r_tv_show := fmt.Sprintf( "LIBRARY.HULU.TV.%s" , tv_show_id )
 		for _ , season := range tv_show.Seasons {
 			for _ , episode := range season.Episodes {
 				// fmt.Println( episode.Name )
-				fmt.Println( "Adding to" , r_tv_show , episode.ID , episode.Name )
+				// fmt.Println( "Adding to" , r_tv_show , episode.ID , episode.Name )
 				circular_set.Add( s.DB , r_tv_show , episode.ID )
 				s.DB.Set( ctx , fmt.Sprintf( "LIBRARY.HULU.TV.%s.%s" , tv_show_id , episode.ID ) , episode.Name , 0 )
 			}
 		}
 	}
+
+	// Netflix - Movies
+	for movie_id , movie := range s.Config.Library.Netflix.Movies {
+		// fmt.Println( "netflix movie" , movie_id )
+		r_movie := "LIBRARY.NETFLIX.MOVIES"
+		circular_set.Add( s.DB , r_movie , movie_id )
+		s.DB.Set( ctx , fmt.Sprintf( "LIBRARY.NETFLIX.MOVIES.%s" , movie_id ) , movie.Name , 0 )
+	}
+	// Netflix - TV Shows
+	for tv_show_id , tv_show := range s.Config.Library.Netflix.TV {
+		r_tv_show := fmt.Sprintf( "LIBRARY.NETFLIX.TV.%s" , tv_show_id )
+		for _ , season := range tv_show.Seasons {
+			for _ , episode := range season.Episodes {
+				// fmt.Println( episode.Name )
+				// fmt.Println( "Adding to" , r_tv_show , episode.ID , episode.Name )
+				circular_set.Add( s.DB , r_tv_show , episode.ID )
+				s.DB.Set( ctx , fmt.Sprintf( "LIBRARY.NETFLIX.TV.%s.%s" , tv_show_id , episode.ID ) , episode.Name , 0 )
+			}
+		}
+	}
+
+	log.Debug( "StoreLibrary() --> Done" )
 }
 
 func ( s *Server ) Set( key string , value interface{} ) ( result string ) {

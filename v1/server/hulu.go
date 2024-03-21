@@ -199,7 +199,7 @@ func ( s *Server ) HuluID( c *fiber.Ctx ) ( error ) {
 	if utils.IsUUID( sent_id ) {
 		sent_id = fmt.Sprintf( "https://www.hulu.com/watch/%s" , sent_id )
 	}
-	log.Debug( fmt.Sprintf( "HuluPlaylistAddURL( %s )" , sent_id ) )
+	log.Debug( fmt.Sprintf( "HuluID( %s )" , sent_id ) )
 	s.HuluContinuousOpen()
 	s.ADB.OpenURI( sent_id )
 	s.Set( "active_player_now_playing_id" , sent_id )

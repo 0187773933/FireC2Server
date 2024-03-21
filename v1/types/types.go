@@ -73,6 +73,30 @@ type HuluLibrary struct {
 	TV map[string]HuluTVShow `yaml:"tv"`
 }
 
+type NetflixEpisode struct {
+	ID string `yaml:"id"`
+	Name string `yaml:"name"`
+}
+
+type NetflixTVShowSeason struct {
+	Number string `yaml:"number"`
+	Episodes []NetflixEpisode `yaml:"episodes"`
+}
+
+type NetflixTVShow struct {
+	Name string `yaml:"name"`
+	Seasons []NetflixTVShowSeason `yaml:"seasons"`
+}
+
+type NetflixMovie struct {
+	Name string `yaml:"name"`
+}
+
+type NetflixLibrary struct {
+	Movies map[string]NetflixMovie `yaml:"movies"`
+	TV map[string]NetflixTVShow `yaml:"tv"`
+}
+
 type Library struct {
 	Spotify SpotifyLibrary `yaml:"spotify"`
 	Twitch TwitchLibrary `yaml:"twitch"`
@@ -80,6 +104,7 @@ type Library struct {
 	YouTube YouTubeLibrary `yaml:"youtube"`
 	VLC VLCLibrary `yaml:"vlc"`
 	Hulu HuluLibrary `yaml:"hulu"`
+	Netflix NetflixLibrary `yaml:"netflix"`
 }
 
 type ConfigFile struct {
@@ -121,6 +146,8 @@ type ConfigFile struct {
 	FireCubeUserProfileIndex int `yaml:"firecube_user_profile_index"`
 	HuluTotalUserProfiles int `yaml:"hulu_total_user_profiles"`
 	HuluUserProfileIndex int `yaml:"hulu_user_profile_index"`
+	NetflixTotalUserProfiles int `yaml:"netflix_total_user_profiles"`
+	NetflixUserProfileIndex int `yaml:"netflix_user_profile_index"`
 	YouTubeAPIKeys []string `yaml:"youtube_api_keys"`
 	TwitchUserID string `yaml:"twitch_user_id"`
 	TwitchClientID string `yaml:"twitch_client_id"`
