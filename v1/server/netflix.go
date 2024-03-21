@@ -120,6 +120,40 @@ func ( s *Server ) NetflixOpenID( id string ) {
 		"-f" , "0x10008000" ,
 		"-e" , "source" , "30" , "com.netflix.ninja/.MainActivity" ,
 	)
+	var last_playback_position int
+	timeout := time.NewTimer(20 * time.Second)
+	tick := time.NewTicker(2 * time.Second) // Increase ticker interval for stability.
+	defer timeout.Stop()
+	defer tick.Stop()
+	for {
+		select {
+			case <-timeout.C:
+				log.Debug( "Timeout reached, exiting." )
+				return
+			case <-tick.C:
+				player_name , latest_position := s.ADB.GetPlaybackPosition()
+				log.Debug( fmt.Sprintf( "Checking playback: last=%d , latest=%d" , last_playback_position , latest_position ) )
+				if player_name != "com.netflix.ninja" {
+					log.Debug( "Player not recognized or not active." )
+					return
+				}
+				if latest_position > last_playback_position {
+					time.Sleep( 1 * time.Second )
+					_ , double_check := s.ADB.GetPlaybackPosition()
+					log.Debug( fmt.Sprintf( "Double-check playback: last=%d , double_check=%d" , latest_position , double_check ) )
+					if double_check > latest_position {
+						log.Debug( "Playback confirmed, exiting." )
+						return
+					}
+					last_playback_position = double_check
+				} else {
+					last_playback_position = latest_position
+					log.Debug( "Attempting to press play." )
+					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+					time.Sleep( 5 * time.Second )
+				}
+		}
+	}
 }
 
 func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {

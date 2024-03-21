@@ -3,7 +3,7 @@ module github.com/0187773933/FireC2Server
 go 1.18
 
 require (
-	github.com/0187773933/ADBWrapper v1.0.31
+	github.com/0187773933/ADBWrapper v1.0.33
 	github.com/0187773933/RedisCircular v1.0.7
 	github.com/0187773933/TVController v1.0.8
 	github.com/boltdb/bolt v1.3.1
@@ -40,7 +40,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
-	gocv.io/x/gocv v0.28.0 // indirect
+	gocv.io/x/gocv v0.35.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 )
