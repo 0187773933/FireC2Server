@@ -120,40 +120,90 @@ func ( s *Server ) NetflixOpenID( id string ) {
 		"-f" , "0x10008000" ,
 		"-e" , "source" , "30" , "com.netflix.ninja/.MainActivity" ,
 	)
-	var last_playback_position int
-	timeout := time.NewTimer(20 * time.Second)
-	tick := time.NewTicker(2 * time.Second) // Increase ticker interval for stability.
-	defer timeout.Stop()
-	defer tick.Stop()
-	for {
-		select {
-			case <-timeout.C:
-				log.Debug( "Timeout reached, exiting." )
-				return
-			case <-tick.C:
-				player_name , latest_position := s.ADB.GetPlaybackPosition()
-				log.Debug( fmt.Sprintf( "Checking playback: last=%d , latest=%d" , last_playback_position , latest_position ) )
-				if player_name != "com.netflix.ninja" {
-					log.Debug( "Player not recognized or not active." )
-					return
-				}
-				if latest_position > last_playback_position {
-					time.Sleep( 1 * time.Second )
-					_ , double_check := s.ADB.GetPlaybackPosition()
-					log.Debug( fmt.Sprintf( "Double-check playback: last=%d , double_check=%d" , latest_position , double_check ) )
-					if double_check > latest_position {
-						log.Debug( "Playback confirmed, exiting." )
-						return
-					}
-					last_playback_position = double_check
-				} else {
-					last_playback_position = latest_position
-					log.Debug( "Attempting to press play." )
-					s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
-					time.Sleep( 5 * time.Second )
-				}
+	positions := s.ADB.GetPlaybackPositions()
+	position , ok := positions[ "netflix" ]
+	timeout_init_seconds := 20
+	if ok == false {
+		log.Debug( "1 , not ready , waiting up to 20 seconds" )
+		for i := 0; i < timeout_init_seconds; i++ {
+			time.Sleep( 1 * time.Second )
+			positions = s.ADB.GetPlaybackPositions()
+			position , ok = positions[ "netflix" ]
+			if ok == true {
+				log.Debug( "2 , ready" )
+				break
+			}
+			if i & 3 == 0 {
+				log.Debug( "3 , pressing play button , just in case its stalled" )
+				s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+			}
 		}
 	}
+	if ok == false {
+		log.Debug( "4 , timed out , app crashed ?" )
+		return
+	}
+	if position.State == "playing" {
+		log.Debug( "5 , supposedly already playing" )
+	} else {
+		log.Debug( "6 , not playing , pressing play button" )
+		s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+		for i := 0; i < timeout_init_seconds; i++ {
+			time.Sleep( 1 * time.Second )
+			positions = s.ADB.GetPlaybackPositions()
+			position , ok = positions[ "netflix" ]
+			if ok == true {
+				log.Debug( "7 , ready" )
+				break
+			}
+			if i & 3 == 0 {
+				log.Debug( "8 , pressing play button , just in case its stalled" )
+				s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+			}
+		}
+	}
+	fmt.Println( position )
+	log.Debug( "9 , double checking we are playing , quick check" )
+	for i := 0; i < 10; i++ {
+		updated := s.ADB.GetUpdatedPlaybackPosition( position )
+		fmt.Println( updated )
+		if updated.Position != position.Position {
+			log.Debug( "10 , playing" )
+			return
+		}
+		time.Sleep( 500 * time.Millisecond )
+	}
+
+	log.Debug( "11 , still not playing , pressing play button again" )
+	s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+	for i := 0; i < timeout_init_seconds; i++ {
+		time.Sleep( 1 * time.Second )
+		positions = s.ADB.GetPlaybackPositions()
+		position , ok = positions[ "netflix" ]
+		if ok == true {
+			log.Debug( "12 , ready" )
+			break
+		}
+	}
+
+	time.Sleep( 1 * time.Second )
+
+	// longer check
+	log.Debug( "13 , double checking we are playing , longer check" )
+	max_retries := 10
+	for r := 0; r < max_retries; r++ {
+		for i := 0; i < 10; i++ {
+			updated := s.ADB.GetUpdatedPlaybackPosition( position )
+			fmt.Println( updated )
+			if updated.Position != position.Position {
+				log.Debug( "1 ,playing" )
+				return
+			}
+			time.Sleep( 500 * time.Millisecond )
+		}
+		time.Sleep( 1 * time.Second )
+	}
+	log.Debug( "14 , Timeout reached, exiting." )
 }
 
 func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {
@@ -190,6 +240,7 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 	s.StateMutex.Lock()
 	series_id := c.Params( "series_id" )
 	if series_id == "" {
+		s.StateMutex.Unlock()
 		return c.JSON( fiber.Map{
 			"url": "/netflix/tv/:series_id" ,
 			"series_id": series_id ,
@@ -198,6 +249,7 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 	}
 	_ , series_exists := s.Config.Library.Netflix.TV[ series_id ]
 	if series_exists == false {
+		s.StateMutex.Unlock()
 		return c.JSON( fiber.Map{
 			"url": "/netflix/tv/:series_id" ,
 			"series_id": series_id ,

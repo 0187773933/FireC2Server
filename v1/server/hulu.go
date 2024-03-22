@@ -111,6 +111,7 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 	series_id := c.Params( "series_id" )
 	// log.Debug( fmt.Sprintf( "HuluTVID( %s )" , series_id ) )
 	if series_id == "" {
+		s.StateMutex.Unlock()
 		return c.JSON( fiber.Map{
 			"url": "/hulu/tv/:series_id" ,
 			"series_id": series_id ,
@@ -119,6 +120,7 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 	}
 	_ , series_exists := s.Config.Library.Hulu.TV[ series_id ]
 	if series_exists == false {
+		s.StateMutex.Unlock()
 		return c.JSON( fiber.Map{
 			"url": "/hulu/tv/:series_id" ,
 			"series_id": series_id ,
