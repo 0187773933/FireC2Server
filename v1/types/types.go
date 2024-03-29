@@ -107,6 +107,11 @@ type Library struct {
 	Netflix NetflixLibrary `yaml:"netflix"`
 }
 
+type APKInfo struct {
+	Package string `yaml:"package"`
+	Activity string `yaml:"activity"`
+}
+
 type ConfigFile struct {
 	ServerName string `yaml:"server_name"`
 	ServerBaseUrl string `yaml:"server_base_url"`
@@ -142,6 +147,7 @@ type ConfigFile struct {
 	ADBServerIP string `yaml:"adb_server_ip"`
 	ADBServerPort string `yaml:"adb_server_port"`
 	ADBTimeoutSeconds int `yaml:"adb_timeout_seconds"`
+	APKS map[string]APKInfo `yaml:"apks"`
 	FireCubeTotalUserProfiles int `yaml:"firecube_total_user_profiles"`
 	FireCubeUserProfileIndex int `yaml:"firecube_user_profile_index"`
 	HuluTotalUserProfiles int `yaml:"hulu_total_user_profiles"`

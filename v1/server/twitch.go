@@ -18,14 +18,16 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-const TWITCH_ACTIVITY = "tv.twitch.android.viewer/tv.twitch.starshot64.app.StarshotActivity"
+// const TWITCH_ACTIVITY = "tv.twitch.android.viewer/tv.twitch.starshot64.app.StarshotActivity"
+// const TWITCH_ACTIVITY = "tv.twitch.android.viewer/tv.twitch.android.app.core.LandingActivity"
+const TWITCH_ACTIVITY = "tv.twitch.android.viewer/tv.twitch.android.feature.viewer.main.MainActivity"
 const TWITCH_APP_NAME = "tv.twitch.android.viewer"
 const R_KEY_STATE_TWITCH_FOLLOWING_LIVE = "STATE.TWITCH.FOLLOWING.LIVE"
 
 func ( s *Server ) TwitchReopenApp() {
 	log.Debug( "TwitchReopenApp()" )
 	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
+	// s.ADB.Brightness( 0 )
 	s.ADB.CloseAppName( TWITCH_APP_NAME )
 	time.Sleep( 500 * time.Millisecond )
 	s.ADB.OpenAppName( TWITCH_APP_NAME )
@@ -50,13 +52,17 @@ func ( s *Server ) TwitchContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 	} else if s.Status.ADB.Activity != TWITCH_ACTIVITY {
 		log.Debug( "twitch was NOT already open" )
-		s.TwitchReopenApp()
-		time.Sleep( 500 * time.Millisecond )
+		windows := s.ADB.GetWindowStack()
+		for _ , window := range windows {
+			if window.Activity == TWITCH_ACTIVITY {
+				log.Debug( "twitch was already open" )
+				return
+			}
+		}
 	} else {
 		log.Debug( "twitch was already open" )
 		// s.TwitchLiveUpdate()
 		// we don't want a destructive update , we just need a cleansing of stale offline usernames
-
 	}
 }
 

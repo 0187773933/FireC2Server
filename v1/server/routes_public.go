@@ -38,7 +38,6 @@ var auth_limiter = rate_limiter.New( rate_limiter.Config{
 	} ,
 })
 
-
 func ( s *Server ) SetupPublicRoutes() {
 	cdn_group := s.FiberApp.Group( "/cdn" )
 	cdn_group.Use( public_limiter )

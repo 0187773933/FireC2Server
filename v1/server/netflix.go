@@ -196,14 +196,14 @@ func ( s *Server ) NetflixOpenID( id string ) {
 			updated := s.ADB.GetUpdatedPlaybackPosition( position )
 			fmt.Println( updated )
 			if updated.Position != position.Position {
-				log.Debug( "1 ,playing" )
+				log.Debug( "14 , playing" )
 				return
 			}
 			time.Sleep( 500 * time.Millisecond )
 		}
 		time.Sleep( 1 * time.Second )
 	}
-	log.Debug( "14 , Timeout reached, exiting." )
+	log.Debug( "15 , Timeout reached, exiting." )
 }
 
 func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {

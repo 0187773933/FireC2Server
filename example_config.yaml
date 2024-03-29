@@ -76,6 +76,7 @@ adb_path: "/usr/local/bin/adb"
 adb_connection_type: "tcp" # tcp or usb
 adb_server_ip: "192.168.1.44"
 adb_server_port: "5555"
+adb_connection_type: "usb" # wifi
 adb_serial: "asdf"
 adb_timeout_seconds: 4
 firecube_total_user_profiles: 2

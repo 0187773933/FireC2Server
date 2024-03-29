@@ -83,8 +83,10 @@ func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 	go func() {
 		var conn adb_wrapper.Wrapper
 		if s.Config.ADBConnectionType == "tcp" {
+			log.Debug( "using tcp" )
 			conn = adb_wrapper.ConnectIP( s.Config.ADBPath , s.Config.ADBServerIP , s.Config.ADBServerPort )
 		} else if s.Config.ADBConnectionType == "usb" {
+			log.Debug( "using usb" )
 			conn = adb_wrapper.ConnectUSB( s.Config.ADBPath , s.Config.ADBSerial )
 		}
 		done <- conn
