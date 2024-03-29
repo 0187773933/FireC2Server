@@ -24,10 +24,9 @@ else
 	git clone "https://github.com/0187773933/FireC2Server.git"
 	sudo chown -R morphs:morphs /home/morphs/FireC2Server
 	cd /home/morphs/FireC2Server
+	cp -r /home/morphs/SAVE_FILES/ /home/morphs/FireC2Server/SAVE_FILES/
+	sudo chown -R morphs:morphs /home/morphs/FireC2Server/SAVE_FILES/
 	/usr/local/go/bin/go mod tidy
 	GOOS=linux GOARCH=amd64 /usr/local/go/bin/go build -o /home/morphs/FireC2Server/server
 	LOG_LEVEL=debug exec /home/morphs/FireC2Server/server "$@"
 fi
-
-	# mkdir SAVE_FILES
-	# cp -r /home/morphs/SAVE_FILES/ .

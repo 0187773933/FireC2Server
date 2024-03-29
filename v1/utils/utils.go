@@ -214,14 +214,14 @@ func ParseConfig( file_path string ) ( result types.ConfigFile ) {
 	var hulu_library types.HuluLibrary
 	hulu_library_file , hulu_library_file_read_error := ioutil.ReadFile( filepath.Join( library_base_path , "hulu.yaml" ) )
 	if hulu_library_file_read_error != nil { panic( hulu_library_file_read_error ) }
-	error = yaml.UnmarshalStrict( hulu_library_file , &hulu_library )
+	error = yaml.Unmarshal( hulu_library_file , &hulu_library )
 	if error != nil { fmt.Println( error ); panic( error ) }
 	result.Library.Hulu = hulu_library
 
 	var netflix_library types.NetflixLibrary
 	netflix_library_file , netflix_library_file_read_error := ioutil.ReadFile( filepath.Join( library_base_path , "netflix.yaml" ) )
 	if netflix_library_file_read_error != nil { panic( netflix_library_file_read_error ) }
-	error = yaml.UnmarshalStrict( netflix_library_file , &netflix_library )
+	error = yaml.Unmarshal( netflix_library_file , &netflix_library )
 	if error != nil { fmt.Println( error ); panic( error ) }
 	result.Library.Netflix = netflix_library
 
