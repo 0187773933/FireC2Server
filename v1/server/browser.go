@@ -32,11 +32,11 @@ func ( s *Server ) BrowserReopenApp() {
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
 	}
-	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( BROWSER_APP_NAME )
+	s.ADB.StopAllPackages()
+	s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( BROWSER_APP_NAME )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenAppName( BROWSER_APP_NAME )
+	s.ADB.OpenPackage( BROWSER_APP_NAME )
 	s.Set( "active_player_name" , "browser" )
 	log.Debug( "Done" )
 }
@@ -63,7 +63,7 @@ func ( s *Server ) BrowserOpenURL( c *fiber.Ctx ) ( error ) {
 	time.Sleep( 1000 * time.Millisecond )
 	s.ADB.Type( x_url )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.ADB.Key( "KEYCODE_ENTER" )
 	s.Set( "active_player_now_playing_id" , x_url )
 	s.Set( "active_player_now_playing_uri" , "url" )
 	return c.JSON( fiber.Map{
@@ -111,22 +111,22 @@ func ( s *Server ) BrowserOpenAudioPlayer( c *fiber.Ctx ) ( error ) {
 	// firefox focus glitches out
 	// firefox regular forces portrait display
 	// chrome requires google play tools
-	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( BROWSER_APP_NAME )
+	s.ADB.StopAllPackages()
+	s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( BROWSER_APP_NAME )
 	s.ADB.Shell( "am" , "start" , "-a" , "android.intent.action.VIEW" , "-d" , target_url )
 
 	// 3.) Press One of the JS Hooked Event Keys
 	// Browsers try and block "autoplay"
 	// TODO : browser message passing back here once ready for ADB press
 	time.Sleep( 3000 * time.Millisecond )
-	s.ADB.PressKey( 62 )
+	s.ADB.KeyInt( 62 )
 
 	// 4.) Press "Menu" Key twice to hide browser bar
 	time.Sleep( 2000 * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_MENU" )
+	s.ADB.Key( "KEYCODE_MENU" )
 	time.Sleep( 200 * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_MENU" )
+	s.ADB.Key( "KEYCODE_MENU" )
 
 	s.Set( "active_player_now_playing_id" , x_url )
 	s.Set( "active_player_now_playing_uri" , "url" )
@@ -175,7 +175,7 @@ func ( s *Server ) BrowserOpenVideoPlayer( c *fiber.Ctx ) ( error ) {
 	time.Sleep( 1000 * time.Millisecond )
 	s.ADB.Type( x_url )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.ADB.Key( "KEYCODE_ENTER" )
 	s.Set( "active_player_now_playing_id" , x_url )
 	s.Set( "active_player_now_playing_uri" , "url" )
 	return c.JSON( fiber.Map{

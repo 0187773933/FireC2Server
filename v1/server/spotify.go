@@ -10,12 +10,12 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-const SPOTIFY_ACTIVITY = "com.spotify.tv.android/com.spotify.tv.android.SpotifyTVActivity"
-const SPOTIFY_APP_NAME = "com.spotify.tv.android"
+// const SPOTIFY_ACTIVITY = "com.spotify.tv.android/com.spotify.tv.android.SpotifyTVActivity"
+// const SPOTIFY_APP_NAME = "com.spotify.tv.android"
 
 // func reopen_spotify( adb *adb_wrapper.Wrapper ) {
-// 	adb.StopAllApps()
-// 	adb.CloseAppName( "com.spotify.tv.android" )
+// 	adb.StopAllPackages()
+// 	adb.ClosePackage( "com.spotify.tv.android" )
 // 	// time.Sleep( 1 * time.Second )
 // 	time.Sleep( 500 * time.Millisecond )
 // 	adb.OpenActivity( ACTIVITY_SPOTIFY )
@@ -64,7 +64,7 @@ func ( s *Server ) SpotifyIsShuffleOn() ( result bool ) {
 	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
 	coords := []int{ 752 , 964 }
 	log.Debug( "pressing left" )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+	s.ADB.Key( "KEYCODE_DPAD_LEFT" )
 	time.Sleep( 500 * time.Millisecond )
 	result = s.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color )
 	return
@@ -76,7 +76,7 @@ func ( s *Server ) SpotifyPressPreviousButton() {
 	button_index := 2
 	index := s.SpotifyGetActiveButtonIndex()
 	if index == button_index {
-		s.ADB.PressKeyName( "KEYCODE_ENTER" )
+		s.ADB.Key( "KEYCODE_ENTER" )
 	}
 	distance := int( math.Abs( float64( button_index - index ) ) )
 	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
@@ -84,30 +84,30 @@ func ( s *Server ) SpotifyPressPreviousButton() {
 		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
 		for i := 0 ; i < distance ; i++ {
 			log.Debug( "pressing right" )
-			s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+			s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 		}
 	} else {
 		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
 		for i := 0 ; i < distance ; i++ {
 			log.Debug( "pressing left" )
-			s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+			s.ADB.Key( "KEYCODE_DPAD_LEFT" )
 		}
 	}
 	log.Debug( "pressing enter" )
-	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.ADB.Key( "KEYCODE_ENTER" )
 	if shuffle_on == true {
 		log.Debug( "pressing enter" )
-		s.ADB.PressKeyName( "KEYCODE_ENTER" )
+		s.ADB.Key( "KEYCODE_ENTER" )
 	}
 	return
 }
 
 func ( s *Server ) SpotifyReopenApp() {
 	log.Debug( "SpotifyReopenApp()" )
-	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( SPOTIFY_APP_NAME )
-	s.ADB.OpenAppName( SPOTIFY_APP_NAME )
+	s.ADB.StopAllPackages()
+	// s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( s.Config.APKS[ "spotify" ][ "package" ] )
+	s.ADB.OpenPackage( s.Config.APKS[ "spotify" ][ "package" ] )
 	// time.Sleep( 1500 * time.Millisecond )
 	time.Sleep( 3000 * time.Millisecond )
 	log.Debug( "Done" )
@@ -128,7 +128,7 @@ func ( s *Server ) SpotifyContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity != SPOTIFY_ACTIVITY {
+	} else if s.Status.ADB.Activity != s.Config.APKS[ "spotify" ][ "activity" ] {
 		log.Debug( "spotify was NOT already open" )
 		s.SpotifyReopenApp()
 		time.Sleep( 6 * time.Second )
@@ -149,7 +149,7 @@ func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	time.Sleep( 500 * time.Millisecond )
 	// was_on := s.ShuffleOn()
 	s.SpotifyShuffleOn()
-	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
+	s.ADB.Key( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
 	s.ADB.SetVolume( s.Status.ADB.Volume )
 	s.Set( "active_player_now_playing_id" , playlist_id )
 	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "playlist === %s" , s.Config.Library.Spotify.Playlists[ playlist_id ].Name ) )
@@ -221,7 +221,7 @@ func ( s *Server ) SpotifyNextPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( playlist_uri )
 	// was_on := s.ShuffleOn()
 	s.SpotifyShuffleOn()
-	s.ADB.PressKeyName( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
+	s.ADB.Key( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
 	s.ADB.SetVolume( s.Status.ADB.Volume )
 	s.Set( "active_player_now_playing_id" , playlist_id )
 	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "playlist === %s" , s.Config.Library.Spotify.Playlists[ playlist_id ].Name ) )
@@ -250,7 +250,7 @@ func ( s *Server ) SpotifyShuffleOn() ( was_on bool ) {
 	shuffle_index := 1
 	index := s.SpotifyGetActiveButtonIndex()
 	if index == shuffle_index {
-		s.ADB.PressKeyName( "KEYCODE_ENTER" )
+		s.ADB.Key( "KEYCODE_ENTER" )
 	}
 	distance := int( math.Abs( float64( shuffle_index - index ) ) )
 	log.Debug( "Shuffle === OFF" )
@@ -259,17 +259,17 @@ func ( s *Server ) SpotifyShuffleOn() ( was_on bool ) {
 		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
 		for i := 0 ; i < distance ; i++ {
 			log.Debug( "pressing right" )
-			s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+			s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 		}
 	} else {
 		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
 		for i := 0 ; i < distance ; i++ {
 			log.Debug( "pressing left" )
-			s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+			s.ADB.Key( "KEYCODE_DPAD_LEFT" )
 		}
 	}
 	log.Debug( "pressing enter" )
-	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.ADB.Key( "KEYCODE_ENTER" )
 	log.Debug( "Shuffle === ON" )
 	return
 }
@@ -284,7 +284,7 @@ func ( s *Server ) SpotifyShuffleOff() ( was_on bool ) {
 	shuffle_index := 1
 	index := s.SpotifyGetActiveButtonIndex()
 	if index == shuffle_index {
-		s.ADB.PressKeyName( "KEYCODE_ENTER" )
+		s.ADB.Key( "KEYCODE_ENTER" )
 	}
 	distance := int( math.Abs( float64( shuffle_index - index ) ) )
 	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
@@ -292,17 +292,17 @@ func ( s *Server ) SpotifyShuffleOff() ( was_on bool ) {
 		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
 		for i := 0 ; i < distance ; i++ {
 			log.Debug( "pressing right" )
-			s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+			s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 		}
 	} else {
 		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
 		for i := 0 ; i < distance ; i++ {
 			log.Debug( "pressing left" )
-			s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+			s.ADB.Key( "KEYCODE_DPAD_LEFT" )
 		}
 	}
 	log.Debug( "pressing enter" )
-	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.ADB.Key( "KEYCODE_ENTER" )
 	log.Debug( "Shuffle === OFF" )
 	return
 }

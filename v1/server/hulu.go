@@ -33,16 +33,16 @@ import (
 // am start -n hulu.intent.action.PLAY_CONTENT -e content_id 502bbc34-fa19-48fb-89c6-074da28335d3
 // start -n com.hulu.plus/.WKFactivity -a hulu.intent.action.PLAY_CONTENT -e content_id 502bbc34-fa19-48fb-89c6-074da28335d3
 
-const HULU_ACTIVITY = "com.hulu.plus/com.hulu.plus.MainActivity"
-const HULU_APP_NAME = "com.hulu.plus"
+// const HULU_ACTIVITY = "com.hulu.plus/com.hulu.plus.MainActivity"
+// const HULU_APP_NAME = "com.hulu.plus"
 
 func ( s *Server ) HuluReopenApp() {
 	log.Debug( "HuluReopenApp()" )
-	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( HULU_APP_NAME )
+	s.ADB.StopAllPackages()
+	s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( s.Config.APKS[ "hulu" ][ "package" ] )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenAppName( HULU_APP_NAME )
+	s.ADB.OpenPackage( s.Config.APKS[ "hulu" ][ "package" ] )
 	log.Debug( "Done" )
 }
 
@@ -60,35 +60,35 @@ func ( s *Server ) HuluContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == HULU_ACTIVITY {
+	} else if s.Status.ADB.Activity == s.Config.APKS[ "hulu" ][ "activity" ] {
 		log.Debug( "hulu was already open" )
 	} else {
 		log.Debug( "hulu was NOT already open" )
 		s.HuluReopenApp()
 		time.Sleep( 2000 * time.Millisecond )
 		for i := 0; i < s.Config.HuluTotalUserProfiles; i++ {
-			s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+			s.ADB.Key( "KEYCODE_DPAD_DOWN" )
 			time.Sleep( 100 * time.Millisecond )
 		}
-		s.ADB.PressKeyName( "KEYCODE_DPAD_UP" )
+		s.ADB.Key( "KEYCODE_DPAD_UP" )
 		time.Sleep( 100 * time.Millisecond )
-		s.ADB.PressKeyName( "KEYCODE_ENTER" )
+		s.ADB.Key( "KEYCODE_ENTER" )
 	}
 }
 
 func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "HuluMovieNext()" )
 	s.HuluContinuousOpen()
 	// next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
 	// uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
 	// log.Debug( uri )
 	// s.ADB.OpenURI( uri )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	// s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
 	// s.Set( "active_player_now_playing_id" , next_movie )
 	// s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/hulu/next" ,
 		"result": true ,
@@ -96,10 +96,10 @@ func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluMoviePrevious( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "HuluMoviePrevious()" )
 	s.HuluContinuousOpen()
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/hulu/previous" ,
 		"result": true ,
@@ -107,11 +107,11 @@ func ( s *Server ) HuluMoviePrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	series_id := c.Params( "series_id" )
 	// log.Debug( fmt.Sprintf( "HuluTVID( %s )" , series_id ) )
 	if series_id == "" {
-		s.StateMutex.Unlock()
+
 		return c.JSON( fiber.Map{
 			"url": "/hulu/tv/:series_id" ,
 			"series_id": series_id ,
@@ -120,7 +120,7 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 	}
 	_ , series_exists := s.Config.Library.Hulu.TV[ series_id ]
 	if series_exists == false {
-		s.StateMutex.Unlock()
+
 		return c.JSON( fiber.Map{
 			"url": "/hulu/tv/:series_id" ,
 			"series_id": series_id ,
@@ -139,7 +139,7 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , uri )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/hulu/tv/:series_id" ,
 		"series_id": series_id ,
@@ -150,7 +150,7 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluTVNext( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "HuluTVNext()" )
 	series_id := s.Get( "STATE.HULU.NOW_PLAYING.TV.SERIES_ID" )
 	next_episode := circular_set.Next( s.DB , fmt.Sprintf( "LIBRARY.HULU.TV.%s" , series_id ) )
@@ -162,7 +162,7 @@ func ( s *Server ) HuluTVNext( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , uri )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/hulu/tv/:id/next" ,
 		"series_id": series_id ,
@@ -173,7 +173,7 @@ func ( s *Server ) HuluTVNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluTVPrevious( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "HuluTVPrevious()" )
 	series_id := s.Get( "STATE.HULU.NOW_PLAYING.TV.SERIES_ID" )
 	next_episode := circular_set.Previous( s.DB , fmt.Sprintf( "LIBRARY.HULU.TV.%s" , series_id ) )
@@ -185,7 +185,7 @@ func ( s *Server ) HuluTVPrevious( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , uri )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/hulu/tv/:id/previous" ,
 		"series_id": series_id ,
@@ -196,7 +196,7 @@ func ( s *Server ) HuluTVPrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluID( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	sent_id := c.Params( "*" )
 	if utils.IsUUID( sent_id ) {
 		sent_id = fmt.Sprintf( "https://www.hulu.com/watch/%s" , sent_id )
@@ -206,7 +206,7 @@ func ( s *Server ) HuluID( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( sent_id )
 	s.Set( "active_player_now_playing_id" , sent_id )
 	s.Set( "active_player_now_playing_uri" , sent_id )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/hulu/:id" ,
 		"id": sent_id ,

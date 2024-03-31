@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"time"
-	"sync"
+	// "sync"
 	// context "context"
 	logger "github.com/0187773933/FireC2Server/v1/logger"
 	fiber "github.com/gofiber/fiber/v2"
@@ -16,7 +16,7 @@ import (
 	adb_wrapper "github.com/0187773933/ADBWrapper/v1/wrapper"
 	// tv "github.com/0187773933/FireC2Server/v1/tv"
 	tv_controller "github.com/0187773933/TVController/v1/controller"
-	// utils "github.com/0187773933/FireC2Server/v1/utils"
+	utils "github.com/0187773933/FireC2Server/v1/utils"
 )
 
 var GlobalServer *Server
@@ -52,7 +52,7 @@ type Server struct {
 	// TV *tv.TV `json:"-"`
 	TV *tv_controller.Controller `json:"-"`
 	Status Status `json:"-"`
-	StateMutex *sync.Mutex `json:"-"`
+	// StateMutex *sync.Mutex `json:"-"`
 	// FMAP map[string]func(*Server, context.Context) error `json:"-"`
 }
 
@@ -82,6 +82,7 @@ func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	server.Config = config
 	server.DB = db
 	server.ADB = server.ADBConnect()
+	utils.PrettyPrint( server.ADB )
 	// server.TV = tv.New( &config )
 	server.TV = tv_controller.New( &config.TV )
 	GlobalServer = &server
@@ -99,6 +100,6 @@ func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	server.SetupRoutes()
 	server.FiberApp.Get( "/*" , func( context *fiber.Ctx ) ( error ) { return context.Redirect( "/" ) } )
 	// server.SetupFunctionMap()
-	server.StateMutex = &sync.Mutex{}
+	// server.StateMutex = &sync.Mutex{}
 	return
 }

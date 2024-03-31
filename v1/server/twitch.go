@@ -18,26 +18,26 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-// const TWITCH_ACTIVITY = "tv.twitch.android.viewer/tv.twitch.starshot64.app.StarshotActivity"
-// const TWITCH_ACTIVITY = "tv.twitch.android.viewer/tv.twitch.android.app.core.LandingActivity"
-const TWITCH_ACTIVITY = "tv.twitch.android.viewer/tv.twitch.android.feature.viewer.main.MainActivity"
-const TWITCH_APP_NAME = "tv.twitch.android.viewer"
 const R_KEY_STATE_TWITCH_FOLLOWING_LIVE = "STATE.TWITCH.FOLLOWING.LIVE"
+
+// const s.Config.APKS[ "twitch" ][ "activity" ] = "tv.twitch.android.viewer/tv.twitch.starshot64.app.StarshotActivity"
+// const s.Config.APKS[ "twitch" ][ "activity" ] = "tv.twitch.android.viewer/tv.twitch.android.app.core.LandingActivity"
+// const s.Config.APKS[ "twitch" ][ "activity" ] = "tv.twitch.android.viewer/tv.twitch.android.feature.viewer.main.MainActivity"
+// const s.Config.APKS[ "twitch" ][ "package" ] = "tv.twitch.android.viewer"
 
 func ( s *Server ) TwitchReopenApp() {
 	log.Debug( "TwitchReopenApp()" )
-	s.ADB.StopAllApps()
-	// s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( TWITCH_APP_NAME )
+	s.ADB.StopAllPackages()
+	s.ADB.ClosePackage( s.Config.APKS[ "twitch" ][ "package" ] )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenAppName( TWITCH_APP_NAME )
+	s.ADB.OpenPackage( s.Config.APKS[ "twitch" ][ "package" ] )
 	log.Debug( "Done" )
 }
 
 func ( s *Server ) TwitchContinuousOpen() {
 	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
 	log.Debug( "TwitchContinuousOpen()" )
-	s.ADB.PressKeyName( "KEYCODE_WAKEUP" )
+	s.ADB.Key( "KEYCODE_WAKEUP" )
 	// why ?? ok ??
 	s.GetStatus()
 	log.Debug( s.Status )
@@ -50,11 +50,11 @@ func ( s *Server ) TwitchContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity != TWITCH_ACTIVITY {
+	} else if s.Status.ADB.Activity != s.Config.APKS[ "twitch" ][ "activity" ] {
 		log.Debug( "twitch was NOT already open" )
 		windows := s.ADB.GetWindowStack()
 		for _ , window := range windows {
-			if window.Activity == TWITCH_ACTIVITY {
+			if window.Activity == s.Config.APKS[ "twitch" ][ "activity" ] {
 				log.Debug( "twitch was already open" )
 				return
 			}
@@ -67,7 +67,7 @@ func ( s *Server ) TwitchContinuousOpen() {
 }
 
 func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "TwitchLiveNext()" )
 	s.TwitchContinuousOpen()
 
@@ -95,62 +95,61 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	// }
 
 	// who knows if this is fine
-	var initial_stream string = circular_set.Next(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+	var initial_stream string = circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 	var next_stream string = initial_stream
 	var refreshed bool = false
 
 	if initial_stream == "" {
-	    log.Debug("The initial stream is empty, indicating no streams are being followed or all are offline.")
-	    s.TwitchLiveUpdate() // Try updating once to check for live streams again after the update.
-	    initial_stream = circular_set.Current(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
-	    next_stream = initial_stream
-	    if initial_stream == "" {
-	    	s.StateMutex.Unlock()
-	        return c.JSON(fiber.Map{
-	            "url": "/twitch/live/next",
-	            "stream": "nobody is live after initial check and update...",
-	            "result": false,
-	        })
-	    }
+		log.Debug( "The initial stream is empty, indicating no streams are being followed or all are offline." )
+		s.TwitchLiveUpdate() // Try updating once to check for live streams again after the update.
+		initial_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+		next_stream = initial_stream
+		if initial_stream == "" {
+
+			return c.JSON( fiber.Map{
+				"url": "/twitch/live/next" ,
+				"stream": "nobody is live after initial check and update..." ,
+				"result": false ,
+			})
+		}
 	}
 
 	for {
-	    log.Debug( next_stream )
-	    is_stream_live := s.TwitchIsUserLive( next_stream )
-	    if is_stream_live == true {
-	        log.Debug( fmt.Sprintf( "%s === live" , next_stream ) )
-	        break
-	    } else {
-	        log.Debug( fmt.Sprintf( "%s === offline" , next_stream ) )
-	        next_stream = circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+		log.Debug( next_stream )
+		is_stream_live := s.TwitchIsUserLive( next_stream )
+		if is_stream_live == true {
+			log.Debug( fmt.Sprintf( "%s === live" , next_stream ) )
+			break
+		} else {
+			log.Debug( fmt.Sprintf( "%s === offline" , next_stream ) )
+			next_stream = circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 
-	        // Check if we've looped through all streams or the list is empty.
-	        if next_stream == "" || next_stream == initial_stream {
-	            if refreshed {
-	                log.Debug( "No live streams found after a complete cycle and refresh." )
-	                s.StateMutex.Unlock()
-	                return c.JSON(fiber.Map{
-	                    "url": "/twitch/live/next",
-	                    "stream": "nobody is live after cycling through all options.",
-	                    "result": false,
-	                })
-	            }
-	            log.Debug( "Attempting to refresh the stream list." )
-	            s.TwitchLiveUpdate()
-	            next_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
-	            refreshed = true
-	            // Check again if no streams are available after the refresh.
-	            if next_stream == "" || next_stream == initial_stream {
-	                log.Debug( "No live streams found after refresh." )
-	                s.StateMutex.Unlock()
-	                return c.JSON(fiber.Map{
-	                    "url": "/twitch/live/next",
-	                    "stream": "nobody is live after refresh.",
-	                    "result": false,
-	                })
-	            }
-	        }
-	    }
+			// Check if we've looped through all streams or the list is empty.
+			if next_stream == "" || next_stream == initial_stream {
+				if refreshed {
+					log.Debug( "No live streams found after a complete cycle and refresh." )
+					return c.JSON(fiber.Map{
+						"url": "/twitch/live/next",
+						"stream": "nobody is live after cycling through all options.",
+						"result": false,
+					})
+				}
+				log.Debug( "Attempting to refresh the stream list." )
+				s.TwitchLiveUpdate()
+				next_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+				refreshed = true
+				// Check again if no streams are available after the refresh.
+				if next_stream == "" || next_stream == initial_stream {
+					log.Debug( "No live streams found after refresh." )
+
+					return c.JSON(fiber.Map{
+						"url": "/twitch/live/next",
+						"stream": "nobody is live after refresh.",
+						"result": false,
+					})
+				}
+			}
+		}
 	}
 
 	// force refresh on last
@@ -165,7 +164,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
 	s.Set( "active_player_now_playing_id" , next_stream )
 	s.Set( "active_player_now_playing_text" , "" )
@@ -174,13 +173,13 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 	// you have to wait on button screen
 	// look for white heart
 	// time.Sleep( 3 * time.Second )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
-	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
-	s.StateMutex.Unlock()
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.Key( "KEYCODE_DPAD_DOWN" )
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.Key( "KEYCODE_ENTER" )
+	// s.ADB.Key( "KEYCODE_DPAD_DOWN" )
+	// s.ADB.Key( "KEYCODE_ENTER" )
+
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/next" ,
 		"stream": next_stream ,
@@ -189,7 +188,7 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "TwitchLivePrevious()" )
 	s.TwitchContinuousOpen()
 
@@ -201,7 +200,7 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 		next_stream = circular_set.Previous( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 		if next_stream == "" {
 			log.Debug( "nobody is live ...." )
-			s.StateMutex.Unlock()
+
 			return c.JSON( fiber.Map{
 				"url": "/twitch/live/next" ,
 				"stream": "nobody is live ...." ,
@@ -221,19 +220,19 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
 	s.Set( "active_player_now_playing_id" , next_stream )
 	s.Set( "active_player_now_playing_text" , "" )
 	// Force Highest Quality
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
-	// s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.Key( "KEYCODE_DPAD_DOWN" )
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.Key( "KEYCODE_ENTER" )
+	// s.ADB.Key( "KEYCODE_DPAD_DOWN" )
+	// s.ADB.Key( "KEYCODE_ENTER" )
 	// Right , Down , Right , Enter , Down , Enter
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/next" ,
 		"stream": next_stream ,
@@ -619,41 +618,41 @@ func ( s *Server ) GetTwitchLiveRefresh( c *fiber.Ctx ) ( error ) {
 // literally trolling ,
 // we have to get pixel values to know where we are being bullied in the quality selection menu
 func ( s *Server ) TwitchLiveSetQualityMax( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	// Right , Down , Right , Enter , Down , Enter
 	rand.Seed( time.Now().UnixNano() )
 	min_sleep := 200
 	max_sleep := 700
-	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	s.ADB.Key( "KEYCODE_DPAD_DOWN" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	s.ADB.Key( "KEYCODE_DPAD_DOWN" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	s.ADB.Key( "KEYCODE_DPAD_DOWN" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+	s.ADB.Key( "KEYCODE_DPAD_LEFT" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.ADB.Key( "KEYCODE_ENTER" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_UP" )
+	s.ADB.Key( "KEYCODE_UP" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_UP" )
+	s.ADB.Key( "KEYCODE_UP" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_UP" )
+	s.ADB.Key( "KEYCODE_UP" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_UP" )
+	s.ADB.Key( "KEYCODE_UP" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_UP" )
+	s.ADB.Key( "KEYCODE_UP" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_DOWN" )
+	s.ADB.Key( "KEYCODE_DPAD_DOWN" )
 	time.Sleep( time.Duration( rand.Intn( max_sleep + 1 ) + min_sleep ) * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_ENTER" )
-	s.StateMutex.Unlock()
+	s.ADB.Key( "KEYCODE_ENTER" )
+
 	return c.JSON( fiber.Map{
 		"url": "/twitch/live/set/quality/max" ,
 		"result": true ,
@@ -661,16 +660,16 @@ func ( s *Server ) TwitchLiveSetQualityMax( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) TwitchLiveUser( username string ) {
-	s.StateMutex.Lock()
+
 	log.Debug( fmt.Sprintf( "TwitchLiveUser( %s )" , username ) )
 	s.TwitchContinuousOpen()
 	uri := fmt.Sprintf( "twitch://stream/%s" , username )
 	s.ADB.OpenURI( uri )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , username )
 	s.Set( "active_player_now_playing_id" , username )
 	s.Set( "active_player_now_playing_text" , "" )
-	s.StateMutex.Unlock()
+
 }
 
 
@@ -690,7 +689,7 @@ func ( s *Server ) GetTwitchLiveUser( c *fiber.Ctx ) ( error ) {
 // 	s.TwitchContinuousOpen()
 // 	uri := fmt.Sprintf( "twitch://stream/%s" , username )
 // 	s.ADB.OpenURI( uri )
-// 	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+// 	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 // 	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , username )
 // 	s.Set( "active_player_now_playing_id" , username )
 // 	s.Set( "active_player_now_playing_text" , "" )

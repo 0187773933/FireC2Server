@@ -14,14 +14,14 @@ func ( s *Server ) Governor() {
 	for {
 		select {
 		case <-ticker.C:
-			s.StateMutex.Lock()
+
 			fmt.Println( "Mutex acquired by governor, performing checks" )
 
 			// TODO
 			tv_status := s.TV.Status()
 			utils.PrettyPrint( tv_status )
 
-			s.StateMutex.Unlock()
+
 			fmt.Println( "Mutex released by governor" )
 		}
 	}

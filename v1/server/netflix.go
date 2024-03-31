@@ -67,11 +67,11 @@ const NETFLIX_APP_NAME = "com.netflix.ninja"
 
 func ( s *Server ) NetflixReopenApp() {
 	log.Debug( "NetflixReopenApp()" )
-	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( NETFLIX_APP_NAME )
+	s.ADB.StopAllPackages()
+	// s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( NETFLIX_APP_NAME )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenAppName( NETFLIX_APP_NAME )
+	s.ADB.OpenPackage( NETFLIX_APP_NAME )
 	log.Debug( "Done" )
 }
 
@@ -135,7 +135,7 @@ func ( s *Server ) NetflixOpenID( id string ) {
 			}
 			if i & 3 == 0 {
 				log.Debug( "3 , pressing play button , just in case its stalled" )
-				s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+				s.ADB.Key( "KEYCODE_MEDIA_PLAY" )
 			}
 		}
 	}
@@ -147,7 +147,7 @@ func ( s *Server ) NetflixOpenID( id string ) {
 		log.Debug( "5 , supposedly already playing" )
 	} else {
 		log.Debug( "6 , not playing , pressing play button" )
-		s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+		s.ADB.Key( "KEYCODE_MEDIA_PLAY" )
 		for i := 0; i < timeout_init_seconds; i++ {
 			time.Sleep( 1 * time.Second )
 			positions = s.ADB.GetPlaybackPositions()
@@ -158,7 +158,7 @@ func ( s *Server ) NetflixOpenID( id string ) {
 			}
 			if i & 3 == 0 {
 				log.Debug( "8 , pressing play button , just in case its stalled" )
-				s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+				s.ADB.Key( "KEYCODE_MEDIA_PLAY" )
 			}
 		}
 	}
@@ -175,7 +175,7 @@ func ( s *Server ) NetflixOpenID( id string ) {
 	}
 
 	log.Debug( "11 , still not playing , pressing play button again" )
-	s.ADB.PressKeyName( "KEYCODE_MEDIA_PLAY" )
+	s.ADB.Key( "KEYCODE_MEDIA_PLAY" )
 	for i := 0; i < timeout_init_seconds; i++ {
 		time.Sleep( 1 * time.Second )
 		positions = s.ADB.GetPlaybackPositions()
@@ -207,7 +207,7 @@ func ( s *Server ) NetflixOpenID( id string ) {
 }
 
 func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "NetflixMovieNext()" )
 	r_movie := "LIBRARY.NETFLIX.MOVIES"
 	next_movie := circular_set.Next( s.DB , r_movie )
@@ -216,7 +216,7 @@ func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {
 	s.NetflixOpenID( next_movie )
 	s.Set( "active_player_now_playing_id" , next_movie )
 	s.Set( "active_player_now_playing_uri" , next_movie )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/netflix/next" ,
 		"next_movie_id": next_movie ,
@@ -226,10 +226,10 @@ func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixMoviePrevious( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "NetflixMoviePrevious()" )
 	s.NetflixContinuousOpen()
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/netflix/previous" ,
 		"result": true ,
@@ -237,10 +237,10 @@ func ( s *Server ) NetflixMoviePrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	series_id := c.Params( "series_id" )
 	if series_id == "" {
-		s.StateMutex.Unlock()
+
 		return c.JSON( fiber.Map{
 			"url": "/netflix/tv/:series_id" ,
 			"series_id": series_id ,
@@ -249,7 +249,7 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 	}
 	_ , series_exists := s.Config.Library.Netflix.TV[ series_id ]
 	if series_exists == false {
-		s.StateMutex.Unlock()
+
 		return c.JSON( fiber.Map{
 			"url": "/netflix/tv/:series_id" ,
 			"series_id": series_id ,
@@ -266,7 +266,7 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 	s.NetflixOpenID( next_episode )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , next_episode )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/netflix/tv/:series_id" ,
 		"series_id": series_id ,
@@ -277,7 +277,7 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixTVNext( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "NetflixTVNext()" )
 	series_id := s.Get( "STATE.NETFLIX.NOW_PLAYING.TV.SERIES_ID" )
 	next_episode := circular_set.Next( s.DB , fmt.Sprintf( "LIBRARY.NETFLIX.TV.%s" , series_id ) )
@@ -287,7 +287,7 @@ func ( s *Server ) NetflixTVNext( c *fiber.Ctx ) ( error ) {
 	s.NetflixOpenID( next_episode )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , next_episode )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/netflix/tv/:id/next" ,
 		"series_id": series_id ,
@@ -298,7 +298,7 @@ func ( s *Server ) NetflixTVNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixTVPrevious( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "NetflixTVPrevious()" )
 	series_id := s.Get( "STATE.NETFLIX.NOW_PLAYING.TV.SERIES_ID" )
 	previous_episode := circular_set.Previous( s.DB , fmt.Sprintf( "LIBRARY.NETFLIX.TV.%s" , series_id ) )
@@ -308,7 +308,7 @@ func ( s *Server ) NetflixTVPrevious( c *fiber.Ctx ) ( error ) {
 	s.NetflixOpenID( previous_episode )
 	s.Set( "active_player_now_playing_id" , previous_episode )
 	s.Set( "active_player_now_playing_uri" , previous_episode )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/netflix/tv/:id/previous" ,
 		"series_id": series_id ,
@@ -319,14 +319,14 @@ func ( s *Server ) NetflixTVPrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixID( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	sent_id := c.Params( "*" )
 	log.Debug( fmt.Sprintf( "NetflixID( %s )" , sent_id ) )
 	s.NetflixContinuousOpen()
 	s.NetflixOpenID( sent_id )
 	s.Set( "active_player_now_playing_id" , sent_id )
 	s.Set( "active_player_now_playing_uri" , sent_id )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/netflix/:id" ,
 		"id": sent_id ,

@@ -12,16 +12,16 @@ import (
 	// circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-const VLC_ACTIVITY = "org.videolan.vlc/org.videolan.television.ui.MainTvActivity"
-const VLC_APP_NAME = "org.videolan.vlc"
+// const VLC_ACTIVITY = "org.videolan.vlc/org.videolan.television.ui.MainTvActivity"
+// const VLC_APP_NAME = "org.videolan.vlc"
 
 func ( s *Server ) VLCReopenApp() {
 	log.Debug( "VLCReopenApp()" )
-	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( VLC_APP_NAME )
+	s.ADB.StopAllPackages()
+	// s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( s.Config.APKS[ "vlc" ][ "package" ] )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenAppName( VLC_APP_NAME )
+	s.ADB.OpenPackage( s.Config.APKS[ "vlc" ][ "package" ] )
 	log.Debug( "Done" )
 }
 
@@ -39,7 +39,7 @@ func ( s *Server ) VLCContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == VLC_ACTIVITY {
+	} else if s.Status.ADB.Activity == s.Config.APKS[ "vlc" ][ "activity" ] {
 		log.Debug( "vlc was already open" )
 	} else {
 		log.Debug( "vlc was NOT already open" )
@@ -49,18 +49,18 @@ func ( s *Server ) VLCContinuousOpen() {
 }
 
 func ( s *Server ) VLCNext( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "VLCNext()" )
 	s.VLCContinuousOpen()
 	// next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
 	// uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
 	// log.Debug( uri )
 	// s.ADB.OpenURI( uri )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	// s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
 	// s.Set( "active_player_now_playing_id" , next_movie )
 	// s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/vlc/next" ,
 		"result": true ,
@@ -68,10 +68,10 @@ func ( s *Server ) VLCNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) VLCPrevious( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "VLCPrevious()" )
 	s.VLCContinuousOpen()
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/vlc/previous" ,
 		"result": true ,
@@ -79,7 +79,7 @@ func ( s *Server ) VLCPrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) VLCPlayURL( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	x_url := c.Params( "*" )
 	log.Debug( fmt.Sprintf( "VLCPlayURL( %s )" , x_url ) )
 	s.VLCContinuousOpen()
@@ -88,7 +88,7 @@ func ( s *Server ) VLCPlayURL( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , x_url )
 	s.Set( "active_player_now_playing_uri" , uri )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/vlc/url/:url" ,
 		"param_url": x_url ,
@@ -98,13 +98,13 @@ func ( s *Server ) VLCPlayURL( c *fiber.Ctx ) ( error ) {
 
 // Custom Playlist Stuff
 func ( s *Server ) VLCPlaylistAddURL( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	log.Debug( "VLCPlaylistAddURL()" )
 	playlist_name := c.Params( "name" )
 	sent_url := c.Params( "*" )
 	// key := fmt.Sprintf( "LIBRARY.VLC.PLAYLISTS.%s" , playlist_name )
 	// circular_set.Add( s.DB , key , video_id )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/vlc/playlist/:name/add/url/*" ,
 		"playlist_name": playlist_name ,

@@ -13,17 +13,17 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-const DISNEY_ACTIVITY = "com.disney.disneyplus/com.bamtechmedia.dominguez.main.MainActivity"
-const DISNEY_PLAYING_ACTIVITY = "com.disney.disneyplus/com.bamtechmedia.dominguez.player.ui.experiences.legacy.v1.TvPlaybackActivity"
-const DISNEY_APP_NAME = "com.disney.disneyplus"
+// const DISNEY_ACTIVITY = "com.disney.disneyplus/com.bamtechmedia.dominguez.main.MainActivity"
+// const DISNEY_PLAYING_ACTIVITY = "com.disney.disneyplus/com.bamtechmedia.dominguez.player.ui.experiences.legacy.v1.TvPlaybackActivity"
+// const DISNEY_APP_NAME = "com.disney.disneyplus"
 
 func ( s *Server ) DisneyReopenApp() {
 	log.Debug( "DisneyReopenApp()" )
-	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( DISNEY_APP_NAME )
+	s.ADB.StopAllPackages()
+	// s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( s.Config.APKS[ "disney" ][ "package" ] )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenAppName( DISNEY_APP_NAME )
+	s.ADB.OpenPackage( s.Config.APKS[ "disney" ][ "package" ] )
 	log.Debug( "Done" )
 }
 
@@ -41,7 +41,7 @@ func ( s *Server ) DisneyContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == DISNEY_PLAYING_ACTIVITY || s.Status.ADB.Activity == DISNEY_ACTIVITY {
+	} else if s.Status.ADB.Activity == s.Config.APKS[ "disney" ][ "playing_activity" ] || s.Status.ADB.Activity == s.Config.APKS[ "disney" ][ "activity" ] {
 		log.Debug( "disney was already open" )
 	} else {
 		log.Debug( "disney was NOT already open" )
@@ -50,15 +50,15 @@ func ( s *Server ) DisneyContinuousOpen() {
 		pss_fp := filepath.Join( s.Config.SaveFilesPath , "screenshots" , "disney" , "profile_selection.png" )
 		s.ADB.WaitOnScreen( pss_fp , ( 20 * time.Second ) )
 		time.Sleep( 500 * time.Millisecond )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 		time.Sleep( 500 * time.Millisecond )
-		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		s.ADB.Key( "KEYCODE_DPAD_LEFT" )
 		time.Sleep( 200 * time.Millisecond )
-		s.ADB.PressKeyName( "KEYCODE_ENTER" )
+		s.ADB.Key( "KEYCODE_ENTER" )
 	}
 }
 
@@ -69,7 +69,7 @@ func ( s *Server ) DisneyMovieNext( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
 	s.Set( "active_player_now_playing_id" , next_movie )
 	s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
@@ -88,7 +88,7 @@ func ( s *Server ) DisneyMoviePrevious( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
 	s.Set( "active_player_now_playing_id" , next_movie )
 	s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
@@ -107,7 +107,7 @@ func ( s *Server ) DisneyMovie( c *fiber.Ctx ) ( error ) {
 	uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , movie_id )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
-	s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
+	s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
 	name := "unknown"
 	if movie , ok := s.Config.Library.Disney.Movies.Currated[ movie_id ]; ok {
 		name = movie.Name

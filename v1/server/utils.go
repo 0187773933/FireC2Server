@@ -95,7 +95,7 @@ func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 	select {
 		case connection = <-done:
 			s.ADB = connection
-			log.Debug( fmt.Sprintf( "ADB Connected === %t\n" , s.ADB.Connected ) )
+			log.Debug( fmt.Sprintf( "ADB Connected === %t" , s.ADB.Connected ) )
 			return
 		case <-time.After( timeout_duration ):
 			log.Debug( "Timed Out Connecting to ADB" )
@@ -330,9 +330,9 @@ func ( s *Server ) GetJSON( key string , target interface{} ) {
 
 func ( s *Server ) SelectFireCubeProfile() {
 	for i := 0; i < s.Config.FireCubeTotalUserProfiles; i++ {
-		s.ADB.PressKeyName( "KEYCODE_DPAD_LEFT" )
+		s.ADB.Key( "KEYCODE_DPAD_LEFT" )
 		time.Sleep( 100 * time.Millisecond )
 	}
 	time.Sleep( 200 * time.Millisecond )
-	s.ADB.PressKeyName( "KEYCODE_ENTER" )
+	s.ADB.Key( "KEYCODE_ENTER" )
 }

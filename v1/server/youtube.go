@@ -16,16 +16,16 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-const YOUTUBE_ACTIVITY = "com.amazon.firetv.youtube/dev.cobalt.app.MainActivity"
-const YOUTUBE_APP_NAME = "com.amazon.firetv.youtube"
+// const YOUTUBE_ACTIVITY = "com.amazon.firetv.youtube/dev.cobalt.app.MainActivity"
+// const YOUTUBE_APP_NAME = "com.amazon.firetv.youtube"
 
 func ( s *Server ) YouTubeReopenApp() {
 	log.Debug( "YouTubeReopenApp()" )
-	s.ADB.StopAllApps()
-	s.ADB.Brightness( 0 )
-	s.ADB.CloseAppName( YOUTUBE_APP_NAME )
+	s.ADB.StopAllPackages()
+	// s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( s.Config.APKS[ "youtube" ][ "package" ] )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenAppName( YOUTUBE_APP_NAME )
+	s.ADB.OpenPackage( s.Config.APKS[ "youtube" ][ "package" ] )
 	log.Debug( "Done" )
 }
 
@@ -43,7 +43,7 @@ func ( s *Server ) YouTubeContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == YOUTUBE_ACTIVITY {
+	} else if s.Status.ADB.Activity == s.Config.APKS[ "youtube" ][ "activity" ] {
 		log.Debug( "youtube was already open" )
 	} else {
 		log.Debug( "youtube was NOT already open" )
@@ -99,7 +99,7 @@ func ( s *Server ) YouTubePlaylistNext( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/next" ,
 		"playlist_name": playlist_name ,
@@ -122,7 +122,7 @@ func ( s *Server ) YouTubePlaylistPrevious( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-	s.StateMutex.Unlock()
+
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/previous" ,
 		"playlist_name": playlist_name ,
@@ -263,8 +263,8 @@ func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 	// s.Set( "STATE.YOUTUBE.NOW_PLAYING" , video_id )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	s.StateMutex.Unlock()
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+
 	return c.JSON( fiber.Map{
 		"url": "/youtube/live/next" ,
 		"video_id": video_id ,
@@ -287,8 +287,8 @@ func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	s.StateMutex.Unlock()
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+
 	return c.JSON( fiber.Map{
 		"url": "/youtube/live/previous" ,
 		"video_id": video_id ,
@@ -297,7 +297,7 @@ func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) YouTubeVideo( c *fiber.Ctx ) ( error ) {
-	s.StateMutex.Lock()
+
 	video_id := c.Params( "video_id" )
 	log.Debug( fmt.Sprintf( "YouTubeVideo( %s )" , video_id ) )
 	s.YouTubeContinuousOpen()
@@ -306,8 +306,8 @@ func ( s *Server ) YouTubeVideo( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-	// s.ADB.PressKeyName( "KEYCODE_DPAD_RIGHT" )
-	s.StateMutex.Unlock()
+	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+
 	return c.JSON( fiber.Map{
 		"url": "/youtube/:video_id" ,
 		"video_id": video_id ,
