@@ -6,9 +6,13 @@ import (
 	// url "net/url"
 	// "math"
 	// "image/color"
+	"strings"
+	// url "net/url"
+	regexp "regexp"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
 	// redis "github.com/redis/go-redis/v9"
+	adb_wrapper "github.com/0187773933/ADBWrapper/v1/wrapper"
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
@@ -62,16 +66,16 @@ import (
 // 	console.log( yaml_string );
 // })();
 
-const NETFLIX_ACTIVITY = "com.netflix.ninja/com.netflix.ninja.MainActivity"
-const NETFLIX_APP_NAME = "com.netflix.ninja"
+// const NETFLIX_ACTIVITY = "com.netflix.ninja/com.netflix.ninja.MainActivity"
+// const NETFLIX_APP_NAME = "com.netflix.ninja"
 
 func ( s *Server ) NetflixReopenApp() {
 	log.Debug( "NetflixReopenApp()" )
 	s.ADB.StopAllPackages()
 	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( NETFLIX_APP_NAME )
+	s.ADB.ClosePackage( s.Config.APKS[ "netflix" ][ "package" ] )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenPackage( NETFLIX_APP_NAME )
+	s.ADB.OpenPackage( s.Config.APKS[ "netflix" ][ "package" ] )
 	log.Debug( "Done" )
 }
 
@@ -89,13 +93,24 @@ func ( s *Server ) NetflixContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == NETFLIX_ACTIVITY {
+	// } else if s.Status.ADB.Activity == s.Config.APKS[ "netflix" ][ "activity" ] {
+	} else if s.Status.ADB.Activity == s.Config.APKS[ "netflix" ][ "profile_selection_activity" ] {
+		log.Debug( "@ netflix profile selection screen" )
+		for i := 0; i < s.Config.NetflixTotalUserProfiles; i++ {
+			s.ADB.Left()
+			time.Sleep( 100 * time.Millisecond )
+		}
+		for i := 0; i < s.Config.NetflixUserProfileIndex; i++ {
+			s.ADB.Right()
+			time.Sleep( 100 * time.Millisecond )
+		}
+		s.ADB.Enter()
+	} else if strings.Contains( s.Status.ADB.Activity , "netflix" ) == true {
 		log.Debug( "netflix was already open" )
 	} else {
 		log.Debug( "netflix was NOT already open" )
+		log.Debug( s.Config.APKS[ "netflix" ][ "activity" ] )
 		s.NetflixReopenApp()
-		time.Sleep( 500 * time.Millisecond )
-		// TODO , deal with profile selection screen ....
 	}
 }
 
@@ -109,105 +124,99 @@ func ( s *Server ) NetflixContinuousOpen() {
 // 0x00800000 = FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
 // 0x00008000 = FLAG_ACTIVITY_CLEAR_TASK
 
+// 70143664?trackId=14170286
+
 // https://developer.android.com/reference/android/content/Intent#FLAG_ACTIVITY_NEW_TASK
-func ( s *Server ) NetflixOpenID( id string ) {
-	uri := fmt.Sprintf( "https://www.netflix.com/watch/%s" , id )
+
+func parse_sent_id( sent_id string ) ( uri string ) {
+	id_part_one := ""
+	id_part_two := ""
+	is_url , parsed_url := utils.IsURL( sent_id )
+	pattern := `^\d+\?trackId=\d+(?:&.+)*$`
+	re := regexp.MustCompile( pattern )
+	if is_url == true {
+		parsed_id := strings.TrimPrefix( parsed_url.Path , "/watch/" )
+		id_part_one = strings.TrimSuffix( parsed_id , "?" )
+		id_part_two = parsed_url.Query().Get( "trackId" )
+	} else {
+		matches := re.FindStringSubmatch( sent_id )
+		if len( matches ) != 3 {
+			log.Debug( "couldn't parse netflix id" , sent_id )
+			return
+		}
+		id_part_one = matches[ 1 ]
+		id_part_two = matches[ 2 ]
+	}
+	if id_part_one == "" || id_part_two == "" {
+		log.Debug( fmt.Sprintf( "id_part_one === %s" , id_part_one ) )
+		log.Debug( fmt.Sprintf( "id_part_two === %s" , id_part_two ) )
+		log.Debug( "couldn't parse netflix id" , sent_id )
+		return
+	}
+	uri = fmt.Sprintf( "https://www.netflix.com/watch/%s?trackId=%s" , id_part_one , id_part_two )
+	return
+}
+func ( s *Server ) get_netflix_playback_object() ( position adb_wrapper.PlaybackResult ) {
+	positions := s.ADB.GetPlaybackPositions()
+	log.Debug( "get_netflix_playback_object()" )
+	utils.PrettyPrint( positions )
+	for k , v := range positions {
+		if k == "netflix" {
+			position = v
+			return
+		}
+		if strings.Contains( v.PackageStr , "netflix" ) {
+			position = v
+			return
+		}
+	}
+	return
+}
+func ( s *Server ) NetflixOpenID( sent_id string ) {
+	uri := parse_sent_id( sent_id )
 	log.Debug( uri )
 	s.ADB.Shell(
 		"am" , "start" , "-c" , "android.intent.category.LEANBACK_LAUNCHER" ,
 		"-a" , "android.intent.action.VIEW" , "-d" , uri ,
 		// "-f" , "0x10808000" ,
 		"-f" , "0x10008000" ,
-		"-e" , "source" , "30" , "com.netflix.ninja/.MainActivity" ,
+		"-e" , "source" , "30" , s.Config.APKS[ "netflix" ][ "source_activity" ] ,
 	)
-	positions := s.ADB.GetPlaybackPositions()
-	position , ok := positions[ "netflix" ]
-	timeout_init_seconds := 20
-	if ok == false {
-		log.Debug( "1 , not ready , waiting up to 20 seconds" )
-		for i := 0; i < timeout_init_seconds; i++ {
-			time.Sleep( 1 * time.Second )
-			positions = s.ADB.GetPlaybackPositions()
-			position , ok = positions[ "netflix" ]
-			if ok == true {
-				log.Debug( "2 , ready" )
-				break
-			}
-			if i & 3 == 0 {
-				log.Debug( "3 , pressing play button , just in case its stalled" )
-				s.ADB.Key( "KEYCODE_MEDIA_PLAY" )
-			}
-		}
+	log.Debug( "waiting 20 seconds for netflix player to appear" )
+	netflix_players := s.ADB.WaitOnPlayers( "netflix" , 20 )
+	if len( netflix_players ) < 1 {
+		log.Debug( "never started playing , we might have to try play button" )
 	}
-	if ok == false {
-		log.Debug( "4 , timed out , app crashed ?" )
-		return
+	log.Debug( "netflix player should be ready" )
+	utils.PrettyPrint( netflix_players )
+	log.Debug( "waiting 10 seconds to see if netflix auto starts playing" )
+	playing := s.ADB.WaitOnPlayersPlaying( "netflix" , 10 )
+	if len( playing ) < 1 {
+		log.Debug( "never started playing , we might have to try play button" )
 	}
-	if position.State == "playing" {
-		log.Debug( "5 , supposedly already playing" )
-	} else {
-		log.Debug( "6 , not playing , pressing play button" )
-		s.ADB.Key( "KEYCODE_MEDIA_PLAY" )
-		for i := 0; i < timeout_init_seconds; i++ {
-			time.Sleep( 1 * time.Second )
-			positions = s.ADB.GetPlaybackPositions()
-			position , ok = positions[ "netflix" ]
-			if ok == true {
-				log.Debug( "7 , ready" )
-				break
-			}
-			if i & 3 == 0 {
-				log.Debug( "8 , pressing play button , just in case its stalled" )
-				s.ADB.Key( "KEYCODE_MEDIA_PLAY" )
-			}
-		}
-	}
-	fmt.Println( position )
-	log.Debug( "9 , double checking we are playing , quick check" )
-	for i := 0; i < 10; i++ {
-		updated := s.ADB.GetUpdatedPlaybackPosition( position )
-		fmt.Println( updated )
-		if updated.Position != position.Position {
-			log.Debug( "10 , playing" )
+	utils.PrettyPrint( playing )
+	log.Debug( fmt.Sprintf( "total now playing === %d" , len( playing ) ) )
+	// x := s.ADB.GetNowPlaying( "netflix" , 60 )
+	// x := s.ADB.GetNowPlayingForce( "netflix" , 60 )
+	for _ , player := range playing {
+		if player.Updated > 0 {
+			fmt.Println( "netflix autostarted playing on it's own" )
 			return
 		}
-		time.Sleep( 500 * time.Millisecond )
 	}
-
-	log.Debug( "11 , still not playing , pressing play button again" )
-	s.ADB.Key( "KEYCODE_MEDIA_PLAY" )
-	for i := 0; i < timeout_init_seconds; i++ {
-		time.Sleep( 1 * time.Second )
-		positions = s.ADB.GetPlaybackPositions()
-		position , ok = positions[ "netflix" ]
-		if ok == true {
-			log.Debug( "12 , ready" )
-			break
-		}
+	log.Debug( "trying to force update adb playback state" )
+	for _ , player := range playing {
+		playing = s.ADB.WaitOnPlayersUpdatedForce( "netflix" , player.Updated , 60 )
+		utils.PrettyPrint( playing )
 	}
-
-	time.Sleep( 1 * time.Second )
-
-	// longer check
-	log.Debug( "13 , double checking we are playing , longer check" )
-	max_retries := 10
-	for r := 0; r < max_retries; r++ {
-		for i := 0; i < 10; i++ {
-			updated := s.ADB.GetUpdatedPlaybackPosition( position )
-			fmt.Println( updated )
-			if updated.Position != position.Position {
-				log.Debug( "14 , playing" )
-				return
-			}
-			time.Sleep( 500 * time.Millisecond )
-		}
-		time.Sleep( 1 * time.Second )
+	log.Debug( "trying to force update adb playback state" )
+	for _ , player := range playing {
+		playing = s.ADB.WaitOnPlayersUpdatedForce( "netflix" , player.Updated , 60 )
+		utils.PrettyPrint( playing )
 	}
-	log.Debug( "15 , Timeout reached, exiting." )
 }
 
 func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {
-
 	log.Debug( "NetflixMovieNext()" )
 	r_movie := "LIBRARY.NETFLIX.MOVIES"
 	next_movie := circular_set.Next( s.DB , r_movie )
@@ -216,7 +225,6 @@ func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {
 	s.NetflixOpenID( next_movie )
 	s.Set( "active_player_now_playing_id" , next_movie )
 	s.Set( "active_player_now_playing_uri" , next_movie )
-
 	return c.JSON( fiber.Map{
 		"url": "/netflix/next" ,
 		"next_movie_id": next_movie ,
@@ -226,10 +234,8 @@ func ( s *Server ) NetflixMovieNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixMoviePrevious( c *fiber.Ctx ) ( error ) {
-
 	log.Debug( "NetflixMoviePrevious()" )
 	s.NetflixContinuousOpen()
-
 	return c.JSON( fiber.Map{
 		"url": "/netflix/previous" ,
 		"result": true ,
@@ -240,7 +246,6 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 
 	series_id := c.Params( "series_id" )
 	if series_id == "" {
-
 		return c.JSON( fiber.Map{
 			"url": "/netflix/tv/:series_id" ,
 			"series_id": series_id ,
@@ -277,7 +282,6 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixTVNext( c *fiber.Ctx ) ( error ) {
-
 	log.Debug( "NetflixTVNext()" )
 	series_id := s.Get( "STATE.NETFLIX.NOW_PLAYING.TV.SERIES_ID" )
 	next_episode := circular_set.Next( s.DB , fmt.Sprintf( "LIBRARY.NETFLIX.TV.%s" , series_id ) )
@@ -287,7 +291,6 @@ func ( s *Server ) NetflixTVNext( c *fiber.Ctx ) ( error ) {
 	s.NetflixOpenID( next_episode )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , next_episode )
-
 	return c.JSON( fiber.Map{
 		"url": "/netflix/tv/:id/next" ,
 		"series_id": series_id ,
@@ -298,7 +301,6 @@ func ( s *Server ) NetflixTVNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixTVPrevious( c *fiber.Ctx ) ( error ) {
-
 	log.Debug( "NetflixTVPrevious()" )
 	series_id := s.Get( "STATE.NETFLIX.NOW_PLAYING.TV.SERIES_ID" )
 	previous_episode := circular_set.Previous( s.DB , fmt.Sprintf( "LIBRARY.NETFLIX.TV.%s" , series_id ) )
@@ -308,7 +310,6 @@ func ( s *Server ) NetflixTVPrevious( c *fiber.Ctx ) ( error ) {
 	s.NetflixOpenID( previous_episode )
 	s.Set( "active_player_now_playing_id" , previous_episode )
 	s.Set( "active_player_now_playing_uri" , previous_episode )
-
 	return c.JSON( fiber.Map{
 		"url": "/netflix/tv/:id/previous" ,
 		"series_id": series_id ,
@@ -319,14 +320,14 @@ func ( s *Server ) NetflixTVPrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixID( c *fiber.Ctx ) ( error ) {
-
 	sent_id := c.Params( "*" )
+	sent_query := c.Request().URI().QueryArgs().String()
+    if sent_query != "" { sent_id += "?" + sent_query }
 	log.Debug( fmt.Sprintf( "NetflixID( %s )" , sent_id ) )
 	s.NetflixContinuousOpen()
 	s.NetflixOpenID( sent_id )
 	s.Set( "active_player_now_playing_id" , sent_id )
 	s.Set( "active_player_now_playing_uri" , sent_id )
-
 	return c.JSON( fiber.Map{
 		"url": "/netflix/:id" ,
 		"id": sent_id ,

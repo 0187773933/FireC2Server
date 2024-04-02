@@ -15,7 +15,7 @@ import (
 	filepath "path/filepath"
 	"bytes"
 	"net/http"
-	"net/url"
+	url "net/url"
 	"encoding/json"
 	sha256 "crypto/sha256"
 	// "strings"
@@ -57,6 +57,14 @@ func IsUUID( u string ) ( result bool ) {
 	_ , err := uuid.Parse( u )
 	return err == nil
 }
+
+func IsURL( input string ) ( result bool , url *url.URL ) {
+	parsed , err := url.Parse( input )
+	if err != nil { return false , nil }
+	if parsed.Scheme == "" { return false , nil }
+	return true , parsed
+}
+
 
 func GetLocalIPAddresses() ( ip_addresses []string ) {
 	host , _ := os.Hostname()

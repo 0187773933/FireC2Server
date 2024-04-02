@@ -69,6 +69,7 @@ func ( s *Server ) SetupRoutes() {
 
 func ( s *Server ) Start() {
 	log.Printf( "Listening on http://localhost:%s" , s.Config.ServerPort )
+	// log.Printf( "Listening on http://%s:%s" , s.Config.ServerPort )
 	fmt.Printf( "Admin Login @ http://localhost:%s/%s\n" , s.Config.ServerPort , s.Config.ServerLoginUrlPrefix )
 	fmt.Printf( "Admin Username === %s\n" , s.Config.AdminUsername )
 	fmt.Printf( "Admin Password === %s\n" , s.Config.AdminPassword )
