@@ -156,22 +156,7 @@ func parse_sent_id( sent_id string ) ( uri string ) {
 	uri = fmt.Sprintf( "https://www.netflix.com/watch/%s?trackId=%s" , id_part_one , id_part_two )
 	return
 }
-func ( s *Server ) get_netflix_playback_object() ( position adb_wrapper.PlaybackResult ) {
-	positions := s.ADB.GetPlaybackPositions()
-	log.Debug( "get_netflix_playback_object()" )
-	utils.PrettyPrint( positions )
-	for k , v := range positions {
-		if k == "netflix" {
-			position = v
-			return
-		}
-		if strings.Contains( v.PackageStr , "netflix" ) {
-			position = v
-			return
-		}
-	}
-	return
-}
+
 func ( s *Server ) NetflixOpenID( sent_id string ) {
 	uri := parse_sent_id( sent_id )
 	log.Debug( uri )
@@ -196,8 +181,6 @@ func ( s *Server ) NetflixOpenID( sent_id string ) {
 	}
 	utils.PrettyPrint( playing )
 	log.Debug( fmt.Sprintf( "total now playing === %d" , len( playing ) ) )
-	// x := s.ADB.GetNowPlaying( "netflix" , 60 )
-	// x := s.ADB.GetNowPlayingForce( "netflix" , 60 )
 	for _ , player := range playing {
 		if player.Updated > 0 {
 			fmt.Println( "netflix autostarted playing on it's own" )
