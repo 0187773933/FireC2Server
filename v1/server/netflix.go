@@ -12,7 +12,7 @@ import (
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
 	// redis "github.com/redis/go-redis/v9"
-	adb_wrapper "github.com/0187773933/ADBWrapper/v1/wrapper"
+	// adb_wrapper "github.com/0187773933/ADBWrapper/v1/wrapper"
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
@@ -226,7 +226,6 @@ func ( s *Server ) NetflixMoviePrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
-
 	series_id := c.Params( "series_id" )
 	if series_id == "" {
 		return c.JSON( fiber.Map{
@@ -237,7 +236,6 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 	}
 	_ , series_exists := s.Config.Library.Netflix.TV[ series_id ]
 	if series_exists == false {
-
 		return c.JSON( fiber.Map{
 			"url": "/netflix/tv/:series_id" ,
 			"series_id": series_id ,
@@ -254,7 +252,6 @@ func ( s *Server ) NetflixTVID( c *fiber.Ctx ) ( error ) {
 	s.NetflixOpenID( next_episode )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , next_episode )
-
 	return c.JSON( fiber.Map{
 		"url": "/netflix/tv/:series_id" ,
 		"series_id": series_id ,
