@@ -16,6 +16,10 @@ func ( s *Server ) SetupAdminRoutes() {
 	streamdeck.Get( "youtube" , s.StreamDeckYouTube )
 	streamdeck.Get( "disney" , s.StreamDeckDisney )
 	streamdeck.Get( "twitch" , s.StreamDeckTwitch )
+	streamdeck.Get( "twitch-background" , s.StreamDeckTwitchBackground )
+	streamdeck.Get( "netflix" , s.StreamDeckNetflix )
+	streamdeck.Get( "hulu" , s.StreamDeckHulu )
+	streamdeck.Get( "audio-book" , s.StreamDeckAudioBook )
 	streamdeck.Get( "escape-rope" , s.StreamDeckEscapeRope )
 	streamdeck.Get( "heart" , s.StreamDeckHeart )
 

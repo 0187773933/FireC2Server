@@ -39,7 +39,7 @@ import (
 func ( s *Server ) HuluReopenApp() {
 	log.Debug( "HuluReopenApp()" )
 	s.ADB.StopAllPackages()
-	s.ADB.SetBrightness( 0 )
+	// s.ADB.SetBrightness( 0 )
 	s.ADB.ClosePackage( s.Config.APKS[ "hulu" ][ "package" ] )
 	time.Sleep( 500 * time.Millisecond )
 	s.ADB.OpenPackage( s.Config.APKS[ "hulu" ][ "package" ] )
@@ -77,7 +77,6 @@ func ( s *Server ) HuluContinuousOpen() {
 }
 
 func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
-
 	log.Debug( "HuluMovieNext()" )
 	s.HuluContinuousOpen()
 	// next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
@@ -88,7 +87,6 @@ func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
 	// s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
 	// s.Set( "active_player_now_playing_id" , next_movie )
 	// s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
-
 	return c.JSON( fiber.Map{
 		"url": "/hulu/next" ,
 		"result": true ,
@@ -107,7 +105,6 @@ func ( s *Server ) HuluMoviePrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
-
 	series_id := c.Params( "series_id" )
 	// log.Debug( fmt.Sprintf( "HuluTVID( %s )" , series_id ) )
 	if series_id == "" {
@@ -139,7 +136,6 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , uri )
-
 	return c.JSON( fiber.Map{
 		"url": "/hulu/tv/:series_id" ,
 		"series_id": series_id ,
@@ -150,7 +146,6 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluTVNext( c *fiber.Ctx ) ( error ) {
-
 	log.Debug( "HuluTVNext()" )
 	series_id := s.Get( "STATE.HULU.NOW_PLAYING.TV.SERIES_ID" )
 	next_episode := circular_set.Next( s.DB , fmt.Sprintf( "LIBRARY.HULU.TV.%s" , series_id ) )
@@ -162,7 +157,6 @@ func ( s *Server ) HuluTVNext( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , uri )
-
 	return c.JSON( fiber.Map{
 		"url": "/hulu/tv/:id/next" ,
 		"series_id": series_id ,
@@ -173,7 +167,6 @@ func ( s *Server ) HuluTVNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluTVPrevious( c *fiber.Ctx ) ( error ) {
-
 	log.Debug( "HuluTVPrevious()" )
 	series_id := s.Get( "STATE.HULU.NOW_PLAYING.TV.SERIES_ID" )
 	next_episode := circular_set.Previous( s.DB , fmt.Sprintf( "LIBRARY.HULU.TV.%s" , series_id ) )
@@ -185,7 +178,6 @@ func ( s *Server ) HuluTVPrevious( c *fiber.Ctx ) ( error ) {
 	s.ADB.OpenURI( uri )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , uri )
-
 	return c.JSON( fiber.Map{
 		"url": "/hulu/tv/:id/previous" ,
 		"series_id": series_id ,
@@ -195,18 +187,77 @@ func ( s *Server ) HuluTVPrevious( c *fiber.Ctx ) ( error ) {
 	})
 }
 
-func ( s *Server ) HuluID( c *fiber.Ctx ) ( error ) {
-
-	sent_id := c.Params( "*" )
+func parse_hulu_sent_id( sent_id string ) ( uri string ) {
 	if utils.IsUUID( sent_id ) {
-		sent_id = fmt.Sprintf( "https://www.hulu.com/watch/%s" , sent_id )
+		uri = fmt.Sprintf( "https://www.hulu.com/watch/%s" , sent_id )
+		return
 	}
-	log.Debug( fmt.Sprintf( "HuluID( %s )" , sent_id ) )
+	is_url , _ := utils.IsURL( sent_id )
+	if is_url {
+		uri = sent_id
+		return
+	}
+	return
+}
+
+func ( s *Server ) HuluOpenURI( uri string ) {
+	log.Debug( fmt.Sprintf( "HuluOpenURI( %s )" , uri ) )
 	s.HuluContinuousOpen()
-	s.ADB.OpenURI( sent_id )
+	s.ADB.OpenURI( uri )
+	verified_now_playing := false
+	verified_now_playing_updated_time := 0
+	log.Debug( "waiting 20 seconds for hulu player to appear" )
+	players := s.ADB.WaitOnPlayers( "hulu" , 20 )
+	if len( players ) < 1 {
+		log.Debug( "never started playing , we might have to try play button" )
+	}
+	log.Debug( "hulu player should be ready" )
+	utils.PrettyPrint( players )
+	log.Debug( "waiting 10 seconds to see if hulu auto starts playing" )
+	playing := s.ADB.WaitOnPlayersPlaying( "hulu" , 10 )
+	if len( playing ) < 1 {
+		log.Debug( "never started playing , we might have to try play button" )
+	}
+	utils.PrettyPrint( playing )
+	log.Debug( fmt.Sprintf( "total now playing === %d" , len( playing ) ) )
+	for _ , player := range playing {
+		if player.Updated > 0 {
+			log.Debug( "hulu autostarted playing on it's own" )
+			verified_now_playing = true
+			verified_now_playing_updated_time = player.Updated
+			break
+		}
+	}
+	if verified_now_playing == false {
+		log.Debug( "hulu didn't auto start playing , we might have to try play button" )
+		return
+	}
+	log.Debug( "waiting now for player progress" )
+	s.ADB.WaitOnPlayersUpdated( "hulu" , verified_now_playing_updated_time , 60 )
+	log.Debug( "player progress should be ready" )
+	time.Sleep( 3 * time.Second )
+	switch s.Config.ADBDeviceType {
+		case "firetablet":
+			log.Debug( "entering fullscreen" )
+			s.ADB.Tap( 302 , 191 )
+			time.Sleep( 500 * time.Millisecond )
+			s.ADB.Tap( 573 , 58 )
+			break;
+		case "firecube":
+		case "firestick":
+			break;
+	}
+}
+
+func ( s *Server ) HuluID( c *fiber.Ctx ) ( error ) {
+	sent_id := c.Params( "*" )
+	sent_query := c.Request().URI().QueryArgs().String()
+	if sent_query != "" { sent_id += "?" + sent_query }
+	uri := parse_hulu_sent_id( sent_id )
+	log.Debug( fmt.Sprintf( "HuluID( %s )" , uri ) )
+	s.HuluOpenURI( uri )
 	s.Set( "active_player_now_playing_id" , sent_id )
 	s.Set( "active_player_now_playing_uri" , sent_id )
-
 	return c.JSON( fiber.Map{
 		"url": "/hulu/:id" ,
 		"id": sent_id ,

@@ -128,7 +128,7 @@ func ( s *Server ) NetflixContinuousOpen() {
 
 // https://developer.android.com/reference/android/content/Intent#FLAG_ACTIVITY_NEW_TASK
 
-func parse_sent_id( sent_id string ) ( uri string ) {
+func parse_netflix_sent_id( sent_id string ) ( uri string ) {
 	id_part_one := ""
 	id_part_two := ""
 	is_url , parsed_url := utils.IsURL( sent_id )
@@ -158,7 +158,7 @@ func parse_sent_id( sent_id string ) ( uri string ) {
 }
 
 func ( s *Server ) NetflixOpenID( sent_id string ) {
-	uri := parse_sent_id( sent_id )
+	uri := parse_netflix_sent_id( sent_id )
 	log.Debug( uri )
 	s.ADB.Shell(
 		"am" , "start" , "-c" , "android.intent.category.LEANBACK_LAUNCHER" ,
@@ -302,7 +302,7 @@ func ( s *Server ) NetflixTVPrevious( c *fiber.Ctx ) ( error ) {
 func ( s *Server ) NetflixID( c *fiber.Ctx ) ( error ) {
 	sent_id := c.Params( "*" )
 	sent_query := c.Request().URI().QueryArgs().String()
-    if sent_query != "" { sent_id += "?" + sent_query }
+	if sent_query != "" { sent_id += "?" + sent_query }
 	log.Debug( fmt.Sprintf( "NetflixID( %s )" , sent_id ) )
 	s.NetflixContinuousOpen()
 	s.NetflixOpenID( sent_id )

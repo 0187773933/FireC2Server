@@ -147,6 +147,7 @@ type ConfigFile struct {
 	ADBServerIP string `yaml:"adb_server_ip"`
 	ADBServerPort string `yaml:"adb_server_port"`
 	ADBTimeoutSeconds int `yaml:"adb_timeout_seconds"`
+	ADBDeviceType string `yaml:"adb_device_type"`
 	APKS map[string]map[string]string `yaml:"apks"`
 	FireCubeTotalUserProfiles int `yaml:"firecube_total_user_profiles"`
 	FireCubeUserProfileIndex int `yaml:"firecube_user_profile_index"`

@@ -79,6 +79,7 @@ adb_server_port: "5555"
 adb_connection_type: "usb" # wifi
 adb_serial: "asdf"
 adb_timeout_seconds: 4
+adb_device_type: "firetablet"
 apks:
   disney:
     package: "com.disney.disneyplus"
@@ -87,7 +88,8 @@ apks:
     playing_activity: "com.bamtechmedia.dominguez.player.ui.experiences.legacy.v1.MobilePlaybackActivity" # firetablet
   hulu:
     package: "com.hulu.plus"
-    activity: "com.hulu.plus.MainActivity"
+    # activity: "com.hulu.plus.MainActivity" # firecube , firestick
+    activity: "com.hulu.features.playback.PlayerActivity" # firetablet
     temp_activity: "com.hulu.plus.SplashActivity" # firestick
   netflix:
     # package: "com.netflix.ninja" # firecube and firestick

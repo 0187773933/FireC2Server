@@ -60,6 +60,34 @@ func ( s *Server ) StreamDeckTwitch( c *fiber.Ctx ) ( error ) {
 	})
 }
 
+func ( s *Server ) StreamDeckTwitchBackground( c *fiber.Ctx ) ( error ) {
+	return c.JSON( fiber.Map{
+		"url": "/streamdeck/twitch-background" ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) StreamDeckNetflix( c *fiber.Ctx ) ( error ) {
+	return c.JSON( fiber.Map{
+		"url": "/streamdeck/netflix" ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) StreamDeckHulu( c *fiber.Ctx ) ( error ) {
+	return c.JSON( fiber.Map{
+		"url": "/streamdeck/hulu" ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) StreamDeckAudioBook( c *fiber.Ctx ) ( error ) {
+	return c.JSON( fiber.Map{
+		"url": "/streamdeck/audio-book" ,
+		"result": true ,
+	})
+}
+
 func ( s *Server ) StreamDeckEscapeRope( c *fiber.Ctx ) ( error ) {
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/escape-rope" ,
