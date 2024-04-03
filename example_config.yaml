@@ -15,7 +15,7 @@ admin_password: "asdf"
 time_zone: "America/New_York"
 save_files_path: "/home/morphs/SAVE_FILES"
 bolt_db_path: "bolt.db"
-encryption_key: "44a34a58da0a68f37b5507334381bef7766a0f48bfaf1876cab2b0b8cabb1092"
+encryption_key: "asdf"
 redis_address: "localhost:6379"
 # redis_address: "private-redis:6379"
 redis_db_number: 1
@@ -79,6 +79,42 @@ adb_server_port: "5555"
 adb_connection_type: "usb" # wifi
 adb_serial: "asdf"
 adb_timeout_seconds: 4
+apks:
+  disney:
+    package: "com.disney.disneyplus"
+    activity: "com.bamtechmedia.dominguez.main.MainActivity"
+    # playing_activity: "com.bamtechmedia.dominguez.player.ui.experiences.legacy.v1.TvPlaybackActivity" # firecube
+    playing_activity: "com.bamtechmedia.dominguez.player.ui.experiences.legacy.v1.MobilePlaybackActivity" # firetablet
+  hulu:
+    package: "com.hulu.plus"
+    activity: "com.hulu.plus.MainActivity"
+    temp_activity: "com.hulu.plus.SplashActivity" # firestick
+  netflix:
+    # package: "com.netflix.ninja" # firecube and firestick
+    # activity: "com.netflix.ninja.MainActivity" # firecube and firestick
+    # source_activity: "com.netflix.ninja/.MainActivity" # firecube and firestick
+    package: "com.netflix.mediaclient" # firetablet
+    activity: "com.netflix.mediaclient.ui.player.PlayerActivity" # firetablet
+    source_activity: "com.netflix.mediaclient/.ui.launch.NetflixComLaunchActivity" # firetablet
+    sign_in_activity: "o.bZb" # firetablet
+    profile_selection_activity: "com.netflix.mediaclient.ui.profiles.ProfileSelectionActivity" # firetablet
+    home_activity: "com.netflix.mediaclient.ui.home.HomeActivity" # firetablet
+  spotify:
+    package: "com.spotify.music"
+    activity: "com.spotify.music.MainActivity" # firecube and firetablet
+    # activity: "com.spotify.tv.android.SpotifyTVActivity" # firestick
+  twitch:
+    package: "tv.twitch.android.app"
+    # activity: "tv.twitch.starshot64.app.StarshotActivity" # firecube , firestick
+    activity: "tv.twitch.android.feature.viewer.main.MainActivity" # firetablet
+  youtube:
+    package: "com.amazon.firetv.youtube"
+    activity: "dev.cobalt.app.MainActivity" # firecube , firestick , no support on firetablet ??
+  vlc:
+    package: "org.videolan.vlc"
+    activity: "org.videolan.television.ui.MainTvActivity" # firecube
+    # activity: "org.videolan.vlc.gui.MainActivity" # firetablet
+    # activity: "org.videolan.vlc.StartActivity" # firestick
 firecube_total_user_profiles: 2
 firecube_user_profile_index: 0
 hulu_total_user_profiles: 5
