@@ -64,7 +64,7 @@ func ( s *Server ) SpotifyIsShuffleOn() ( result bool ) {
 	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
 	coords := []int{ 752 , 964 }
 	log.Debug( "pressing left" )
-	s.ADB.Key( "KEYCODE_DPAD_LEFT" )
+	s.ADB.Left()
 	time.Sleep( 500 * time.Millisecond )
 	result = s.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color )
 	return
@@ -76,7 +76,7 @@ func ( s *Server ) SpotifyPressPreviousButton() {
 	button_index := 2
 	index := s.SpotifyGetActiveButtonIndex()
 	if index == button_index {
-		s.ADB.Key( "KEYCODE_ENTER" )
+		s.ADB.Enter()
 	}
 	distance := int( math.Abs( float64( button_index - index ) ) )
 	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
@@ -84,20 +84,20 @@ func ( s *Server ) SpotifyPressPreviousButton() {
 		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
 		for i := 0 ; i < distance ; i++ {
 			log.Debug( "pressing right" )
-			s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
+			s.ADB.Right()
 		}
 	} else {
 		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
 		for i := 0 ; i < distance ; i++ {
 			log.Debug( "pressing left" )
-			s.ADB.Key( "KEYCODE_DPAD_LEFT" )
+			s.ADB.Left()
 		}
 	}
 	log.Debug( "pressing enter" )
-	s.ADB.Key( "KEYCODE_ENTER" )
+	s.ADB.Enter()
 	if shuffle_on == true {
 		log.Debug( "pressing enter" )
-		s.ADB.Key( "KEYCODE_ENTER" )
+		s.ADB.Enter()
 	}
 	return
 }
@@ -106,8 +106,8 @@ func ( s *Server ) SpotifyReopenApp() {
 	log.Debug( "SpotifyReopenApp()" )
 	s.ADB.StopAllPackages()
 	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( s.Config.APKS[ "spotify" ][ "package" ] )
-	s.ADB.OpenPackage( s.Config.APKS[ "spotify" ][ "package" ] )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Package )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Package )
 	// time.Sleep( 1500 * time.Millisecond )
 	time.Sleep( 3000 * time.Millisecond )
 	log.Debug( "Done" )
@@ -128,13 +128,18 @@ func ( s *Server ) SpotifyContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity != s.Config.APKS[ "spotify" ][ "activity" ] {
-		log.Debug( "spotify was NOT already open" )
-		s.SpotifyReopenApp()
-		time.Sleep( 6 * time.Second )
-	} else {
-		log.Debug( "spotify was already open" )
 	}
+	for _ , v := range s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Activities {
+		if s.Status.ADB.Activity == v {
+			log.Debug( fmt.Sprintf( "spotify was already open with activity %s" , v ) )
+			return
+		}
+	}
+	log.Debug( "spotify was NOT already open" )
+	s.SpotifyReopenApp()
+	log.Debug( "sleeping extra 6 seconds to wait for spotify init" )
+	time.Sleep( 6 * time.Second )
+	log.Debug( "done sleeping" )
 }
 
 func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {

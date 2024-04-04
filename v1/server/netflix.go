@@ -73,9 +73,9 @@ func ( s *Server ) NetflixReopenApp() {
 	log.Debug( "NetflixReopenApp()" )
 	s.ADB.StopAllPackages()
 	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( s.Config.APKS[ "netflix" ][ "package" ] )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "netflix" ][ s.Config.ADB.DeviceType ].Package )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenPackage( s.Config.APKS[ "netflix" ][ "package" ] )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "netflix" ][ s.Config.ADB.DeviceType ].Package )
 	log.Debug( "Done" )
 }
 
@@ -94,7 +94,7 @@ func ( s *Server ) NetflixContinuousOpen() {
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
 	// } else if s.Status.ADB.Activity == s.Config.APKS[ "netflix" ][ "activity" ] {
-	} else if s.Status.ADB.Activity == s.Config.APKS[ "netflix" ][ "profile_selection_activity" ] {
+	} else if s.Status.ADB.Activity == s.Config.ADB.APKS[ "netflix" ][ s.Config.ADB.DeviceType ].Activities[ "profile_selection" ] {
 		log.Debug( "@ netflix profile selection screen" )
 		for i := 0; i < s.Config.NetflixTotalUserProfiles; i++ {
 			s.ADB.Left()
@@ -109,7 +109,7 @@ func ( s *Server ) NetflixContinuousOpen() {
 		log.Debug( "netflix was already open" )
 	} else {
 		log.Debug( "netflix was NOT already open" )
-		log.Debug( s.Config.APKS[ "netflix" ][ "activity" ] )
+		log.Debug( s.Config.ADB.APKS[ "netflix" ][ s.Config.ADB.DeviceType ].Activities[ "main" ] )
 		s.NetflixReopenApp()
 	}
 }
@@ -165,7 +165,7 @@ func ( s *Server ) NetflixOpenID( sent_id string ) {
 		"-a" , "android.intent.action.VIEW" , "-d" , uri ,
 		// "-f" , "0x10808000" ,
 		"-f" , "0x10008000" ,
-		"-e" , "source" , "30" , s.Config.APKS[ "netflix" ][ "source_activity" ] ,
+		"-e" , "source" , "30" , s.Config.ADB.APKS[ "netflix" ][ s.Config.ADB.DeviceType ].Activities[ "source" ] ,
 	)
 	log.Debug( "waiting 20 seconds for netflix player to appear" )
 	netflix_players := s.ADB.WaitOnPlayers( "netflix" , 20 )

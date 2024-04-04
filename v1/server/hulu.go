@@ -40,9 +40,9 @@ func ( s *Server ) HuluReopenApp() {
 	log.Debug( "HuluReopenApp()" )
 	s.ADB.StopAllPackages()
 	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( s.Config.APKS[ "hulu" ][ "package" ] )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "hulu" ][ s.Config.ADB.DeviceType ].Package )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenPackage( s.Config.APKS[ "hulu" ][ "package" ] )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "hulu" ][ s.Config.ADB.DeviceType ].Package )
 	log.Debug( "Done" )
 }
 
@@ -60,20 +60,23 @@ func ( s *Server ) HuluContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == s.Config.APKS[ "hulu" ][ "activity" ] {
-		log.Debug( "hulu was already open" )
-	} else {
-		log.Debug( "hulu was NOT already open" )
-		s.HuluReopenApp()
-		time.Sleep( 2000 * time.Millisecond )
-		for i := 0; i < s.Config.HuluTotalUserProfiles; i++ {
-			s.ADB.Key( "KEYCODE_DPAD_DOWN" )
-			time.Sleep( 100 * time.Millisecond )
-		}
-		s.ADB.Key( "KEYCODE_DPAD_UP" )
-		time.Sleep( 100 * time.Millisecond )
-		s.ADB.Key( "KEYCODE_ENTER" )
 	}
+	for _ , v := range s.Config.ADB.APKS[ "hulu" ][ s.Config.ADB.DeviceType ].Activities {
+		if s.Status.ADB.Activity == v {
+			log.Debug( fmt.Sprintf( "hulu was already open with activity %s" , v ) )
+			return
+		}
+	}
+	log.Debug( "hulu was NOT already open" )
+	s.HuluReopenApp()
+	time.Sleep( 2000 * time.Millisecond )
+	for i := 0; i < s.Config.HuluTotalUserProfiles; i++ {
+		s.ADB.Right()
+		time.Sleep( 100 * time.Millisecond )
+	}
+	s.ADB.Up()
+	time.Sleep( 100 * time.Millisecond )
+	s.ADB.Enter()
 }
 
 func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
@@ -236,7 +239,7 @@ func ( s *Server ) HuluOpenURI( uri string ) {
 	s.ADB.WaitOnPlayersUpdated( "hulu" , verified_now_playing_updated_time , 60 )
 	log.Debug( "player progress should be ready" )
 	time.Sleep( 3 * time.Second )
-	switch s.Config.ADBDeviceType {
+	switch s.Config.ADB.DeviceType {
 		case "firetablet":
 			log.Debug( "entering fullscreen" )
 			s.ADB.Tap( 302 , 191 )

@@ -13,17 +13,12 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-// const DISNEY_ACTIVITY = "com.disney.disneyplus/com.bamtechmedia.dominguez.main.MainActivity"
-// const DISNEY_PLAYING_ACTIVITY = "com.disney.disneyplus/com.bamtechmedia.dominguez.player.ui.experiences.legacy.v1.TvPlaybackActivity"
-// const DISNEY_APP_NAME = "com.disney.disneyplus"
-
 func ( s *Server ) DisneyReopenApp() {
 	log.Debug( "DisneyReopenApp()" )
 	s.ADB.StopAllPackages()
-	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( s.Config.APKS[ "disney" ][ "package" ] )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "disney" ][ s.Config.ADB.DeviceType ].Package )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenPackage( s.Config.APKS[ "disney" ][ "package" ] )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "disney" ][ s.Config.ADB.DeviceType ].Package )
 	log.Debug( "Done" )
 }
 
@@ -41,25 +36,30 @@ func ( s *Server ) DisneyContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == s.Config.APKS[ "disney" ][ "playing_activity" ] || s.Status.ADB.Activity == s.Config.APKS[ "disney" ][ "activity" ] {
-		log.Debug( "disney was already open" )
-	} else {
-		log.Debug( "disney was NOT already open" )
-		s.DisneyReopenApp()
-		time.Sleep( 500 * time.Millisecond )
-		pss_fp := filepath.Join( s.Config.SaveFilesPath , "screenshots" , "disney" , "profile_selection.png" )
-		s.ADB.WaitOnScreen( pss_fp , ( 20 * time.Second ) )
-		time.Sleep( 500 * time.Millisecond )
-		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-		s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-		time.Sleep( 500 * time.Millisecond )
-		s.ADB.Key( "KEYCODE_DPAD_LEFT" )
-		time.Sleep( 200 * time.Millisecond )
-		s.ADB.Key( "KEYCODE_ENTER" )
 	}
+	for _ , v := range s.Config.ADB.APKS[ "disney" ][ s.Config.ADB.DeviceType ].Activities {
+		if s.Status.ADB.Activity == v {
+			log.Debug( fmt.Sprintf( "disney was already open with activity %s" , v ) )
+			return
+		}
+	}
+	log.Debug( "disney was NOT already open" )
+	s.DisneyReopenApp()
+	time.Sleep( 500 * time.Millisecond )
+	pss_fp := filepath.Join( s.Config.SaveFilesPath , "screenshots" , "disney" , "profile_selection.png" )
+	log.Debug( "waiting on profile selection screen" )
+	s.ADB.WaitOnScreen( pss_fp , ( 20 * time.Second ) )
+	log.Debug( "selecting hardcoded profile" ) // todo , disney profile index numbers
+	time.Sleep( 500 * time.Millisecond )
+	s.ADB.Right()
+	s.ADB.Right()
+	s.ADB.Right()
+	s.ADB.Right()
+	s.ADB.Right()
+	time.Sleep( 500 * time.Millisecond )
+	s.ADB.Left()
+	time.Sleep( 200 * time.Millisecond )
+	s.ADB.Enter()
 }
 
 func ( s *Server ) DisneyMovieNext( c *fiber.Ctx ) ( error ) {

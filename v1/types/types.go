@@ -109,7 +109,18 @@ type Library struct {
 
 type APKInfo struct {
 	Package string `yaml:"package"`
-	Activity string `yaml:"activity"`
+	Activities map[string]string `yaml:"activities"`
+}
+
+type ADBConfig struct {
+	Path string `yaml:"path"`
+	ConnectionType string `yaml:"connection_type"`
+	Serial string `yaml:"serial"`
+	ServerIP string `yaml:"server_ip"`
+	ServerPort string `yaml:"server_port"`
+	TimeoutSeconds int `yaml:"timeout_seconds"`
+	DeviceType string `yaml:"device_type"`
+	APKS map[string]map[string]APKInfo `yaml:"apks"`
 }
 
 type ConfigFile struct {
@@ -140,17 +151,10 @@ type ConfigFile struct {
 	ReStreamServerHLSURLPrefix string `yaml:"restream_server_hls_url_prefix"`
 	StreamDeckServerUrl string `yaml:"stream_deck_server_url"`
 	StreamDeckServerAPIKey string `yaml:"stream_deck_server_api_key"`
-	TV tv_controller_types.ConfigFile `yaml:"tv"`
-	ADBPath string `yaml:"adb_path"`
-	ADBConnectionType string `yaml:"adb_connection_type"`
-	ADBSerial string `yaml:"adb_serial"`
-	ADBServerIP string `yaml:"adb_server_ip"`
-	ADBServerPort string `yaml:"adb_server_port"`
-	ADBTimeoutSeconds int `yaml:"adb_timeout_seconds"`
-	ADBDeviceType string `yaml:"adb_device_type"`
-	APKS map[string]map[string]string `yaml:"apks"`
 	FireCubeTotalUserProfiles int `yaml:"firecube_total_user_profiles"`
 	FireCubeUserProfileIndex int `yaml:"firecube_user_profile_index"`
+	TV tv_controller_types.ConfigFile `yaml:"tv"`
+	ADB ADBConfig `yaml:"adb"`
 	HuluTotalUserProfiles int `yaml:"hulu_total_user_profiles"`
 	HuluUserProfileIndex int `yaml:"hulu_user_profile_index"`
 	NetflixTotalUserProfiles int `yaml:"netflix_total_user_profiles"`

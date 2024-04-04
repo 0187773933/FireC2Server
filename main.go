@@ -63,10 +63,10 @@ func main() {
 	logger.Log.Printf( "Loaded Config File From : %s" , config_file_path )
 	utils.WriteLoginURLPrefix( config.ServerLoginUrlPrefix )
 	utils.FingerPrint( &config )
-
 	SetupCloseHandler()
 	SetupDB( &config )
 	// utils.GenerateNewKeys()
+	// panic( "asdf" )
 	logger.Log.Printf( "Loading Server" )
 	s = server.New( DB , config )
 	logger.Log.Printf( "Starting Server" )

@@ -78,20 +78,20 @@ func ( s *Server ) Printf( format_string string , args ...interface{} ) {
 
 func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 	log.Debug( "ADB Connecting" )
-	log.Debug( s.Config.ADBPath )
+	log.Debug( s.Config.ADB.Path )
 	done := make( chan adb_wrapper.Wrapper , 1 )
 	go func() {
 		var conn adb_wrapper.Wrapper
-		if s.Config.ADBConnectionType == "tcp" {
+		if s.Config.ADB.ConnectionType == "tcp" {
 			log.Debug( "using tcp" )
-			conn = adb_wrapper.ConnectIP( s.Config.ADBPath , s.Config.ADBServerIP , s.Config.ADBServerPort )
-		} else if s.Config.ADBConnectionType == "usb" {
+			conn = adb_wrapper.ConnectIP( s.Config.ADB.Path , s.Config.ADB.ServerIP , s.Config.ADB.ServerPort )
+		} else if s.Config.ADB.ConnectionType == "usb" {
 			log.Debug( "using usb" )
-			conn = adb_wrapper.ConnectUSB( s.Config.ADBPath , s.Config.ADBSerial )
+			conn = adb_wrapper.ConnectUSB( s.Config.ADB.Path , s.Config.ADB.Serial )
 		}
 		done <- conn
 	}()
-	timeout_duration := ( time.Duration( s.Config.ADBTimeoutSeconds ) * time.Second )
+	timeout_duration := ( time.Duration( s.Config.ADB.TimeoutSeconds ) * time.Second )
 	select {
 		case connection = <-done:
 			s.ADB = connection

@@ -248,8 +248,7 @@ func GenerateNewKeys() {
 	fmt.Printf( "\tEncryption Key === %s\n" , encryption_key )
 	fmt.Printf( "\tServer API Key === %s\n" , server_api_key )
 	fmt.Printf( "\tAdmin Username === %s\n" , admin_username )
-	fmt.Printf( "\tAdmin Password === %s\n\n" , admin_password )
-	fmt.Println( "" )
+	fmt.Printf( "\tAdmin Password === %s\n" , admin_password )
 	fmt.Printf( "\tBrowser API Key === %s\n" , browser_api_key )
 }
 

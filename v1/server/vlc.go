@@ -19,9 +19,9 @@ func ( s *Server ) VLCReopenApp() {
 	log.Debug( "VLCReopenApp()" )
 	s.ADB.StopAllPackages()
 	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( s.Config.APKS[ "vlc" ][ "package" ] )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "vlc" ][ s.Config.ADB.DeviceType ].Package )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenPackage( s.Config.APKS[ "vlc" ][ "package" ] )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "vlc" ][ s.Config.ADB.DeviceType ].Package )
 	log.Debug( "Done" )
 }
 
@@ -39,13 +39,16 @@ func ( s *Server ) VLCContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == s.Config.APKS[ "vlc" ][ "activity" ] {
-		log.Debug( "vlc was already open" )
-	} else {
-		log.Debug( "vlc was NOT already open" )
-		s.VLCReopenApp()
-		time.Sleep( 500 * time.Millisecond )
 	}
+	for _ , v := range s.Config.ADB.APKS[ "vlc" ][ s.Config.ADB.DeviceType ].Activities {
+		if s.Status.ADB.Activity == v {
+			log.Debug( fmt.Sprintf( "vlc was already open with activity %s" , v ) )
+			return
+		}
+	}
+	log.Debug( "vlc was NOT already open" )
+	s.VLCReopenApp()
+	time.Sleep( 500 * time.Millisecond )
 }
 
 func ( s *Server ) VLCNext( c *fiber.Ctx ) ( error ) {

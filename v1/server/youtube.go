@@ -23,9 +23,9 @@ func ( s *Server ) YouTubeReopenApp() {
 	log.Debug( "YouTubeReopenApp()" )
 	s.ADB.StopAllPackages()
 	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( s.Config.APKS[ "youtube" ][ "package" ] )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "vlc" ][ s.Config.ADB.DeviceType ].Package )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenPackage( s.Config.APKS[ "youtube" ][ "package" ] )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "vlc" ][ s.Config.ADB.DeviceType ].Package )
 	log.Debug( "Done" )
 }
 
@@ -43,13 +43,16 @@ func ( s *Server ) YouTubeContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity == s.Config.APKS[ "youtube" ][ "activity" ] {
-		log.Debug( "youtube was already open" )
-	} else {
-		log.Debug( "youtube was NOT already open" )
-		s.YouTubeReopenApp()
-		time.Sleep( 500 * time.Millisecond )
 	}
+	for _ , v := range s.Config.ADB.APKS[ "youtube" ][ s.Config.ADB.DeviceType ].Activities {
+		if s.Status.ADB.Activity == v {
+			log.Debug( fmt.Sprintf( "youtube was already open with activity %s" , v ) )
+			return
+		}
+	}
+	log.Debug( "youtube was NOT already open" )
+	s.YouTubeReopenApp()
+	time.Sleep( 500 * time.Millisecond )
 }
 
 func ( s *Server ) YouTubePlaylistGetNextAvailableVideoID( playlist_key string ) ( video_id string ) {

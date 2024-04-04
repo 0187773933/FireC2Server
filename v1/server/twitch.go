@@ -20,24 +20,19 @@ import (
 
 const R_KEY_STATE_TWITCH_FOLLOWING_LIVE = "STATE.TWITCH.FOLLOWING.LIVE"
 
-// const s.Config.APKS[ "twitch" ][ "activity" ] = "tv.twitch.android.viewer/tv.twitch.starshot64.app.StarshotActivity"
-// const s.Config.APKS[ "twitch" ][ "activity" ] = "tv.twitch.android.viewer/tv.twitch.android.app.core.LandingActivity"
-// const s.Config.APKS[ "twitch" ][ "activity" ] = "tv.twitch.android.viewer/tv.twitch.android.feature.viewer.main.MainActivity"
-// const s.Config.APKS[ "twitch" ][ "package" ] = "tv.twitch.android.viewer"
-
 func ( s *Server ) TwitchReopenApp() {
 	log.Debug( "TwitchReopenApp()" )
 	s.ADB.StopAllPackages()
-	s.ADB.ClosePackage( s.Config.APKS[ "twitch" ][ "package" ] )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "twitch" ][ s.Config.ADB.DeviceType ].Package )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenPackage( s.Config.APKS[ "twitch" ][ "package" ] )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "twitch" ][ s.Config.ADB.DeviceType ].Package )
 	log.Debug( "Done" )
 }
 
 func ( s *Server ) TwitchContinuousOpen() {
 	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
 	log.Debug( "TwitchContinuousOpen()" )
-	s.ADB.Key( "KEYCODE_WAKEUP" )
+	s.ADB.Wakeup()
 	// why ?? ok ??
 	s.GetStatus()
 	log.Debug( s.Status )
@@ -50,20 +45,22 @@ func ( s *Server ) TwitchContinuousOpen() {
 		time.Sleep( 1000 * time.Millisecond )
 		s.SelectFireCubeProfile()
 		time.Sleep( 1000 * time.Millisecond )
-	} else if s.Status.ADB.Activity != s.Config.APKS[ "twitch" ][ "activity" ] {
-		log.Debug( "twitch was NOT already open" )
-		windows := s.ADB.GetWindowStack()
-		for _ , window := range windows {
-			if window.Activity == s.Config.APKS[ "twitch" ][ "activity" ] {
-				log.Debug( "twitch was already open" )
-				return
-			}
-		}
-	} else {
-		log.Debug( "twitch was already open" )
-		// s.TwitchLiveUpdate()
-		// we don't want a destructive update , we just need a cleansing of stale offline usernames
 	}
+	// for _ , v := range s.Config.ADB.APKS[ "twitch" ][ s.Config.ADB.DeviceType ].Activities {
+	// 	if s.Status.ADB.Activity == v {
+	// 		log.Debug( fmt.Sprintf( "twitch was already open with activity %s" , v ) )
+	// 		return
+	// 	}
+	// }
+	windows := s.ADB.GetWindowStack()
+	for _ , window := range windows {
+		if _ , ok := s.Config.ADB.APKS[ "twitch" ][ s.Config.ADB.DeviceType ].Activities[ window.Activity ]; ok {
+			log.Debug( "twitch was already open" )
+			return
+		}
+	}
+	log.Debug( "twitch was NOT already open" )
+	s.TwitchReopenApp()
 }
 
 func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
