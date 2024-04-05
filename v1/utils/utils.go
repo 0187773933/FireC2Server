@@ -242,6 +242,7 @@ func GenerateNewKeys() {
 	server_api_key := encryption.GenerateRandomString( 16 )
 	admin_username := encryption.GenerateRandomString( 16 )
 	admin_password := encryption.GenerateRandomString( 16 )
+	login_url := encryption.GenerateRandomString( 16 )
 	browser_api_key := encryption.GenerateRandomString( 16 )
 	fmt.Println( "Generated New Keys :" )
 	fmt.Printf( "\tFiber Cookie Key === %s\n" , fiber_cookie_key )
@@ -249,6 +250,7 @@ func GenerateNewKeys() {
 	fmt.Printf( "\tServer API Key === %s\n" , server_api_key )
 	fmt.Printf( "\tAdmin Username === %s\n" , admin_username )
 	fmt.Printf( "\tAdmin Password === %s\n" , admin_password )
+	fmt.Printf( "\tLogin URL === %s\n" , login_url )
 	fmt.Printf( "\tBrowser API Key === %s\n" , browser_api_key )
 }
 

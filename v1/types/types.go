@@ -155,6 +155,8 @@ type ConfigFile struct {
 	FireCubeUserProfileIndex int `yaml:"firecube_user_profile_index"`
 	TV tv_controller_types.ConfigFile `yaml:"tv"`
 	ADB ADBConfig `yaml:"adb"`
+	DisneyTotalUserProfiles int `yaml:"disney_total_user_profiles"`
+	DisneyUserProfileIndex int `yaml:"disney_user_profile_index"`
 	HuluTotalUserProfiles int `yaml:"hulu_total_user_profiles"`
 	HuluUserProfileIndex int `yaml:"hulu_user_profile_index"`
 	NetflixTotalUserProfiles int `yaml:"netflix_total_user_profiles"`

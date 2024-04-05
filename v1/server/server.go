@@ -24,6 +24,7 @@ var log = logger.GetLogger()
 // var LocalIPS = utils.GetLocalIPAddresses()
 
 const ACTIVITY_PROFILE_PICKER = "com.amazon.ftv.profilepicker/com.amazon.ftv.profilepicker.ui.PickerActivity"
+const ADS_PACKAGE = "com.amazon.wallpaper.LockscreenWallpaperService"
 
 type Status struct {
 	StartTime string `json:"start_time"`
@@ -38,8 +39,6 @@ type Status struct {
 	PreviousStartTimeOBJ time.Time `json:"-"`
 	PreviousStartTimeDuration time.Duration `json:"-"`
 	PreviousStartTimeDurationSeconds float64 `json:"previous_start_time_duration_seconds"`
-	// ADBTopWindow string `json:"adb_top_window"`
-	// ADBVolume int `json:"adb_volume"`
 	ADB adb_wrapper.Status `json:"adb"`
 	TV tv_controller.Status `json:"tv"`
 }
@@ -49,23 +48,14 @@ type Server struct {
 	Config types.ConfigFile `yaml:"config"`
 	DB *redis.Client `yaml:"-"`
 	ADB adb_wrapper.Wrapper `json:"-"`
-	// TV *tv.TV `json:"-"`
 	TV *tv_controller.Controller `json:"-"`
 	Status Status `json:"-"`
-	// StateMutex *sync.Mutex `json:"-"`
-	// FMAP map[string]func(*Server, context.Context) error `json:"-"`
 }
 
 func ( s *Server ) SetupRoutes() {
 	s.SetupPublicRoutes()
 	s.SetupAdminRoutes()
 }
-
-// func ( s *Server ) SetupFunctionMap() {
-// 	s.FMAP = make(map[string]func(*Server, context.Context))
-// 	s.FMAP["TwitchLiveUser"] = s.TwitchLiveUser
-// }
-
 
 func ( s *Server ) Start() {
 	log.Printf( "Listening on http://localhost:%s" , s.Config.ServerPort )
@@ -75,6 +65,7 @@ func ( s *Server ) Start() {
 	fmt.Printf( "Admin Password === %s\n" , s.Config.AdminPassword )
 	fmt.Printf( "Admin API Key === %s\n" , s.Config.ServerAPIKey )
 	// go s.Governor()
+	// go s.ADB.WatchLog()
 	s.FiberApp.Listen( fmt.Sprintf( ":%s" , s.Config.ServerPort ) )
 }
 
@@ -84,11 +75,9 @@ func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	server.DB = db
 	server.ADB = server.ADBConnect()
 	utils.PrettyPrint( server.ADB )
-	// server.TV = tv.New( &config )
 	server.TV = tv_controller.New( &config.TV )
 	GlobalServer = &server
 	server.StoreLibrary()
-	// server.MediaPlayer = media_player.New( db , &config )
 	server.FiberApp.Use( server.LogRequest )
 	server.FiberApp.Use( favicon.New() )
 	server.FiberApp.Use( fiber_cookie.New( fiber_cookie.Config{
@@ -100,7 +89,5 @@ func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	}))
 	server.SetupRoutes()
 	server.FiberApp.Get( "/*" , func( context *fiber.Ctx ) ( error ) { return context.Redirect( "/" ) } )
-	// server.SetupFunctionMap()
-	// server.StateMutex = &sync.Mutex{}
 	return
 }
