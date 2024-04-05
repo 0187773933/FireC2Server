@@ -102,7 +102,6 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 		initial_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 		next_stream = initial_stream
 		if initial_stream == "" {
-
 			return c.JSON( fiber.Map{
 				"url": "/twitch/live/next" ,
 				"stream": "nobody is live after initial check and update..." ,
@@ -138,7 +137,6 @@ func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
 				// Check again if no streams are available after the refresh.
 				if next_stream == "" || next_stream == initial_stream {
 					log.Debug( "No live streams found after refresh." )
-
 					return c.JSON(fiber.Map{
 						"url": "/twitch/live/next",
 						"stream": "nobody is live after refresh.",
@@ -197,7 +195,6 @@ func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
 		next_stream = circular_set.Previous( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 		if next_stream == "" {
 			log.Debug( "nobody is live ...." )
-
 			return c.JSON( fiber.Map{
 				"url": "/twitch/live/next" ,
 				"stream": "nobody is live ...." ,

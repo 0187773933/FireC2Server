@@ -97,10 +97,8 @@ func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) HuluMoviePrevious( c *fiber.Ctx ) ( error ) {
-
 	log.Debug( "HuluMoviePrevious()" )
 	s.HuluContinuousOpen()
-
 	return c.JSON( fiber.Map{
 		"url": "/hulu/previous" ,
 		"result": true ,
@@ -111,7 +109,6 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 	series_id := c.Params( "series_id" )
 	// log.Debug( fmt.Sprintf( "HuluTVID( %s )" , series_id ) )
 	if series_id == "" {
-
 		return c.JSON( fiber.Map{
 			"url": "/hulu/tv/:series_id" ,
 			"series_id": series_id ,
@@ -120,7 +117,6 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 	}
 	_ , series_exists := s.Config.Library.Hulu.TV[ series_id ]
 	if series_exists == false {
-
 		return c.JSON( fiber.Map{
 			"url": "/hulu/tv/:series_id" ,
 			"series_id": series_id ,
@@ -247,6 +243,7 @@ func ( s *Server ) HuluOpenURI( uri string ) {
 			s.ADB.Tap( 573 , 58 )
 			break;
 		case "firecube":
+			break;
 		case "firestick":
 			break;
 	}
