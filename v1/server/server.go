@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"time"
-	// "sync"
+	"sync"
 	// context "context"
 	logger "github.com/0187773933/FireC2Server/v1/logger"
 	fiber "github.com/gofiber/fiber/v2"
@@ -50,6 +50,7 @@ type Server struct {
 	ADB adb_wrapper.Wrapper `json:"-"`
 	TV *tv_controller.Controller `json:"-"`
 	Status Status `json:"-"`
+	StatusMutex sync.Mutex `json:"-"`
 }
 
 func ( s *Server ) SetupRoutes() {
@@ -76,6 +77,7 @@ func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 	server.ADB = server.ADBConnect()
 	utils.PrettyPrint( server.ADB )
 	server.TV = tv_controller.New( &config.TV )
+	server.StatusMutex = sync.Mutex{}
 	GlobalServer = &server
 	server.StoreLibrary()
 	server.FiberApp.Use( server.LogRequest )

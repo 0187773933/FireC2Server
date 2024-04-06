@@ -107,9 +107,17 @@ type Library struct {
 	Netflix NetflixLibrary `yaml:"netflix"`
 }
 
+// a group of coords:color pairs to verify ui state
+type Pixel struct {
+	X int `yaml:"x"`
+	Y int `yaml:"y"`
+	Color string `yaml:"color"` // hex color
+}
+
 type APKInfo struct {
 	Package string `yaml:"package"`
 	Activities map[string]string `yaml:"activities"`
+	Pixels map[string]map[string]Pixel `yaml:"pixels"`
 }
 
 type ADBConfig struct {

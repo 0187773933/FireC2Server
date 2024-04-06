@@ -3,12 +3,15 @@ module github.com/0187773933/FireC2Server
 go 1.18
 
 require (
-	github.com/0187773933/ADBWrapper v1.0.52
+	github.com/0187773933/ADBWrapper v1.0.54
 	github.com/0187773933/RedisCircular v1.0.7
 	github.com/0187773933/TVController v1.0.8
+	github.com/0187773933/encryption v0.0.0-20230921140858-60fe28b9fcc0
 	github.com/boltdb/bolt v1.3.1
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.52.2
+	github.com/google/uuid v1.5.0
+	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/crypto v0.21.0
@@ -20,13 +23,11 @@ require (
 	github.com/0187773933/IRController v1.0.7 // indirect
 	github.com/0187773933/LGTVController v0.0.0-20230917160125-3fd2f2b61451 // indirect
 	github.com/0187773933/VizioController v1.0.19 // indirect
-	github.com/0187773933/encryption v0.0.0-20230921140858-60fe28b9fcc0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fasthttp/websocket v1.5.7 // indirect
 	github.com/google/gousb v1.1.3 // indirect
-	github.com/google/uuid v1.5.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/klauspost/compress v1.17.3 // indirect
 	github.com/manucorporat/try v0.0.0-20170609134256-2a0c6b941d52 // indirect

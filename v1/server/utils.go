@@ -107,6 +107,33 @@ func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 	}
 }
 
+func ( s * Server ) ADBWakeup() {
+	if s.Status.ADB.DisplayOn == false {
+		log.Debug( "display was off , turning on" )
+		s.ADB.Wakeup()
+		s.ADB.ForceScreenOn()
+		time.Sleep( 500 * time.Millisecond )
+		switch s.Config.ADB.DeviceType {
+			case "firecube" , "firestick":
+				s.ADB.Home()
+				break;
+			case "firetablet":
+				s.ADB.Swipe( 513 , 564 , 553 , 171 )
+		}
+		time.Sleep( 1 * time.Second )
+		s.GetStatus()
+	}
+
+	// if its the profile picker , select the profile
+	if s.Status.ADB.Activity == ACTIVITY_PROFILE_PICKER {
+		log.Debug( fmt.Sprintf( "Choosing Profile Index === %d" , s.Config.FireCubeUserProfileIndex ) )
+		time.Sleep( 1000 * time.Millisecond )
+		s.SelectFireCubeProfile()
+		time.Sleep( 1000 * time.Millisecond )
+		s.GetStatus()
+	}
+}
+
 func ( s *Server ) TimeSinceLastStart() ( result time.Duration ) {
 	_ , now := utils.GetFormattedTimeStringOBJ()
 	last_start_time_string := s.Get( "active_player_start_time" )
@@ -117,6 +144,10 @@ func ( s *Server ) TimeSinceLastStart() ( result time.Duration ) {
 }
 
 func ( s *Server ) GetStatus() ( result Status ) {
+	// if s.StatusMutex.TryLock() == false {
+	// 	log.Debug( "GetStatus() --> Mutex Locked , Returning" )
+	// 	return
+	// }
 	log.Debug( "GetStatus()" )
 
 	// 1.) Get Previous State Info from DB
@@ -156,6 +187,7 @@ func ( s *Server ) GetStatus() ( result Status ) {
 	// result.TV = s.TV.Status()
 
 	s.Status = result
+	// s.StatusMutex.Unlock()
 	return
 }
 func ( s *Server ) GetStatusUrl( c *fiber.Ctx ) ( error ) {

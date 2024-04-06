@@ -1,8 +1,6 @@
 package server
 
 import (
-	"fmt"
-	"time"
 	fiber "github.com/gofiber/fiber/v2"
 )
 
@@ -49,31 +47,4 @@ func ( s *Server ) ADBPrevious( c *fiber.Ctx ) ( error ) {
 		"url": "/adb/previous" ,
 		"result": true ,
 	})
-}
-
-func ( s * Server ) ADBWakeup() {
-	if s.Status.ADB.DisplayOn == false {
-		log.Debug( "display was off , turning on" )
-		s.ADB.Wakeup()
-		s.ADB.ForceScreenOn()
-		time.Sleep( 500 * time.Millisecond )
-		switch s.Config.ADB.DeviceType {
-			case "firecube" , "firestick":
-				s.ADB.Home()
-				break;
-			case "firetablet":
-				s.ADB.Swipe( 513 , 564 , 553 , 171 )
-		}
-		time.Sleep( 1 * time.Second )
-		s.GetStatus()
-	}
-
-	// if its the profile picker , select the profile
-	if s.Status.ADB.Activity == ACTIVITY_PROFILE_PICKER {
-		log.Debug( fmt.Sprintf( "Choosing Profile Index === %d" , s.Config.FireCubeUserProfileIndex ) )
-		time.Sleep( 1000 * time.Millisecond )
-		s.SelectFireCubeProfile()
-		time.Sleep( 1000 * time.Millisecond )
-		s.GetStatus()
-	}
 }
