@@ -120,7 +120,7 @@ func ( s * Server ) ADBWakeup() {
 	}
 	if s.Status.ADB.DisplayOn == false {
 		log.Debug( "display was off , turning on" )
-		s.ADB.Wakeup()
+		s.ADB.WakeUp()
 		s.ADB.ForceScreenOn()
 		switch s.Config.ADB.DeviceType {
 			case "firecube" , "firestick":

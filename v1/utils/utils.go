@@ -65,7 +65,7 @@ func IsURL( input string ) ( result bool , url *url.URL ) {
 		if input == "" { return }
 		parsed , err := url.Parse( input )
 		if err != nil { return }
-		if parsed.Scheme == "" { return}
+		if parsed.Scheme == "" { return }
 		if parsed.Host == "" { return }
 		url = parsed
 		result = true

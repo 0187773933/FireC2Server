@@ -80,6 +80,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	twitch.Get( "/refresh" , s.GetTwitchLiveRefresh )
 	twitch.Get( "/set/quality/max" , s.TwitchLiveSetQualityMax )
 	twitch.Get( "/view/:username" , s.GetTwitchLiveUser )
+	twitch.Get( "/*" , s.TwitchID )
 
 	// Disney
 	disney := s.FiberApp.Group( "/disney" )

@@ -111,6 +111,7 @@ func ( s *Server ) HuluOpenURI( uri string ) {
 		case "firetablet":
 			s.GetStatus()
 			s.ADBWakeup()
+			s.ADB.StopAllPackages()
 			s.ADB.ClosePackage( s.Config.ADB.APKS[ "hulu" ][ s.Config.ADB.DeviceType ].Package )
 			time.Sleep( 1 * time.Second )
 			s.ADB.OpenURI( uri )
