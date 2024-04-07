@@ -7,18 +7,8 @@ import (
 	// utils "github.com/0187773933/FireC2Server/v1/utils"
 )
 
-func ( s *Server ) StreamDeckPrepare() {
-	go s.TV.QuickResetVideo()
-	s.ADB.Key( "KEYCODE_WAKEUP" )
-	// time_since_last_start := s.TimeSinceLastStart()
-	// fmt.Println( "time since last start ===" , time_since_last_start )
-	// if time_since_last_start > 30 * time.Minute {
-	// 	log.Debug( "Refreshing Environment" )
-	// }
-}
-
 func ( s *Server ) StreamDeckSpotify( c *fiber.Ctx ) ( error ) {
-	s.StreamDeckPrepare()
+	go s.TV.QuickResetVideo()
 	s.SpotifyNextPlaylistWithShuffle( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/spotify" ,
@@ -27,7 +17,7 @@ func ( s *Server ) StreamDeckSpotify( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) StreamDeckYouTube( c *fiber.Ctx ) ( error ) {
-	s.StreamDeckPrepare()
+	go s.TV.QuickResetVideo()
 	s.YouTubeLiveNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/youtube" ,
@@ -36,7 +26,7 @@ func ( s *Server ) StreamDeckYouTube( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) StreamDeckDisney( c *fiber.Ctx ) ( error ) {
-	s.StreamDeckPrepare()
+	go s.TV.QuickResetVideo()
 	s.DisneyMovieNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/disney" ,
@@ -46,7 +36,6 @@ func ( s *Server ) StreamDeckDisney( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) StreamDeckTwitch( c *fiber.Ctx ) ( error ) {
 	go s.TV.QuickResetVideo()
-	s.ADB.Key( "KEYCODE_WAKEUP" )
 	time_since_last_start := s.TimeSinceLastStart()
 	fmt.Println( "time since last start ===" , time_since_last_start )
 	if time_since_last_start > 30 * time.Minute {
@@ -69,13 +58,6 @@ func ( s *Server ) StreamDeckTwitchBackground( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) StreamDeckNetflix( c *fiber.Ctx ) ( error ) {
 	go s.TV.QuickResetVideo()
-	s.ADB.Key( "KEYCODE_WAKEUP" )
-	time_since_last_start := s.TimeSinceLastStart()
-	fmt.Println( "time since last start ===" , time_since_last_start )
-	if time_since_last_start > 30 * time.Minute {
-		log.Debug( "Refreshing Twitch Environment" )
-		s.TwitchLiveRefresh()
-	}
 	s.NetflixMovieNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/netflix" ,
@@ -84,6 +66,8 @@ func ( s *Server ) StreamDeckNetflix( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) StreamDeckHulu( c *fiber.Ctx ) ( error ) {
+	go s.TV.QuickResetVideo()
+	s.HuluMovieNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/hulu" ,
 		"result": true ,

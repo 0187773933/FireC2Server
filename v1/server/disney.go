@@ -95,13 +95,13 @@ func ( s *Server ) DisneyOpenID( sent_id string ) {
 
 	// flatten pixels for adb.GetPixelColorsFromImageBytes()
 	// otherwise use png.Decode here
-	var login_screen_pixel_colors []color.RGBA
-	var login_screen_pixel_coords []adb_wrapper.Coord
-	for _ , coord := range s.Config.ADB.APKS[ "disney" ][ s.Config.ADB.DeviceType ].Pixels[ "login" ] {
-		login_screen_pixel_coords = append( login_screen_pixel_coords , adb_wrapper.Coord{ X: coord.X , Y: coord.Y } )
+	var profile_screen_pixel_colors []color.RGBA
+	var profile_screen_pixel_coords []adb_wrapper.Coord
+	for _ , coord := range s.Config.ADB.APKS[ "disney" ][ s.Config.ADB.DeviceType ].Pixels[ "profile_selection" ] {
+		profile_screen_pixel_coords = append( profile_screen_pixel_coords , adb_wrapper.Coord{ X: coord.X , Y: coord.Y } )
 		c , _ := colorful.Hex( coord.Color )
 		r , g , b := c.RGB255()
-		login_screen_pixel_colors = append( login_screen_pixel_colors , color.RGBA{ R: r , G: g , B: b , A: 255 } )
+		profile_screen_pixel_colors = append( profile_screen_pixel_colors , color.RGBA{ R: r , G: g , B: b , A: 255 } )
 	}
 
 	queries := 20
@@ -136,10 +136,10 @@ func ( s *Server ) DisneyOpenID( sent_id string ) {
 			switch s.Config.ADB.DeviceType {
 				case "firecube":
 					// pixel_color := s.ADB.GetPixelColorFromImageBytes( &screenshot_bytes , 1423 , 492 )
-					test_colors := s.ADB.GetPixelColorsFromImageBytes( &screenshot_bytes , login_screen_pixel_coords )
+					test_colors := s.ADB.GetPixelColorsFromImageBytes( &screenshot_bytes , profile_screen_pixel_coords )
 					login_screen := true
 					for i , test_color := range test_colors {
-						if test_color != login_screen_pixel_colors[ i ] {
+						if test_color != profile_screen_pixel_colors[ i ] {
 							log.Debug( "different color pixel found than on known login screen" )
 							login_screen = false
 						}

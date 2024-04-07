@@ -110,8 +110,12 @@ func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 
 func ( s * Server ) ADBWakeup() {
 	log.Debug( "ADBWakeup()" )
-	top_package_string := strings.ToLower( s.Status.ADB.WindowStack[ 0 ].Package )
+	var top_package_string string
+	if len( s.Status.ADB.WindowStack ) > 0 {
+		top_package_string = strings.ToLower( s.Status.ADB.WindowStack[ 0 ].Package )
+	}
 	if strings.Contains( top_package_string , "lockscreen" ) {
+		log.Debug( "lockscreen detected , unlocking" )
 		s.Status.ADB.DisplayOn = false
 	}
 	if s.Status.ADB.DisplayOn == false {

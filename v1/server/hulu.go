@@ -5,11 +5,13 @@ import (
 	time "time"
 	// url "net/url"
 	// "math"
-	"strings"
+	// "strings"
 	color "image/color"
+	colorful "github.com/lucasb-eyer/go-colorful"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
 	// redis "github.com/redis/go-redis/v9"
+	adb_wrapper "github.com/0187773933/ADBWrapper/v1/wrapper"
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
@@ -42,7 +44,7 @@ func ( s *Server ) HuluReopenApp() {
 	s.ADB.StopAllPackages()
 	// s.ADB.SetBrightness( 0 )
 	s.ADB.ClosePackage( s.Config.ADB.APKS[ "hulu" ][ s.Config.ADB.DeviceType ].Package )
-	time.Sleep( 500 * time.Millisecond )
+	time.Sleep( 1000 * time.Millisecond )
 	s.ADB.OpenPackage( s.Config.ADB.APKS[ "hulu" ][ s.Config.ADB.DeviceType ].Package )
 	log.Debug( "Done" )
 }
@@ -57,40 +59,31 @@ func ( s *Server ) HuluContinuousOpen() {
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
 	s.ADBWakeup()
-	if strings.Contains( s.Status.ADB.Activity , "hulu" ) {
-		log.Debug( fmt.Sprintf( "hulu was already open with activity %s" , s.Status.ADB.Activity ) )
-		return
-	}
+	// if strings.Contains( s.Status.ADB.Activity , "hulu" ) {
+	// 	log.Debug( fmt.Sprintf( "hulu was already open with activity %s" , s.Status.ADB.Activity ) )
+	// 	switch s.Config.ADB.DeviceType {
+	// 		case "firecube" , "firestick":
+	// 			return;
+	// 			break;
+	// 		case "firetablet":
+	// 			log.Debug( "restarting anyway" )
+	// 			break;
+	// 	}
+	// }
 	log.Debug( "hulu was NOT already open" )
-	// log.Debug( "we have to force app to reopen to get correct deep uri linking" )
+	log.Debug( "we have to force app to reopen to get correct deep uri linking" )
 	s.HuluReopenApp()
-	switch s.Config.ADB.DeviceType {
-		case "firecube":
-			log.Debug( "waiting on green pixel in top right" )
-			result := s.ADB.WaitOnPixelColor( 1694 , 96 , color.RGBA{ R: 28 , G: 231 , B: 131 , A: 255 } , 10 * time.Second )
-			if result == false {
-				log.Debug( "never found green pixel" )
-				break;
-			}
-			fmt.Println( "assuming this means we are on the profile selection screen" )
-			log.Debug( "selecting hulu profile" , " " , s.Config.HuluUserProfileIndex )
-			for i := 0; i < s.Config.HuluTotalUserProfiles; i++ {
-				s.ADB.Down()
-				time.Sleep( 200 * time.Millisecond )
-			}
-			s.ADB.Up()
-			time.Sleep( 200 * time.Millisecond )
-			s.ADB.Enter()
-			break
-		case "firestick":
-			log.Debug( "sleeping 10 seconds to wait on app init" )
-			time.Sleep( 10 * time.Second )
-			break;
-		case "firetablet":
-			log.Debug( "sleeping 10 seconds to wait on app init" )
-			time.Sleep( 10 * time.Second )
-			break;
+}
+
+func ( s *Server ) HuluSelectProfile() {
+	log.Debug( fmt.Sprintf( "HuluSelectProfile( %d )" , s.Config.HuluUserProfileIndex ) )
+	for i := 0; i < s.Config.HuluTotalUserProfiles; i++ {
+		s.ADB.Down()
+		time.Sleep( 200 * time.Millisecond )
 	}
+	s.ADB.Up()
+	time.Sleep( 200 * time.Millisecond )
+	s.ADB.Enter()
 }
 
 func parse_hulu_sent_id( sent_id string ) ( uri string ) {
@@ -108,46 +101,128 @@ func parse_hulu_sent_id( sent_id string ) ( uri string ) {
 
 func ( s *Server ) HuluOpenURI( uri string ) {
 	log.Debug( fmt.Sprintf( "HuluOpenURI( %s )" , uri ) )
-	s.HuluContinuousOpen()
-	s.ADB.OpenURI( uri )
-	// verified_now_playing := false
-	// verified_now_playing_updated_time := 0
-	log.Debug( "waiting 20 seconds for hulu player to appear" )
-	players := s.ADB.WaitOnPlayers( "hulu" , 20 )
-	if len( players ) < 1 {
-		log.Debug( "never started playing , we might have to try play button" )
-	}
-	log.Debug( "hulu player should be ready" )
-	utils.PrettyPrint( players )
 	switch s.Config.ADB.DeviceType {
-		case "firecube":
-			log.Debug( "hulu app never reports playback positions" )
-			log.Debug( "we need hdmi passthrough frames and sound" )
-			// ... so we have to do complex screenshot to verify if we are already playing ,
-			// or if we are staged on the info page
-			// press up arrow to trigger potential ui overlay , then check pixels
-			time.Sleep( 3 * time.Second )
-			s.ADB.Up()
-			time.Sleep( 100 * time.Millisecond )
-			s.ADB.Down()
-			time.Sleep( 100 * time.Millisecond )
-			s.ADB.Enter()
-			break;
-		case "firestick":
+		case "firecube" , "firestick":
+			s.HuluContinuousOpen()
+			time.Sleep( 1 * time.Second )
+			s.ADB.OpenURI( uri )
+			time.Sleep( 4 * time.Second )
 			break;
 		case "firetablet":
-			log.Debug( "entering fullscreen" )
-			s.ADB.Tap( 302 , 191 )
-			time.Sleep( 500 * time.Millisecond )
-			s.ADB.Tap( 573 , 58 )
+			s.GetStatus()
+			s.ADBWakeup()
+			s.ADB.ClosePackage( s.Config.ADB.APKS[ "hulu" ][ s.Config.ADB.DeviceType ].Package )
+			time.Sleep( 1 * time.Second )
+			s.ADB.OpenURI( uri )
+			time.Sleep( 4 * time.Second )
 			break;
 	}
-	// media_session := s.ADB.GetMediaSessionInfo()
-	// playback_positions := s.ADB.GetPlaybackPositions()
-	// utils.PrettyPrint( media_session )
-	// utils.PrettyPrint( playback_positions )
-	// log.Debug( "waiting 20 seconds to see if hulu auto starts playing" )
-	// playing := s.ADB.WaitOnPlayersPlaying( "hulu" , 20 )
+	// flatten pixels for adb.GetPixelColorsFromImageBytes()
+	// otherwise use png.Decode here
+	var profile_screen_pixel_colors []color.RGBA
+	var profile_screen_pixel_coords []adb_wrapper.Coord
+	for _ , coord := range s.Config.ADB.APKS[ "hulu" ][ s.Config.ADB.DeviceType ].Pixels[ "profile_selection" ] {
+		profile_screen_pixel_coords = append( profile_screen_pixel_coords , adb_wrapper.Coord{ X: coord.X , Y: coord.Y } )
+		c , _ := colorful.Hex( coord.Color )
+		r , g , b := c.RGB255()
+		profile_screen_pixel_colors = append( profile_screen_pixel_colors , color.RGBA{ R: r , G: g , B: b , A: 255 } )
+	}
+
+	verified_now_playing := false
+	verified_now_playing_updated_time := 0
+	queries := 20
+	stage_one_ready := false
+	observed_count := 0
+	login_observed_count := 0
+	normal_observed_count := 0
+	for i := 0; i < queries; i++ {
+		// status := s.ADB.GetStatus()
+		if stage_one_ready == true { break; }
+		log.Debug( fmt.Sprintf( "checking [%d] of %d for hulu to be ready" , ( i + 1 ) , queries ) )
+		// activity := s.ADB.GetActivity()
+		players := s.ADB.FindPlayers( "hulu" )
+		if len( players ) > 0 {
+			log.Debug( "found hulu player" )
+			observed_count = observed_count + 1
+			if observed_count > 3 {
+				for _ , player := range players {
+					if player.Updated > 0 {
+						if player.Position > 0 {
+							log.Debug( "hulu autostarted playing on it's own" )
+							verified_now_playing = true
+							verified_now_playing_updated_time = player.Updated
+							stage_one_ready = true
+							break
+						}
+					}
+				}
+			}
+		}
+		fmt.Println( "observed_count ===" , observed_count )
+		fmt.Println( verified_now_playing )
+		fmt.Println( verified_now_playing_updated_time )
+		switch s.Config.ADB.DeviceType {
+			case "firecube":
+				screenshot_bytes := s.ADB.ScreenshotToBytes()
+				test_colors := s.ADB.GetPixelColorsFromImageBytes( &screenshot_bytes , profile_screen_pixel_coords )
+				fmt.Println( test_colors )
+				login_screen := false
+				for i , test_color := range test_colors {
+					if test_color != profile_screen_pixel_colors[ i ] {
+						log.Debug( "different color pixel found than on known login screen" )
+						login_screen = false
+					} else {
+						login_screen = true
+					}
+				}
+				if login_screen == true {
+					log.Debug( "all test pixels matched , we are on the profile selection screen" )
+					login_observed_count += 1
+					if login_observed_count >= 3 {
+						log.Debug( "3 times saw green pixel ... so we are on the profile selection screen" )
+						stage_one_ready = true
+						s.HuluSelectProfile()
+						log.Debug( "need to double check if it started auto playing still" )
+						break;
+					}
+				} else {
+					log.Debug( "we are not on the profile selection screen" )
+					normal_observed_count += 1
+					if normal_observed_count >= 2 {
+						log.Debug( "already observed 2 times , pressing enter , tapping play button" )
+						s.ADB.Enter()
+						s.ADB.Play()
+						stage_one_ready = true
+						break;
+					}
+				}
+				break
+			case "firestick":
+				log.Debug( "sleeping 10 seconds to wait on app init" )
+				time.Sleep( 10 * time.Second )
+				break;
+			case "firetablet":
+				if i > 1 && i & 3 == 0 {
+					log.Debug( "already observed 3 times , pressing enter , tapping play button" )
+					s.ADB.Enter()
+					s.ADB.Play()
+					s.ADB.Tap( 227 , 388 )
+					stage_one_ready = true
+					time.Sleep( 2 * time.Second )
+					log.Debug( "attempting to enter full screen" )
+					s.ADB.Tap( 305 , 178 ) // tap center of video window to activate ui overlay
+					time.Sleep( 300 * time.Millisecond )
+					s.ADB.Tap( 564 , 60 ) // tap fullscreen button
+				}
+				break;
+		}
+		time.Sleep( 1 * time.Second )
+	}
+	time.Sleep( 4 * time.Second )
+	status := s.ADB.GetStatus()
+	utils.PrettyPrint( status )
+	// log.Debug( "waiting 10 seconds to see if hulu auto starts playing" )
+	// playing := s.ADB.WaitOnPlayersPlaying( "hulu" , 10 )
 	// if len( playing ) < 1 {
 	// 	log.Debug( "never started playing , we might have to try play button" )
 	// }
@@ -166,9 +241,19 @@ func ( s *Server ) HuluOpenURI( uri string ) {
 	// 	return
 	// }
 	// log.Debug( "waiting now for player progress" )
-	// s.ADB.WaitOnPlayersUpdated( "hulu" , verified_now_playing_updated_time , 60 )
+	// progress := s.ADB.WaitOnPlayersUpdated( "hulu" , verified_now_playing_updated_time , 10 )
+	// utils.PrettyPrint( progress )
 	// log.Debug( "player progress should be ready" )
-	// time.Sleep( 3 * time.Second )
+	// switch s.Config.ADB.DeviceType {
+	// 	case "firecube" , "firestick":
+	// 		break;
+	// 	case "firetablet":
+	// 		log.Debug( "attempting to enter full screen" )
+	// 		s.ADB.Tap( 305 , 178 ) // tap center of video window to activate ui overlay
+	// 		time.Sleep( 300 * time.Millisecond )
+	// 		s.ADB.Tap( 564 , 60 ) // tap fullscreen button
+	// 		break;
+	// }
 }
 
 func ( s *Server ) HuluID( c *fiber.Ctx ) ( error ) {
@@ -189,24 +274,34 @@ func ( s *Server ) HuluID( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "HuluMovieNext()" )
-	// next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
-	// uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
-	// log.Debug( uri )
-	// s.ADB.OpenURI( uri )
-	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-	// s.Set( "STATE.DISNEY.NOW_PLAYING" , next_movie )
-	// s.Set( "active_player_now_playing_id" , next_movie )
-	// s.Set( "active_player_now_playing_text" , s.Config.Library.Disney.Movies.Currated[ next_movie ].Name )
+	next_movie := circular_set.Next( s.DB , "LIBRARY.HULU.MOVIES" )
+	next_movie_name := s.Config.Library.Hulu.Movies[ next_movie ].Name
+	uri := fmt.Sprintf( "https://www.hulu.com/movie/%s" , next_movie )
+	s.HuluOpenURI( uri )
+	s.Set( "STATE.HULU.NOW_PLAYING" , next_movie )
+	s.Set( "active_player_now_playing_id" , next_movie )
+	s.Set( "active_player_now_playing_text" , next_movie_name )
 	return c.JSON( fiber.Map{
 		"url": "/hulu/next" ,
+		"id": next_movie ,
+		"name": next_movie_name ,
 		"result": true ,
 	})
 }
 
 func ( s *Server ) HuluMoviePrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( "HuluMoviePrevious()" )
+	next_movie := circular_set.Previous( s.DB , "LIBRARY.HULU.MOVIES" )
+	next_movie_name := s.Config.Library.Hulu.Movies[ next_movie ].Name
+	uri := fmt.Sprintf( "https://www.hulu.com/movie/%s" , next_movie )
+	s.HuluOpenURI( uri )
+	s.Set( "STATE.HULU.NOW_PLAYING" , next_movie )
+	s.Set( "active_player_now_playing_id" , next_movie )
+	s.Set( "active_player_now_playing_text" , next_movie_name )
 	return c.JSON( fiber.Map{
-		"url": "/hulu/previous" ,
+		"url": "/hulu/next" ,
+		"id": next_movie ,
+		"name": next_movie_name ,
 		"result": true ,
 	})
 }
