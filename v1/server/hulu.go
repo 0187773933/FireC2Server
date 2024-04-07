@@ -189,7 +189,6 @@ func ( s *Server ) HuluID( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "HuluMovieNext()" )
-	s.HuluContinuousOpen()
 	// next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
 	// uri := fmt.Sprintf( "https://www.disneyplus.com/video/%s" , next_movie )
 	// log.Debug( uri )
@@ -206,7 +205,6 @@ func ( s *Server ) HuluMovieNext( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) HuluMoviePrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( "HuluMoviePrevious()" )
-	s.HuluContinuousOpen()
 	return c.JSON( fiber.Map{
 		"url": "/hulu/previous" ,
 		"result": true ,
@@ -237,10 +235,9 @@ func ( s *Server ) HuluTVID( c *fiber.Ctx ) ( error ) {
 	next_episode := circular_set.Next( s.DB , fmt.Sprintf( "LIBRARY.HULU.TV.%s" , series_id ) )
 	next_episode_name := s.Get( fmt.Sprintf( "LIBRARY.HULU.TV.%s.%s" , series_id , next_episode ) )
 	log.Debug( fmt.Sprintf( "HuluTVID( %s ) --> %s === " , series_id , next_episode , next_episode_name ) )
-	s.HuluContinuousOpen()
 	uri := fmt.Sprintf( "https://www.hulu.com/watch/%s" , next_episode )
 	log.Debug( uri )
-	s.ADB.OpenURI( uri )
+	s.HuluOpenURI( uri )
 	s.Set( "active_player_now_playing_id" , next_episode )
 	s.Set( "active_player_now_playing_uri" , uri )
 	return c.JSON( fiber.Map{
@@ -258,7 +255,6 @@ func ( s *Server ) HuluTVNext( c *fiber.Ctx ) ( error ) {
 	next_episode := circular_set.Next( s.DB , fmt.Sprintf( "LIBRARY.HULU.TV.%s" , series_id ) )
 	next_episode_name := s.Get( fmt.Sprintf( "LIBRARY.HULU.TV.%s.%s" , series_id , next_episode ) )
 	log.Debug( fmt.Sprintf( "HuluTVNext( %s ) --> %s === " , series_id , next_episode , next_episode_name ) )
-	s.HuluContinuousOpen()
 	uri := fmt.Sprintf( "https://www.hulu.com/watch/%s" , next_episode )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )
@@ -279,7 +275,6 @@ func ( s *Server ) HuluTVPrevious( c *fiber.Ctx ) ( error ) {
 	next_episode := circular_set.Previous( s.DB , fmt.Sprintf( "LIBRARY.HULU.TV.%s" , series_id ) )
 	next_episode_name := s.Get( fmt.Sprintf( "LIBRARY.HULU.TV.%s.%s" , series_id , next_episode ) )
 	log.Debug( fmt.Sprintf( "HuluTVPrevious( %s ) --> %s === " , series_id , next_episode , next_episode_name ) )
-	s.HuluContinuousOpen()
 	uri := fmt.Sprintf( "https://www.hulu.com/watch/%s" , next_episode )
 	log.Debug( uri )
 	s.ADB.OpenURI( uri )

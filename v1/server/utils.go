@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"time"
+	"strings"
 	context "context"
 	"encoding/json"
 	// "strings"
@@ -108,20 +109,29 @@ func ( s *Server ) ADBConnect() ( connection adb_wrapper.Wrapper ) {
 }
 
 func ( s * Server ) ADBWakeup() {
+	log.Debug( "ADBWakeup()" )
+	top_package_string := strings.ToLower( s.Status.ADB.WindowStack[ 0 ].Package )
+	if strings.Contains( top_package_string , "lockscreen" ) {
+		s.Status.ADB.DisplayOn = false
+	}
 	if s.Status.ADB.DisplayOn == false {
 		log.Debug( "display was off , turning on" )
 		s.ADB.Wakeup()
 		s.ADB.ForceScreenOn()
-		time.Sleep( 500 * time.Millisecond )
 		switch s.Config.ADB.DeviceType {
 			case "firecube" , "firestick":
+				time.Sleep( 500 * time.Millisecond )
 				s.ADB.Home()
 				break;
 			case "firetablet":
+				time.Sleep( 1500 * time.Millisecond )
 				s.ADB.Swipe( 513 , 564 , 553 , 171 )
 		}
 		time.Sleep( 1 * time.Second )
 		s.GetStatus()
+	} else {
+		log.Debug( "display was already on" )
+		// utils.PrettyPrint( s.Status.ADB )
 	}
 
 	// if its the profile picker , select the profile

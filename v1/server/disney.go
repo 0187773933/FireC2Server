@@ -73,6 +73,10 @@ func parse_disney_sent_id( sent_id string ) ( result string ) {
 }
 
 func ( s *Server ) DisneyOpenID( sent_id string ) {
+
+	log.Debug( fmt.Sprintf( "DisneyOpenID( %s )" , sent_id ) )
+	s.DisneyContinuousOpen()
+
 	uri := parse_disney_sent_id( sent_id )
 	next_movie_name := ""
 	if _ , _ok := s.Config.Library.Disney.Movies.Currated[ sent_id ]; _ok {
@@ -89,7 +93,7 @@ func ( s *Server ) DisneyOpenID( sent_id string ) {
 	pss_features := image_similarity.GetFeatureVectorFromFilePath( pss )
 	// cross_add_profile_pixel := color.RGBA{ R: 188 , G: 189 , B: 193 , A: 255 }
 
-	// flatten pixels to make calling adb.GetPixelColorsFromImageBytes() easier ?
+	// flatten pixels for adb.GetPixelColorsFromImageBytes()
 	// otherwise use png.Decode here
 	var login_screen_pixel_colors []color.RGBA
 	var login_screen_pixel_coords []adb_wrapper.Coord
@@ -99,9 +103,7 @@ func ( s *Server ) DisneyOpenID( sent_id string ) {
 		r , g , b := c.RGB255()
 		login_screen_pixel_colors = append( login_screen_pixel_colors , color.RGBA{ R: r , G: g , B: b , A: 255 } )
 	}
-	// c , _ := colorful.Hex( "#BCBDC1" )
-	// r, g, b := c.RGB255()
-	// fmt.Println( r , g , b )
+
 	queries := 20
 	stage_one_ready := false
 	for i := 0; i < queries; i++ {
@@ -154,9 +156,7 @@ func ( s *Server ) DisneyOpenID( sent_id string ) {
 					log.Debug( "TODO = find pixel coords for disney profile add on firestick. we need it to verify" )
 					break;
 				case "firetablet":
-					log.Debug( "TODO = find pixel coords for disney profile add on firetablet. we need it to verify" )
-					// s.DisneySelectProfile()
-					// stage_one_ready = true
+					log.Debug( "keeps profile saved , no need to select" )
 					break
 			}
 		}
@@ -176,6 +176,8 @@ func ( s *Server ) DisneyOpenID( sent_id string ) {
 		log.Debug( "disney didn't auto start playing , we might have to try play button" )
 		return
 	}
+	log.Debug( "sleeping 4 seconds" )
+	time.Sleep( 4 * time.Second )
 	log.Debug( "trying to force update adb playback state" )
 	updated := s.ADB.WaitOnPlayersUpdated( "disney" , verified_now_playing_updated_time , 20 )
 	utils.PrettyPrint( updated )
@@ -186,7 +188,6 @@ func ( s *Server ) DisneyID( c *fiber.Ctx ) ( error ) {
 	sent_query := c.Request().URI().QueryArgs().String()
 	if sent_query != "" { sent_id += "?" + sent_query }
 	log.Debug( fmt.Sprintf( "DisneyID( %s )" , sent_id ) )
-	s.DisneyContinuousOpen()
 	s.DisneyOpenID( sent_id )
 	return c.JSON( fiber.Map{
 		"url": "/disney/:id" ,
@@ -198,7 +199,6 @@ func ( s *Server ) DisneyID( c *fiber.Ctx ) ( error ) {
 func ( s *Server ) DisneyMovieNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "DisneyMovieNext()" )
 	next_movie := circular_set.Next( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
-	s.DisneyContinuousOpen()
 	s.DisneyOpenID( next_movie )
 	return c.JSON( fiber.Map{
 		"url": "/disney/next" ,
@@ -210,7 +210,6 @@ func ( s *Server ) DisneyMovieNext( c *fiber.Ctx ) ( error ) {
 func ( s *Server ) DisneyMoviePrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( "DisneyMoviePrevious()" )
 	next_movie := circular_set.Previous( s.DB , "LIBRARY.DISNEY.MOVIES.CURRATED" )
-	s.DisneyContinuousOpen()
 	s.DisneyOpenID( next_movie )
 	return c.JSON( fiber.Map{
 		"url": "/disney/previous" ,

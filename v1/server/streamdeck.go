@@ -68,6 +68,15 @@ func ( s *Server ) StreamDeckTwitchBackground( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) StreamDeckNetflix( c *fiber.Ctx ) ( error ) {
+	go s.TV.QuickResetVideo()
+	s.ADB.Key( "KEYCODE_WAKEUP" )
+	time_since_last_start := s.TimeSinceLastStart()
+	fmt.Println( "time since last start ===" , time_since_last_start )
+	if time_since_last_start > 30 * time.Minute {
+		log.Debug( "Refreshing Twitch Environment" )
+		s.TwitchLiveRefresh()
+	}
+	s.NetflixMovieNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/netflix" ,
 		"result": true ,

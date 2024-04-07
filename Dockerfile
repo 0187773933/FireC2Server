@@ -5,8 +5,6 @@ ENV TZ="US/Eastern"
 ARG USERNAME="morphs"
 ARG PASSWORD="asdf"
 
-# https://github.com/Pulse-Eight/libcec/blob/master/docs/README.linux.md
-
 RUN apt-get update -y && apt-get install -y \
 	apt-transport-https \
 	apt-utils \
@@ -114,6 +112,7 @@ RUN echo "PATH=$PATH:/usr/local/go/bin" | tee -a /home/$USERNAME/.bashrc
 
 USER root
 
+# https://github.com/Pulse-Eight/libcec/blob/master/docs/README.linux.md
 RUN git clone https://github.com/Pulse-Eight/platform.git && \
 	mkdir platform/build && \
 	cd platform/build && \
@@ -134,23 +133,7 @@ RUN git clone https://github.com/Pulse-Eight/libcec.git && \
 # https://github.com/opencv/opencv/wiki
 # https://docs.opencv.org/4.x/d2/de6/tutorial_py_setup_in_ubuntu.html
 # https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html
-#WORKDIR /build-opencv
-#RUN git clone https://github.com/opencv/opencv.git && \
-#    cd opencv && \
-#    git checkout 4.8.0 && \
-#    git clone https://github.com/opencv/opencv_contrib.git && \
-#    cd opencv_contrib && \
-#    git checkout 4.8.0 && \
-#    cd ../.. && \
-#    mkdir build && cd build && \
-#    cmake -D CMAKE_BUILD_TYPE=RELEASE \
-#    -D CMAKE_INSTALL_PREFIX=/usr/local \
-#    -D OPENCV_EXTRA_MODULES_PATH=/build-opencv/opencv/opencv_contrib/modules \
-#    -D BUILD_EXAMPLES=OFF \
-#    /build-opencv/opencv && \
-#    make -j$(nproc) && \
-#    make install && \
-#    ldconfig
+# https://docs.opencv.org/4.x/db/d05/tutorial_config_reference.html
 
 WORKDIR /build-opencv
 RUN git clone https://github.com/opencv/opencv.git && \
@@ -159,6 +142,7 @@ RUN git clone https://github.com/opencv/opencv.git && \
 	git clone https://github.com/opencv/opencv_contrib.git && \
 	cd opencv_contrib && \
 	git checkout 4.8.0 && \
+	find ./modules -type d -name '*wechat*' -print0 | xargs -0 rm -rf && \
 	cd ../.. && \
 	mkdir build && cd build && \
 	cmake -D CMAKE_BUILD_TYPE=RELEASE \

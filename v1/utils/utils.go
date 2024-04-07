@@ -23,6 +23,7 @@ import (
 	uuid "github.com/google/uuid"
 	yaml "gopkg.in/yaml.v2"
 	// hid "github.com/dh1tw/hid"
+	try "github.com/manucorporat/try"
 	types "github.com/0187773933/FireC2Server/v1/types"
 	fiber_cookie "github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	encryption "github.com/0187773933/encryption/v1/encryption"
@@ -59,13 +60,21 @@ func IsUUID( u string ) ( result bool ) {
 }
 
 func IsURL( input string ) ( result bool , url *url.URL ) {
-	parsed , err := url.Parse( input )
-	if err != nil { return false , nil }
-	if parsed.Scheme == "" { return false , nil }
-	if parsed.Host == "" { return false , nil }
-	return true , parsed
+	result = false
+	try.This( func() {
+		if input == "" { return }
+		parsed , err := url.Parse( input )
+		if err != nil { return }
+		if parsed.Scheme == "" { return}
+		if parsed.Host == "" { return }
+		url = parsed
+		result = true
+	}).Catch( func( e try.E ) {
+		fmt.Println( e )
+		fmt.Println( input )
+	})
+	return
 }
-
 
 func GetLocalIPAddresses() ( ip_addresses []string ) {
 	host , _ := os.Hostname()

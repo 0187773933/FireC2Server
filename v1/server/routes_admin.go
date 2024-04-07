@@ -122,6 +122,8 @@ func ( s *Server ) SetupAdminRoutes() {
 	netflix.Use( validate_admin_mw )
 	netflix.Get( "/next" , s.NetflixMovieNext )
 	netflix.Get( "/previous" , s.NetflixMoviePrevious )
+	netflix.Get( "/tv/next" , s.NetflixTVNext )
+	netflix.Get( "/tv/previous" , s.NetflixTVPrevious )
 	netflix.Get( "/tv/:id/next" , s.NetflixTVNext )
 	netflix.Get( "/tv/:id/previous" , s.NetflixTVPrevious )
 	netflix.Get( "/tv/:series_id" , s.NetflixTVID )

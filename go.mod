@@ -3,7 +3,7 @@ module github.com/0187773933/FireC2Server
 go 1.18
 
 require (
-	github.com/0187773933/ADBWrapper v1.0.54
+	github.com/0187773933/ADBWrapper v1.0.55
 	github.com/0187773933/RedisCircular v1.0.7
 	github.com/0187773933/TVController v1.0.8
 	github.com/0187773933/encryption v0.0.0-20230921140858-60fe28b9fcc0
