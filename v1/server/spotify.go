@@ -12,18 +12,68 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-// const SPOTIFY_ACTIVITY = "com.spotify.tv.android/com.spotify.tv.android.SpotifyTVActivity"
-// const SPOTIFY_APP_NAME = "com.spotify.tv.android"
+func ( s *Server ) SpotifyReopenApp() {
+	log.Debug( "SpotifyReopenApp()" )
+	s.ADB.StopAllPackages()
+	// s.ADB.SetBrightness( 0 )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Package )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Package )
+	// time.Sleep( 1500 * time.Millisecond )
+	time.Sleep( 3000 * time.Millisecond )
+	log.Debug( "Done" )
+}
 
-// func reopen_spotify( adb *adb_wrapper.Wrapper ) {
-// 	adb.StopAllPackages()
-// 	adb.ClosePackage( "com.spotify.tv.android" )
-// 	// time.Sleep( 1 * time.Second )
-// 	time.Sleep( 500 * time.Millisecond )
-// 	adb.OpenActivity( ACTIVITY_SPOTIFY )
-// 	time.Sleep( 500 * time.Millisecond )
-// 	// time.Sleep( 1 * time.Second )
-// }
+func ( s *Server ) SpotifyContinuousOpen() ( was_open bool ) {
+	was_open = false
+	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
+	log.Debug( "SpotifyContinuousOpen()" )
+	s.GetStatus()
+	log.Debug( s.Status )
+	s.Set( "active_player_name" , "spotify" )
+	s.Set( "active_player_command" , "play" )
+	s.Set( "active_player_start_time" , start_time_string )
+	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
+	s.ADBWakeup()
+	windows := s.ADB.GetWindowStack()
+	for _ , window := range windows {
+		activity_lower := strings.ToLower( window.Activity )
+		if strings.Contains( activity_lower , "spotify" ) {
+			log.Debug( "spotify was already open" )
+			was_open = true
+			return
+		}
+	}
+	log.Debug( "spotify was NOT already open" )
+	s.SpotifyReopenApp()
+	time.Sleep( 6 * time.Second )
+	return
+}
+
+func parse_spotify_sent_id( sent_id string ) ( uri string ) {
+	if strings.HasPrefix( sent_id , "spotify:" ) {
+		uri = sent_id
+		return
+	}
+	is_url , _ := utils.IsURL( sent_id )
+	if is_url {
+		fmt.Println( "is url" )
+		uri = sent_id
+		return
+	}
+	return
+}
+
+func ( s *Server ) SpotifyOpenID( sent_id string ) {
+	log.Debug( fmt.Sprintf( "SpotifyOpenID( %s )" , sent_id ) )
+	was_open := s.SpotifyContinuousOpen()
+	uri := parse_spotify_sent_id( sent_id )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+	if was_open == true {
+		s.ADB.Right()
+	}
+	s.SpotifyWaitOnNowPlaying()
+}
 
 func ( s *Server ) SpotifyGetActiveButtonIndex() ( result int ) {
 	log.Debug( "SpotifyGetActiveButtonIndex()" )
@@ -146,68 +196,7 @@ func ( s *Server ) SpotifyPressPreviousButton() {
 	return
 }
 
-func ( s *Server ) SpotifyReopenApp() {
-	log.Debug( "SpotifyReopenApp()" )
-	s.ADB.StopAllPackages()
-	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Package )
-	s.ADB.OpenPackage( s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Package )
-	// time.Sleep( 1500 * time.Millisecond )
-	time.Sleep( 3000 * time.Millisecond )
-	log.Debug( "Done" )
-}
 
-func ( s *Server ) SpotifyContinuousOpen() ( was_open bool ) {
-	was_open = false
-	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
-	log.Debug( "SpotifyContinuousOpen()" )
-	s.GetStatus()
-	log.Debug( s.Status )
-	s.Set( "active_player_name" , "spotify" )
-	s.Set( "active_player_command" , "play" )
-	s.Set( "active_player_start_time" , start_time_string )
-	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
-	s.ADBWakeup()
-	windows := s.ADB.GetWindowStack()
-	for _ , window := range windows {
-		activity_lower := strings.ToLower( window.Activity )
-		if strings.Contains( activity_lower , "spotify" ) {
-			log.Debug( "spotify was already open" )
-			was_open = true
-			return
-		}
-	}
-	log.Debug( "spotify was NOT already open" )
-	s.SpotifyReopenApp()
-	time.Sleep( 6 * time.Second )
-	return
-}
-
-func parse_spotify_sent_id( sent_id string ) ( uri string ) {
-	if strings.HasPrefix( sent_id , "spotify:" ) {
-		uri = sent_id
-		return
-	}
-	is_url , _ := utils.IsURL( sent_id )
-	if is_url {
-		fmt.Println( "is url" )
-		uri = sent_id
-		return
-	}
-	return
-}
-
-func ( s *Server ) SpotifyOpenID( sent_id string ) {
-	log.Debug( fmt.Sprintf( "SpotifyOpenID( %s )" , sent_id ) )
-	was_open := s.SpotifyContinuousOpen()
-	uri := parse_spotify_sent_id( sent_id )
-	log.Debug( uri )
-	s.ADB.OpenURI( uri )
-	if was_open == true {
-		s.ADB.Right()
-	}
-	s.SpotifyWaitOnNowPlaying()
-}
 
 func ( s *Server ) SpotifyWaitOnNowPlaying() {
 	log.Debug( "waiting on now playing pixel" )
@@ -311,8 +300,6 @@ func ( s *Server ) SpotifyShuffleOn() ( was_on bool ) {
 	log.Debug( "SpotifyShuffleOn()" )
 	s.ADB.Left() // just activates ui
 	was_on = false
-	// shuffle_on := false
-	// shuffle_smart := false
 	shuffle_on_pixel := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "shuffle" ][ "on" ]
 	shuffle_smart_pixel := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "shuffle" ][ "smart_shuffle" ]
 	screenshot_bytes := s.ADB.ScreenshotToBytes()
@@ -320,14 +307,12 @@ func ( s *Server ) SpotifyShuffleOn() ( was_on bool ) {
 	shuffle_ui_index := 1
 	if shuffle_position_color == utils.HexToRGBColor( shuffle_on_pixel.Color ) {
 		log.Debug( "shuffle was already on" )
-		// shuffle_on = true
 		was_on = true
 		return
 	}
 	s.SpotifyNavigateToUIIndexFromScreenshotBytes( &screenshot_bytes , shuffle_ui_index )
 	if shuffle_position_color == utils.HexToRGBColor( shuffle_smart_pixel.Color ) {
 		log.Debug( "smart shuffle was on" )
-		// shuffle_smart = true
 		was_on = true
 		s.ADB.Enter()
 		time.Sleep( 1 * time.Second )
@@ -341,36 +326,32 @@ func ( s *Server ) SpotifyShuffleOn() ( was_on bool ) {
 
 func ( s *Server ) SpotifyShuffleOff() ( was_on bool ) {
 	log.Debug( "SpotifyShuffleOff()" )
-	was_on = s.SpotifyIsShuffleOn()
-	if was_on == false {
-		log.Debug( "Shuffle === OFF" )
+	s.ADB.Left() // just activates ui
+	was_on = false
+	shuffle_on_pixel := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "shuffle" ][ "on" ]
+	shuffle_smart_pixel := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "shuffle" ][ "smart_shuffle" ]
+	screenshot_bytes := s.ADB.ScreenshotToBytes()
+	shuffle_position_color := s.ADB.GetPixelColorFromImageBytes( &screenshot_bytes , shuffle_on_pixel.X , shuffle_on_pixel.Y )
+	shuffle_ui_index := 1
+	if shuffle_position_color == utils.HexToRGBColor( shuffle_on_pixel.Color ) {
+		log.Debug( "shuffle was already on" )
+		s.SpotifyNavigateToUIIndexFromScreenshotBytes( &screenshot_bytes , shuffle_ui_index )
+		s.ADB.Enter()
+		was_on = true
 		return
 	}
-	shuffle_index := 1
-	index := s.SpotifyGetActiveButtonIndex()
-	if index == shuffle_index {
-		s.ADB.Key( "KEYCODE_ENTER" )
+	if shuffle_position_color == utils.HexToRGBColor( shuffle_smart_pixel.Color ) {
+		log.Debug( "smart shuffle was on" )
+		s.SpotifyNavigateToUIIndexFromScreenshotBytes( &screenshot_bytes , shuffle_ui_index )
+		was_on = true
+		s.ADB.Enter()
+		return
 	}
-	distance := int( math.Abs( float64( shuffle_index - index ) ) )
-	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
-	if index < shuffle_index {
-		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
-		for i := 0 ; i < distance ; i++ {
-			log.Debug( "pressing right" )
-			s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-		}
-	} else {
-		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
-		for i := 0 ; i < distance ; i++ {
-			log.Debug( "pressing left" )
-			s.ADB.Key( "KEYCODE_DPAD_LEFT" )
-		}
-	}
-	log.Debug( "pressing enter" )
-	s.ADB.Key( "KEYCODE_ENTER" )
-	log.Debug( "Shuffle === OFF" )
+	log.Debug( "shuffle was already off" )
+	s.ADB.Enter()
 	return
 }
+
 func ( s *Server ) SpotifySetShuffle( c *fiber.Ctx ) error {
 	log.Debug( "SpotifySetShuffle()" )
 	state := c.Params( "state" )
