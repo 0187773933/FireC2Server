@@ -94,3 +94,23 @@ func ( s *Server ) StreamDeckHeart( c *fiber.Ctx ) ( error ) {
 		"result": true ,
 	})
 }
+
+
+func ( s *Server ) StreamDeckTest( c *fiber.Ctx ) ( error ) {
+	go s.TV.QuickResetVideo()
+	s.SpotifyNextPlaylistWithShuffle( c )
+	time.Sleep( 5 * time.Second )
+	s.YouTubeLiveNext( c )
+	time.Sleep( 5 * time.Second )
+	s.DisneyMovieNext( c )
+	time.Sleep( 5 * time.Second )
+	s.TwitchLiveNext( c )
+	time.Sleep( 5 * time.Second )
+	s.NetflixMovieNext( c )
+	time.Sleep( 5 * time.Second )
+	s.HuluMovieNext( c )
+	return c.JSON( fiber.Map{
+		"url": "/streamdeck/test" ,
+		"result": true ,
+	})
+}

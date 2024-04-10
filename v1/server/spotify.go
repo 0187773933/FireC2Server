@@ -75,6 +75,21 @@ func ( s *Server ) SpotifyOpenID( sent_id string ) {
 	s.SpotifyWaitOnNowPlaying()
 }
 
+func ( s *Server ) SpotifyID( c *fiber.Ctx ) ( error ) {
+	sent_id := c.Params( "*" )
+	sent_query := c.Request().URI().QueryArgs().String()
+	if sent_query != "" { sent_id += "?" + sent_query }
+	log.Debug( fmt.Sprintf( "SpotifyID( %s )" , sent_id ) )
+	s.SpotifyOpenID( sent_id )
+	s.Set( "active_player_now_playing_id" , sent_id )
+	s.Set( "active_player_now_playing_uri" , sent_id )
+	return c.JSON( fiber.Map{
+		"url": "/spotify/:id" ,
+		"id": sent_id ,
+		"result": true ,
+	})
+}
+
 func ( s *Server ) SpotifyGetActiveButtonIndex() ( result int ) {
 	log.Debug( "SpotifyGetActiveButtonIndex()" )
 	result = -1

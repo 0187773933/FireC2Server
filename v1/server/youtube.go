@@ -23,13 +23,14 @@ func ( s *Server ) YouTubeReopenApp() {
 	log.Debug( "YouTubeReopenApp()" )
 	s.ADB.StopAllPackages()
 	// s.ADB.SetBrightness( 0 )
-	s.ADB.ClosePackage( s.Config.ADB.APKS[ "vlc" ][ s.Config.ADB.DeviceType ].Package )
+	s.ADB.ClosePackage( s.Config.ADB.APKS[ "youtube" ][ s.Config.ADB.DeviceType ].Package )
 	time.Sleep( 500 * time.Millisecond )
-	s.ADB.OpenPackage( s.Config.ADB.APKS[ "vlc" ][ s.Config.ADB.DeviceType ].Package )
+	s.ADB.OpenPackage( s.Config.ADB.APKS[ "youtube" ][ s.Config.ADB.DeviceType ].Package )
 	log.Debug( "Done" )
 }
 
-func ( s *Server ) YouTubeContinuousOpen() {
+func ( s *Server ) YouTubeContinuousOpen() ( was_open bool ) {
+	was_open = false
 	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
 	log.Debug( "YouTubeContinuousOpen()" )
 	s.GetStatus()
@@ -38,21 +39,53 @@ func ( s *Server ) YouTubeContinuousOpen() {
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
-	if s.Status.ADB.Activity == ACTIVITY_PROFILE_PICKER {
-		log.Debug( fmt.Sprintf( "Choosing Profile Index === %d" , s.Config.FireCubeUserProfileIndex ) )
-		time.Sleep( 1000 * time.Millisecond )
-		s.SelectFireCubeProfile()
-		time.Sleep( 1000 * time.Millisecond )
-	}
-	for _ , v := range s.Config.ADB.APKS[ "youtube" ][ s.Config.ADB.DeviceType ].Activities {
-		if s.Status.ADB.Activity == v {
-			log.Debug( fmt.Sprintf( "youtube was already open with activity %s" , v ) )
+	s.ADBWakeup()
+	windows := s.ADB.GetWindowStack()
+	for _ , window := range windows {
+		activity_lower := strings.ToLower( window.Activity )
+		if strings.Contains( activity_lower , "youtube" ) {
+			log.Debug( "youtube was already open" )
+			was_open = true
 			return
 		}
 	}
 	log.Debug( "youtube was NOT already open" )
 	s.YouTubeReopenApp()
-	time.Sleep( 500 * time.Millisecond )
+	time.Sleep( 1 * time.Second )
+	return
+}
+
+func parse_youtube_sent_id( sent_id string ) ( uri string ) {
+	is_url , _ := utils.IsURL( sent_id )
+	if is_url {
+		fmt.Println( "is url" )
+		uri = sent_id
+		return
+	}
+	return
+}
+
+func ( s *Server ) YouTubeOpenID( sent_id string ) {
+	log.Debug( fmt.Sprintf( "YouTubeOpenID( %s )" , sent_id ) )
+	s.YouTubeContinuousOpen()
+	uri := parse_youtube_sent_id( sent_id )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+}
+
+func ( s *Server ) YouTubeID( c *fiber.Ctx ) ( error ) {
+	sent_id := c.Params( "*" )
+	sent_query := c.Request().URI().QueryArgs().String()
+	if sent_query != "" { sent_id += "?" + sent_query }
+	log.Debug( fmt.Sprintf( "YouTubeID( %s )" , sent_id ) )
+	s.YouTubeOpenID( sent_id )
+	s.Set( "active_player_now_playing_id" , sent_id )
+	s.Set( "active_player_now_playing_uri" , sent_id )
+	return c.JSON( fiber.Map{
+		"url": "/youtube/:id" ,
+		"id": sent_id ,
+		"result": true ,
+	})
 }
 
 func ( s *Server ) YouTubePlaylistGetNextAvailableVideoID( playlist_key string ) ( video_id string ) {
@@ -96,13 +129,10 @@ func ( s *Server ) YouTubePlaylistNext( c *fiber.Ctx ) ( error ) {
 	key_index := key + ".INDEX"
 	playlist_index := s.DB.Get( context.Background() , key_index ).Val()
 	video_id := s.YouTubePlaylistGetNextAvailableVideoID( key )
-	s.YouTubeContinuousOpen()
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
-	log.Debug( uri )
-	s.ADB.OpenURI( uri )
+	s.YouTubeOpenID( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/next" ,
 		"playlist_name": playlist_name ,
@@ -119,13 +149,10 @@ func ( s *Server ) YouTubePlaylistPrevious( c *fiber.Ctx ) ( error ) {
 	key_index := key + ".INDEX"
 	playlist_index := s.DB.Get( context.Background() , key_index ).Val()
 	video_id := s.YouTubePlaylistGetPreviousAvailableVideoID( key )
-	s.YouTubeContinuousOpen()
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
-	log.Debug( uri )
-	s.ADB.OpenURI( uri )
+	s.YouTubeOpenID( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-
 	return c.JSON( fiber.Map{
 		"url": "/youtube/playlist/:name/previous" ,
 		"playlist_name": playlist_name ,
@@ -242,7 +269,6 @@ func ( s *Server ) YouTubePlaylistSetIndex( c *fiber.Ctx ) ( error ) {
 var RESET_COUNTER = 0;
 func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubeLiveNext()" )
-	s.YouTubeContinuousOpen()
 	video_id := circular_set.Next( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" )
 	available := s.YouTubeIsVideoIdAvailable( video_id )
 	// IF None Available 5 Times in A Row
@@ -261,13 +287,10 @@ func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 		return s.YouTubeLiveNext( c )
 	}
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
-	log.Debug( uri )
-	s.ADB.OpenURI( uri )
+	s.YouTubeOpenID( uri )
 	// s.Set( "STATE.YOUTUBE.NOW_PLAYING" , video_id )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-
 	return c.JSON( fiber.Map{
 		"url": "/youtube/live/next" ,
 		"video_id": video_id ,
@@ -277,7 +300,6 @@ func ( s *Server ) YouTubeLiveNext( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 	log.Debug( "YouTubeLivePrevious()" )
-	s.YouTubeContinuousOpen()
 	video_id := circular_set.Previous( s.DB , "STATE.YOUTUBE.LIVE.VIDEOS" )
 	available := s.YouTubeIsVideoIdAvailable( video_id )
 	if available == false {
@@ -286,12 +308,9 @@ func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 		return s.YouTubeLivePrevious( c )
 	}
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
-	log.Debug( uri )
-	s.ADB.OpenURI( uri )
+	s.YouTubeOpenID( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-
 	return c.JSON( fiber.Map{
 		"url": "/youtube/live/previous" ,
 		"video_id": video_id ,
@@ -300,17 +319,12 @@ func ( s *Server ) YouTubeLivePrevious( c *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) YouTubeVideo( c *fiber.Ctx ) ( error ) {
-
 	video_id := c.Params( "video_id" )
 	log.Debug( fmt.Sprintf( "YouTubeVideo( %s )" , video_id ) )
-	s.YouTubeContinuousOpen()
 	uri := fmt.Sprintf( "https://www.youtube.com/watch?v=%s" , video_id )
-	log.Debug( uri )
-	s.ADB.OpenURI( uri )
+	s.YouTubeOpenID( uri )
 	s.Set( "active_player_now_playing_id" , video_id )
 	s.Set( "active_player_now_playing_text" , "" )
-	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-
 	return c.JSON( fiber.Map{
 		"url": "/youtube/:video_id" ,
 		"video_id": video_id ,
@@ -352,7 +366,6 @@ func ( s *Server ) YouTubeIsVideoIdAvailable( video_id string ) ( result bool ) 
 	}
 	return
 }
-
 
 // 1.) Get Channels channelID
 // curl \

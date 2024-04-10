@@ -22,6 +22,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	streamdeck.Get( "audio-book" , s.StreamDeckAudioBook )
 	streamdeck.Get( "escape-rope" , s.StreamDeckEscapeRope )
 	streamdeck.Get( "heart" , s.StreamDeckHeart )
+	streamdeck.Get( "test" , s.StreamDeckTest )
 
 	// TV
 	tv := s.FiberApp.Group( "/tv" )
@@ -70,6 +71,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	// spotify.Get( "/previous/song" , SpotifyPlaylistWithShuffle )
 	// spotify.Get( "/previous/playlist" , SpotifyPlaylistWithShuffle )
 	// spotify.Get( "/previous" , SpotifyPressPreviousButton ) // needs a custom previous , requires 2 clicks if in shuffle-mode
+	spotify.Get( "/*" , s.SpotifyID )
 
 	// Twitch
 	twitch := s.FiberApp.Group( "/twitch" )
@@ -107,6 +109,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	youtube.Get( "/playlist/:name/index/set/:index" , s.YouTubePlaylistSetIndex )
 	youtube.Get( "/playlist/:name/next" , s.YouTubePlaylistNext )
 	youtube.Get( "/playlist/:name/previous" , s.YouTubePlaylistPrevious )
+	youtube.Get( "/*" , s.YouTubeID )
 
 	// Hulu
 	hulu := s.FiberApp.Group( "/hulu" )
@@ -141,6 +144,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	// vlc.Get( "/playlist/:name/index/set/:index" , s.VLCPlaylistSetIndex )
 	// vlc.Get( "/playlist/:name/next" , s.VLCPlaylistNext )
 	// vlc.Get( "/playlist/:name/previous" , s.VLCPlaylistPrevious )
+	// vlc.Get( "/*" , s.VLCID )
 
 	// ReStreamer
 	restreamer := s.FiberApp.Group( "/restream" )
