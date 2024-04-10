@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"time"
 	"math"
+	"strings"
 	"image/color"
 	utils "github.com/0187773933/FireC2Server/v1/utils"
 	fiber "github.com/gofiber/fiber/v2"
+	adb_wrapper "github.com/0187773933/ADBWrapper/v1/wrapper"
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
@@ -26,47 +28,89 @@ import (
 func ( s *Server ) SpotifyGetActiveButtonIndex() ( result int ) {
 	log.Debug( "SpotifyGetActiveButtonIndex()" )
 	result = -1
-	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
-	// indexes := [][]int{
-	// 	{ 201 , 940 } ,
-	// 	{ 789 , 940 } ,
-	// 	{ 893 , 940 } ,
-	// 	{ 997 , 940 } ,
-	// 	{ 1101 , 940 } ,
-	// 	{ 1205 , 940 } ,
-	// 	{ 1793 , 940 } ,
-	// }
-	// new , they shifted everything up to make you see "about the artist"
-	indexes := [][]int{
-		{ 201 , 852 } ,
-		{ 789 , 852 } ,
-		{ 893 , 852 } ,
-		{ 997 , 852 } ,
-		{ 1101 , 852 } ,
-		{ 1205 , 852 } ,
-		{ 1793 , 852 } ,
+
+	// flatten ui-selected pixels
+	var ui_selected_pixel_keys []string
+	var ui_selected_pixel_colors []color.RGBA
+	var ui_selected_pixel_coords []adb_wrapper.Coord
+	for key , coord := range s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "ui_selected" ] {
+		ui_selected_pixel_keys = append( ui_selected_pixel_keys , key )
+		ui_selected_pixel_coords = append( ui_selected_pixel_coords , adb_wrapper.Coord{ X: coord.X , Y: coord.Y } )
+		ui_selected_pixel_colors = append( ui_selected_pixel_colors , utils.HexToRGBColor( coord.Color ) )
 	}
-	screenshot := s.ADB.ScreenshotToPNG()
-	for index , coords := range indexes {
-		pixel := screenshot.At( coords[ 0 ] , coords[ 1 ] )
-		r , g , b , a := pixel.RGBA()
-		pixel_rgba := color.RGBA{ R: uint8( r ) , G: uint8( g ) , B: uint8( b ) , A: uint8( a ) }
-		if pixel_rgba == active_color {
-			result = index
+
+	screenshot_bytes := s.ADB.ScreenshotToBytes()
+	result_list := s.ADB.GetPixelColorsFromImageBytes( &screenshot_bytes , ui_selected_pixel_coords )
+	for i , color := range result_list {
+		if color == ui_selected_pixel_colors[ i ] {
+			fmt.Println( "found ui selected" , i , ui_selected_pixel_keys[ i ] )
+			result = i
 			return
 		}
 	}
 	return
 }
 
+func ( s *Server ) SpotifyGetActiveButtonIndexFromScreenshotBytes( screenshot_bytes *[]byte ) ( result int ) {
+	log.Debug( "SpotifyGetActiveButtonIndexFromScreenshotBytes()" )
+	result = -1
+	ui_selected_map := map[string]int{
+		"favorite": 0 ,
+		"shuffle": 1 ,
+		"previous": 2 ,
+		"play_pause": 3 ,
+		"next": 4 ,
+		"loop": 5 ,
+	}
+	for key , pixel := range s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "ui_selected" ] {
+		color_test := s.ADB.GetPixelColorFromImageBytes( screenshot_bytes , pixel.X , pixel.Y )
+		if color_test == utils.HexToRGBColor( pixel.Color ) {
+			log.Debug( fmt.Sprintf( "found ui selected === %s === %s" , key , ui_selected_map[ key ] ) )
+			result = ui_selected_map[ key ]
+			return
+		}
+	}
+	return
+}
+
+func ( s *Server ) SpotifyNavigateToUIIndexFromScreenshotBytes( screenshot_bytes *[]byte , ui_button_index int ) {
+	log.Debug( "SpotifyNavigateToUIIndexFromScreenshotBytes()" )
+	current_index := s.SpotifyGetActiveButtonIndexFromScreenshotBytes( screenshot_bytes )
+	distance := int( math.Abs( float64( ui_button_index - current_index ) ) )
+	log.Debug( fmt.Sprintf( "Current Index === %d === Distance from Target === %d" , current_index , distance ) )
+	if current_index < ui_button_index {
+		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
+		for i := 0 ; i < distance; i++ {
+			log.Debug( "pressing right" )
+			s.ADB.Right()
+			time.Sleep( 100 * time.Millisecond )
+		}
+	} else {
+		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
+		for i := 0 ; i < distance ; i++ {
+			log.Debug( "pressing left" )
+			s.ADB.Left()
+			time.Sleep( 100 * time.Millisecond )
+		}
+	}
+}
+
 func ( s *Server ) SpotifyIsShuffleOn() ( result bool ) {
+	result = false
 	log.Debug( "SpotifyIsShuffleOn()" )
-	active_color := color.RGBA{ R: 255 , G: 255 , B: 255 , A: 255 }
-	coords := []int{ 752 , 964 }
 	log.Debug( "pressing left" )
 	s.ADB.Left()
-	time.Sleep( 500 * time.Millisecond )
-	result = s.ADB.IsPixelTheSameColor( coords[ 0 ] , coords[ 1 ] , active_color )
+	shuffle_on := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "shuffle" ][ "on" ]
+	shuffle_smart := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "shuffle" ][ "smart_shuffle" ]
+	shuffle_position_color := s.ADB.GetPixelColor( shuffle_on.X , shuffle_on.Y )
+	if shuffle_position_color == utils.HexToRGBColor( shuffle_on.Color ) {
+		result = true
+		return
+	}
+	if shuffle_position_color == utils.HexToRGBColor( shuffle_smart.Color ) {
+		result = true
+		return
+	}
 	return
 }
 
@@ -113,33 +157,67 @@ func ( s *Server ) SpotifyReopenApp() {
 	log.Debug( "Done" )
 }
 
-func ( s *Server ) SpotifyContinuousOpen() {
+func ( s *Server ) SpotifyContinuousOpen() ( was_open bool ) {
+	was_open = false
+	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
 	log.Debug( "SpotifyContinuousOpen()" )
 	s.GetStatus()
-	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
-	log.Debug( "ContinuousOpen()" )
 	log.Debug( s.Status )
 	s.Set( "active_player_name" , "spotify" )
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
 	log.Debug( fmt.Sprintf( "Top Window Activity === %s" , s.Status.ADB.Activity ) )
-	if s.Status.ADB.Activity == ACTIVITY_PROFILE_PICKER {
-		log.Debug( fmt.Sprintf( "Choosing Profile Index === %d" , s.Config.FireCubeUserProfileIndex ) )
-		time.Sleep( 1000 * time.Millisecond )
-		s.SelectFireCubeProfile()
-		time.Sleep( 1000 * time.Millisecond )
-	}
-	for _ , v := range s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Activities {
-		if s.Status.ADB.Activity == v {
-			log.Debug( fmt.Sprintf( "spotify was already open with activity %s" , v ) )
+	s.ADBWakeup()
+	windows := s.ADB.GetWindowStack()
+	for _ , window := range windows {
+		activity_lower := strings.ToLower( window.Activity )
+		if strings.Contains( activity_lower , "spotify" ) {
+			log.Debug( "spotify was already open" )
+			was_open = true
 			return
 		}
 	}
 	log.Debug( "spotify was NOT already open" )
 	s.SpotifyReopenApp()
-	log.Debug( "sleeping extra 6 seconds to wait for spotify init" )
 	time.Sleep( 6 * time.Second )
-	log.Debug( "done sleeping" )
+	return
+}
+
+func parse_spotify_sent_id( sent_id string ) ( uri string ) {
+	if strings.HasPrefix( sent_id , "spotify:" ) {
+		uri = sent_id
+		return
+	}
+	is_url , _ := utils.IsURL( sent_id )
+	if is_url {
+		fmt.Println( "is url" )
+		uri = sent_id
+		return
+	}
+	return
+}
+
+func ( s *Server ) SpotifyOpenID( sent_id string ) {
+	log.Debug( fmt.Sprintf( "SpotifyOpenID( %s )" , sent_id ) )
+	was_open := s.SpotifyContinuousOpen()
+	uri := parse_spotify_sent_id( sent_id )
+	log.Debug( uri )
+	s.ADB.OpenURI( uri )
+	if was_open == true {
+		s.ADB.Right()
+	}
+	s.SpotifyWaitOnNowPlaying()
+}
+
+func ( s *Server ) SpotifyWaitOnNowPlaying() {
+	log.Debug( "waiting on now playing pixel" )
+	now_playing_pixel := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "now_playing" ][ "play_pause" ]
+	s.ADB.WaitOnPixelColor(
+		now_playing_pixel.X , now_playing_pixel.Y ,
+		utils.HexToRGBColor( now_playing_pixel.Color ) ,
+		( 10 * time.Second ) ,
+	)
+	log.Debug( "should be now playing" )
 }
 
 func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
@@ -148,14 +226,13 @@ func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	s.SpotifyContinuousOpen()
 	// TODO === Need to Add TV Mute and Unmute
 	// TODO === If Same Playlist don't open , just press next ? depends
-	s.ADB.SetVolume( 0 )
+	// s.ADB.SetVolume( 0 )
 	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
 	s.ADB.OpenURI( playlist_uri )
-	time.Sleep( 500 * time.Millisecond )
-	// was_on := s.ShuffleOn()
+	s.SpotifyWaitOnNowPlaying()
 	s.SpotifyShuffleOn()
+	log.Debug( "pressing next" )
 	s.ADB.Key( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
-	s.ADB.SetVolume( s.Status.ADB.Volume )
 	s.Set( "active_player_now_playing_id" , playlist_id )
 	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "playlist === %s" , s.Config.Library.Spotify.Playlists[ playlist_id ].Name ) )
 	return c.JSON( fiber.Map{
@@ -165,18 +242,14 @@ func ( s *Server ) SpotifyPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	})
 }
 
+
+
 // 5Muvh0ooAJkSgBylFyI3su
 func ( s *Server ) SpotifySong( c *fiber.Ctx ) ( error ) {
 	song_id := c.Params( "song_id" )
 	log.Debug( fmt.Sprintf( "SpotifySong( %s )" , song_id ) )
-
-	go s.TV.Prepare()
-	s.Status = s.GetStatus()
-	s.ADB.SetVolume( 0 )
-	s.SpotifyContinuousOpen()
 	uri := fmt.Sprintf( "spotify:track:%s:play" , song_id )
-	s.ADB.OpenURI( uri )
-	s.ADB.SetVolume( s.Status.ADB.Volume )
+	s.SpotifyOpenID( uri )
 	s.Set( "active_player_now_playing_id" , song_id )
 	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "song id === %s" , song_id ) )
 	return c.JSON( fiber.Map{
@@ -189,14 +262,8 @@ func ( s *Server ) SpotifySong( c *fiber.Ctx ) ( error ) {
 func ( s *Server ) SpotifyPlaylist( c *fiber.Ctx ) ( error ) {
 	playlist_id := c.Params( "playlist_id" )
 	log.Debug( fmt.Sprintf( "SpotifyPlaylist( %s )" , playlist_id ) )
-
-	go s.TV.Prepare()
-	s.Status = s.GetStatus()
-	s.ADB.SetVolume( 0 )
-	s.SpotifyContinuousOpen()
 	uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
-	s.ADB.OpenURI( uri )
-	s.ADB.SetVolume( s.Status.ADB.Volume )
+	s.SpotifyOpenID( uri )
 	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "playlist === %s" , s.Config.Library.Spotify.Playlists[ playlist_id ].Name ) )
 	return c.JSON( fiber.Map{
 		"url": "/spotify/playlist/:playlist_id" ,
@@ -218,16 +285,11 @@ func ( s *Server ) SpotifyNextPlaylist() {
 func ( s *Server ) SpotifyNextPlaylistWithShuffle( c *fiber.Ctx ) ( error ) {
 	playlist_id := circular_set.Next( s.DB , "LIBRARY.SPOTIFY.PLAYLISTS" )
 	log.Debug( fmt.Sprintf( "SpotifyPlaylistWithShuffle( %s )" , playlist_id ) )
-	s.SpotifyContinuousOpen()
-	// TODO === Need to Add TV Mute and Unmute
-	// TODO === If Same Playlist don't open , just press next ? depends
-	s.ADB.SetVolume( 0 )
 	playlist_uri := fmt.Sprintf( "spotify:playlist:%s:play" , playlist_id )
-	s.ADB.OpenURI( playlist_uri )
-	// was_on := s.ShuffleOn()
+	s.SpotifyOpenID( playlist_uri )
 	s.SpotifyShuffleOn()
+	log.Debug( "pressing next" )
 	s.ADB.Key( "KEYCODE_MEDIA_NEXT" ) // they sometimes force same song
-	s.ADB.SetVolume( s.Status.ADB.Volume )
 	s.Set( "active_player_now_playing_id" , playlist_id )
 	s.Set( "active_player_now_playing_text" , fmt.Sprintf( "playlist === %s" , s.Config.Library.Spotify.Playlists[ playlist_id ].Name ) )
 	return c.JSON( fiber.Map{
@@ -247,35 +309,33 @@ func ( s *Server ) SpotifyPreviousPlaylist( playlist_id string ) {
 
 func ( s *Server ) SpotifyShuffleOn() ( was_on bool ) {
 	log.Debug( "SpotifyShuffleOn()" )
-	was_on = s.SpotifyIsShuffleOn()
-	if was_on == true {
-		log.Debug( "Shuffle === ON" )
+	s.ADB.Left() // just activates ui
+	was_on = false
+	// shuffle_on := false
+	// shuffle_smart := false
+	shuffle_on_pixel := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "shuffle" ][ "on" ]
+	shuffle_smart_pixel := s.Config.ADB.APKS[ "spotify" ][ s.Config.ADB.DeviceType ].Pixels[ "shuffle" ][ "smart_shuffle" ]
+	screenshot_bytes := s.ADB.ScreenshotToBytes()
+	shuffle_position_color := s.ADB.GetPixelColorFromImageBytes( &screenshot_bytes , shuffle_on_pixel.X , shuffle_on_pixel.Y )
+	shuffle_ui_index := 1
+	if shuffle_position_color == utils.HexToRGBColor( shuffle_on_pixel.Color ) {
+		log.Debug( "shuffle was already on" )
+		// shuffle_on = true
+		was_on = true
 		return
 	}
-	shuffle_index := 1
-	index := s.SpotifyGetActiveButtonIndex()
-	if index == shuffle_index {
-		s.ADB.Key( "KEYCODE_ENTER" )
+	s.SpotifyNavigateToUIIndexFromScreenshotBytes( &screenshot_bytes , shuffle_ui_index )
+	if shuffle_position_color == utils.HexToRGBColor( shuffle_smart_pixel.Color ) {
+		log.Debug( "smart shuffle was on" )
+		// shuffle_smart = true
+		was_on = true
+		s.ADB.Enter()
+		time.Sleep( 1 * time.Second )
+		s.ADB.Enter()
+		return
 	}
-	distance := int( math.Abs( float64( shuffle_index - index ) ) )
-	log.Debug( "Shuffle === OFF" )
-	log.Debug( fmt.Sprintf( "Index === %d === Distance === %d" , index , distance ) )
-	if index < shuffle_index {
-		log.Debug( fmt.Sprintf( "pressing right %d times" , distance ) )
-		for i := 0 ; i < distance ; i++ {
-			log.Debug( "pressing right" )
-			s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-		}
-	} else {
-		log.Debug( fmt.Sprintf( "pressing left %d times" , distance ) )
-		for i := 0 ; i < distance ; i++ {
-			log.Debug( "pressing left" )
-			s.ADB.Key( "KEYCODE_DPAD_LEFT" )
-		}
-	}
-	log.Debug( "pressing enter" )
-	s.ADB.Key( "KEYCODE_ENTER" )
-	log.Debug( "Shuffle === ON" )
+	log.Debug( "shuffle was off , turning on" )
+	s.ADB.Enter()
 	return
 }
 

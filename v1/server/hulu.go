@@ -15,16 +15,162 @@ import (
 	circular_set "github.com/0187773933/RedisCircular/v1/set"
 )
 
-// // // https://www.hulu.com/series/502bbc34-fa19-48fb-89c6-074da28335d3
+// https://www.hulu.com/series/502bbc34-fa19-48fb-89c6-074da28335d3
+// document.querySelectorAll('div[data-testid="details-dropdown-container"]')?.[0]?.querySelectorAll('div[class*="dropdown-indicator"]')?.[0]?.click();
 // ( async ()=> {
-// 	let images = document.querySelectorAll('img[class^="StandardEmphasisHorizontalTileThumbnail"]');
+// 	function sleep( ms ) { return new Promise( resolve => setTimeout( resolve , ms ) ); }
+// 	function wait_on_element( query_selector ) {
+// 		return new Promise( function( resolve , reject ) {
+// 			try {
+// 				let READY_CHECK_INTERVAL = setInterval( function() {
+// 					let item = document.querySelectorAll( query_selector );
+// 					if ( item ) {
+// 						if ( item[ 0 ] ) {
+// 							clearInterval( READY_CHECK_INTERVAL );
+// 							resolve( item[0] );
+// 							return;
+// 						}
+// 					}
+// 				} , 500 );
+// 				setTimeout( function() {
+// 					clearInterval( READY_CHECK_INTERVAL );
+// 					resolve();
+// 					return;
+// 				} , 10000 );
+// 			}
+// 			catch( error ) { console.log( error ); reject( error ); return; }
+// 		});
+// 	}
+// 	function escape_string( str ) {
+// 	  return str
+// 	    .replace(/\\/g, '\\\\') // Escape backslashes first
+// 	    .replace(/"/g, '\\"') // Escape double quotes
+// 	    .replace(/'/g, "\\'") // Escape single quotes
+// 	    .replace(/\n/g, '\\n') // Escape newlines
+// 	    .replace(/\r/g, '\\r') // Escape carriage returns
+// 	    .replace(/\t/g, '\\t'); // Escape tabs
+// 	}
+// 	function random_int( min , max ) {
+// 		min = Math.ceil( min );
+// 		max = Math.floor( max );
+// 		return Math.floor( Math.random() * ( max - min + 1 ) ) + min;
+// 	}
+// 	function click( element ) {
+// 		[ "mouseenter" , "mouseover" , "mousemove" ].forEach( event_type => {
+// 			const m_event = new MouseEvent( event_type , {
+// 				view: window ,
+// 				bubbles: true ,
+// 				cancelable: false ,
+// 				clientX: element.getBoundingClientRect().left ,
+// 				clientY: element.getBoundingClientRect().top
+// 			});
+// 			element.dispatchEvent( m_event );
+// 		});
+// 		const mouse_click = new MouseEvent( "click" , {
+// 			view: window ,
+// 			bubbles: true ,
+// 			cancelable: false
+// 		});
+// 		element.dispatchEvent( mouse_click );
+// 	}
+// 	function get_episodes() {
+// 		let images = document.querySelectorAll( 'img[class^="StandardEmphasisHorizontalTileThumbnail"]' );
+// 		let _ys = "";
+// 		for ( let i = 0; i < images.length; ++i ) {
+// 			if ( images[ i ].src === "" ) { continue; }
+// 			let parts = images[ i ].src.split( "artwork/" );
+// 			if ( parts.length < 2 ) { continue; }
+// 			let uuid = parts[ 1 ].split( "?" )[ 0 ];
+// 			let alt = images[ i ].alt.split( "Cover art for " )[ 1 ];
+// 			if ( alt === undefined ) { continue; }
+// 			alt = escape_string( alt );
+// 			_ys += `          - id: ${uuid}\n`;
+// 			_ys += `            name: "${alt}"\n`;
+// 		}
+// 		return _ys;
+// 	}
+// 	function get_seasons() {
+// 		let seasons_dropdown = document.querySelectorAll( 'div[data-testid="details-dropdown-container"]' );
+// 		if ( seasons_dropdown.length < 1 ) { return false; }
+// 		seasons_dropdown = seasons_dropdown[ 0 ];
+// 		let seasons_dropdown_arrow = seasons_dropdown.querySelectorAll( 'div[class*="dropdown-indicator"]' );
+// 		if ( seasons_dropdown_arrow.length < 1 ) { return false; }
+// 		seasons_dropdown_arrow = seasons_dropdown_arrow[ 0 ];
+// 		seasons_dropdown_arrow.click();
+// 		let seasons = seasons_dropdown.querySelectorAll( "ul" );
+// 		if ( seasons.length < 1 ) { return false; }
+// 		seasons = seasons[ 0 ];
+// 		seasons = seasons.querySelectorAll( "li" );
+// 		let first_season_number = parseInt( seasons[ 0 ].id.split( "::" )[ 1 ] );
+// 		let last_season = parseInt( seasons[ seasons.length - 1 ].id.split( "::" )[ 1 ] );
+// 		if ( first_season_number > last_season ) {
+// 			seasons = [...seasons].reverse();
+// 		}
+// 		seasons_dropdown_arrow.click();
+// 		return seasons_dropdown_arrow , seasons;
+// 	}
+// 	async function select_season( season_index ) {
+// 		let seasons_dropdown = document.querySelectorAll( 'div[data-testid="details-dropdown-container"]' );
+// 		if ( seasons_dropdown.length < 1 ) { return false; }
+// 		seasons_dropdown = seasons_dropdown[ 0 ];
+// 		let seasons_dropdown_arrow = seasons_dropdown.querySelectorAll( 'div[class*="dropdown-indicator"]' );
+// 		if ( seasons_dropdown_arrow.length < 1 ) { return false; }
+// 		seasons_dropdown_arrow = seasons_dropdown_arrow[ 0 ];
+// 		seasons_dropdown_arrow.click();
+// 		let seasons = seasons_dropdown.querySelectorAll( "ul" );
+// 		if ( seasons.length < 1 ) { return false; }
+// 		seasons = seasons[ 0 ];
+// 		seasons = seasons.querySelectorAll( "li" );
+// 		let first_season_number = parseInt( seasons[ 0 ].id.split( "::" )[ 1 ] );
+// 		let last_season = parseInt( seasons[ seasons.length - 1 ].id.split( "::" )[ 1 ] );
+// 		if ( first_season_number > last_season ) {
+// 			seasons = [...seasons].reverse();
+// 		}
+// 		await sleep( random_int( 1000 , 1600 ) );
+// 		console.log( "trying to select :" , seasons[ season_index ].innerText );
+// 		console.log( seasons[ season_index ] );
+// 		click( seasons[ season_index ] );
+// 	}
+// 	function get_id() {
+// 		const url = window.location.href;
+// 		const parts = url.split( "/" );
+// 		const uuid = parts[ parts.length - 1 ];
+// 		return uuid
+// 	}
+// 	let id = get_id();
+// 	let show_name = document.getElementById( "dialog-title" ).innerText;
+// 	show_name = escape_string( show_name );
+// 	let seasons = get_seasons();
 // 	let yaml_string = "";
-// 	for ( let i = 0; i < images.length; ++i ) {
-// 		let uuid = images[ i ].src.split( "artwork/" )[ 1 ].split( "?" )[ 0 ]
-// 		let alt = images[ i ].alt.split( "Cover art for " )[ 1 ];
-// 		if ( alt === undefined ) { continue; }
-// 		yaml_string += `          - id: ${uuid}\n`;
-// 		yaml_string += `            name: "${alt}"\n`;
+// 	yaml_string += `  ${id}:\n`;
+// 	yaml_string += `    name: "${show_name}"\n`;
+// 	yaml_string += `    seasons:\n`;
+// 	let total_seasons = seasons.length;
+// 	console.log( `total seasons === ${total_seasons}` );
+// 	console.log( seasons );
+// 	if ( total_seasons === undefined || total_seasons === 0 ) {
+// 		console.log( "probably only 1 season in show" );
+// 		let episodes = get_episodes();
+// 		if ( episodes === "" ) { console.log( yaml_string ); return }
+// 		yaml_string += `      - number: "one"\n`;
+// 		yaml_string += `        episodes:\n`;
+// 		yaml_string += episodes;
+// 		console.log( yaml_string );
+// 		return;
+// 	}
+// 	for ( let i = 0; i < seasons.length; ++i ) {
+// 		console.log( `getting season [${(i+1)}] of ${total_seasons}` );
+// 		let season = seasons[ i ];
+// 		console.log( "selecting from dropdown" );
+// 		select_season( i );
+// 		await sleep( random_int( 2000 , 2600 ) );
+// 		await wait_on_element( 'img[class^="StandardEmphasisHorizontalTileThumbnail"]' );
+// 		let episodes = get_episodes();
+// 		if ( episodes === "" ) { continue; }
+// 		yaml_string += `      - number: "${i+1}"\n`;
+// 		yaml_string += `        episodes:\n`;
+// 		yaml_string += episodes;
+// 		await sleep( random_int( 1200 , 1600 ) );
 // 	}
 // 	console.log( yaml_string );
 // })();
@@ -207,7 +353,7 @@ func ( s *Server ) HuluOpenURI( uri string ) {
 					log.Debug( "already observed 3 times , pressing enter , tapping play button" )
 					s.ADB.Enter()
 					s.ADB.Play()
-					s.ADB.Tap( 227 , 388 )
+					s.ADB.Tap( 245 , 367 )
 					stage_one_ready = true
 					time.Sleep( 2 * time.Second )
 					log.Debug( "attempting to enter full screen" )

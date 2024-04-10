@@ -12,6 +12,8 @@ import (
 	"net"
 	"runtime"
 	"math/rand"
+	color "image/color"
+	colorful "github.com/lucasb-eyer/go-colorful"
 	filepath "path/filepath"
 	"bytes"
 	"net/http"
@@ -73,6 +75,13 @@ func IsURL( input string ) ( result bool , url *url.URL ) {
 		fmt.Println( e )
 		fmt.Println( input )
 	})
+	return
+}
+
+func HexToRGBColor( hex_color string ) ( result color.RGBA ) {
+	c , _ := colorful.Hex( hex_color )
+	r , g , b := c.RGB255()
+	result = color.RGBA{ R: r , G: g , B: b , A: 255 }
 	return
 }
 
