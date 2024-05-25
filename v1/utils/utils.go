@@ -72,8 +72,8 @@ func IsURL( input string ) ( result bool , url *url.URL ) {
 		url = parsed
 		result = true
 	}).Catch( func( e try.E ) {
-		fmt.Println( e )
-		fmt.Println( input )
+		// fmt.Println( e )
+		// fmt.Println( input )
 	})
 	return
 }
