@@ -34,7 +34,7 @@ func ( s *Server ) TwitchContinuousOpen() {
 	start_time_string , _ := utils.GetFormattedTimeStringOBJ()
 	log.Debug( "TwitchContinuousOpen()" )
 	s.GetStatus()
-	log.Debug( s.Status )
+	// log.Debug( s.Status )
 	s.Set( "active_player_name" , "twitch" )
 	s.Set( "active_player_command" , "play" )
 	s.Set( "active_player_start_time" , start_time_string )
@@ -53,10 +53,8 @@ func ( s *Server ) TwitchContinuousOpen() {
 }
 
 func parse_twitch_sent_id( sent_id string ) ( uri string ) {
-	fmt.Println( sent_id )
 	is_url , _ := utils.IsURL( sent_id )
 	if is_url {
-		fmt.Println( "is url" )
 		uri = sent_id
 		return
 	}
@@ -97,126 +95,227 @@ func ( s *Server ) GetTwitchLiveUser( c *fiber.Ctx ) ( error ) {
 	})
 }
 
-func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) ( error ) {
-
+func ( s *Server ) TwitchLiveNext( c *fiber.Ctx ) error {
 	log.Debug( "TwitchLiveNext()" )
 
-	var initial_stream string = circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
-	var next_stream string = initial_stream
-	var refreshed bool = false
+	// Step 1: Get the initial stream from the circular set
+	initial_stream := circular_set.Current( s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+	next_stream := circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+	refreshed := false
+
+	decision_points := []string{}
+	cached_list , _ := s.DB.ZRange( context.Background() , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , 0 , -1 ).Result()
+	new_live_list := []string{}
 
 	if initial_stream == "" {
-		log.Debug( "The initial stream is empty, indicating no streams are being followed or all are offline." )
-		s.TwitchLiveUpdate() // Try updating once to check for live streams again after the update.
-		initial_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
-		next_stream = initial_stream
+		log.Debug( "The initial stream is empty , no streams are being followed or all are offline." )
+		decision_points = append( decision_points , "Initial stream is empty. Updating the list." )
+		s.TwitchLiveUpdate() // Attempt to update the list of live streams
+		initial_stream = circular_set.Current(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+		next_stream = circular_set.Next(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
 		if initial_stream == "" {
-			return c.JSON( fiber.Map{
-				"url": "/twitch/live/next" ,
-				"stream": "nobody is live after initial check and update..." ,
+			decision_points = append(decision_points, "No streams are live after update.")
+			return c.JSON(fiber.Map{
+				"url": "/twitch/live/next",
+				"stream": "nobody is live after initial check and update...",
 				"result": false ,
+				"decision_points": decision_points ,
+				"cached_list": cached_list ,
+				"new_live_list": new_live_list ,
+				"current_stream":  "" ,
 			})
 		}
 	}
 
+	// Step 2: Check for a live stream
 	for {
-		log.Debug( next_stream )
 		is_stream_live := s.TwitchIsUserLive( next_stream )
-		if is_stream_live == true {
-			log.Debug( fmt.Sprintf( "%s === live" , next_stream ) )
+		if is_stream_live {
+			log.Debug(fmt.Sprintf( "next-check :: %s === live" , next_stream ) )
+			decision_points = append(decision_points, fmt.Sprintf( "%s is live" , next_stream ) )
 			break
 		} else {
-			log.Debug( fmt.Sprintf( "%s === offline" , next_stream ) )
+			log.Debug( fmt.Sprintf( "next-check :: %s === offline" , next_stream ) )
+			decision_points = append( decision_points , fmt.Sprintf( "%s is offline" , next_stream ) )
 			next_stream = circular_set.Next( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
 
-			// Check if we've looped through all streams or the list is empty.
+			// Check if we've looped through all streams or the list is empty
 			if next_stream == "" || next_stream == initial_stream {
 				if refreshed {
-					log.Debug( "No live streams found after a complete cycle and refresh." )
+					log.Debug("No live streams found after a complete cycle and refresh.")
+					decision_points = append(decision_points, "No live streams found after complete cycle and refresh.")
 					return c.JSON(fiber.Map{
-						"url": "/twitch/live/next",
-						"stream": "nobody is live after cycling through all options.",
-						"result": false,
+						"url":            "/twitch/live/next",
+						"stream":         "nobody is live after cycling through all options.",
+						"result":         false,
+						"decision_points": decision_points,
+						"cached_list":     cached_list,
+						"new_live_list":    new_live_list,
+						"current_stream":  initial_stream,
 					})
 				}
-				log.Debug( "Attempting to refresh the stream list." )
+				log.Debug("Attempting to refresh the stream list.")
+				decision_points = append(decision_points, "Refreshing the stream list.")
 				s.TwitchLiveUpdate()
-				next_stream = circular_set.Current( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
+				new_live_list, _ = s.DB.ZRange(context.Background(), R_KEY_STATE_TWITCH_FOLLOWING_LIVE, 0, -1).Result()
+				next_stream = circular_set.Current(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
 				refreshed = true
-				// Check again if no streams are available after the refresh.
 				if next_stream == "" || next_stream == initial_stream {
-					log.Debug( "No live streams found after refresh." )
+					log.Debug("No live streams found after refresh.")
+					decision_points = append(decision_points, "No live streams found after refresh.")
 					return c.JSON(fiber.Map{
-						"url": "/twitch/live/next",
-						"stream": "nobody is live after refresh.",
-						"result": false,
+						"url":            "/twitch/live/next",
+						"stream":         "nobody is live after refresh.",
+						"result":         false,
+						"decision_points": decision_points,
+						"cached_list":     cached_list,
+						"new_live_list":    new_live_list,
+						"current_stream":  initial_stream,
 					})
 				}
 			}
 		}
 	}
 
-	// force refresh on last
-	first_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , 0 , 0 ).Result()
+	// Step 3: Force refresh when reaching the end of the list
+	first_in_set_z, _ := s.DB.ZRangeWithScores(context.Background(), R_KEY_STATE_TWITCH_FOLLOWING_LIVE, 0, 0).Result()
 	first_in_set := first_in_set_z[0].Member.(string)
-	// if len( circular_set? ) && first_in_set == next_stream {
 	if first_in_set == next_stream {
-		log.Debug( "recycled list" )
+		log.Debug("Recycled list, forcing refresh.")
+		decision_points = append(decision_points, "Recycled list. Forcing refresh.")
 		s.TwitchLiveUpdate()
+		new_live_list, _ = s.DB.ZRange(context.Background(), R_KEY_STATE_TWITCH_FOLLOWING_LIVE, 0, -1).Result()
+		// Set next_stream to the first stream in the new live list
+		if len(new_live_list) > 0 {
+			next_stream = new_live_list[0]
+		}
 	}
-	log.Debug( fmt.Sprintf( "TwitchLiveNext( %s )" , next_stream ) )
-	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
-	// log.Debug( uri )
-	s.TwitchOpenID( uri )
-	// s.ADB.Key( "KEYCODE_DPAD_RIGHT" )
-	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
-	s.Set( "active_player_now_playing_id" , next_stream )
-	s.Set( "active_player_now_playing_text" , "" )
-	return c.JSON( fiber.Map{
+
+	log.Debug(fmt.Sprintf("TwitchLiveNext( %s )", next_stream))
+	decision_points = append(decision_points, fmt.Sprintf("Selected stream: %s", next_stream))
+	uri := fmt.Sprintf("twitch://stream/%s", next_stream)
+	s.TwitchOpenID(uri)
+	s.Set("STATE.TWITCH.LIVE.NOW_PLAYING", next_stream)
+	s.Set("active_player_now_playing_id", next_stream)
+	s.Set("active_player_now_playing_text", "")
+
+	return c.JSON(fiber.Map{
 		"url": "/twitch/live/next" ,
 		"stream": next_stream ,
 		"result": true ,
+		"decision_points": decision_points ,
+		"cached_list": cached_list ,
+		"new_live_list": new_live_list ,
+		"current_stream": initial_stream ,
 	})
 }
 
-func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) ( error ) {
-	log.Debug( "TwitchLivePrevious()" )
-	next_stream := circular_set.Previous( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
-	log.Debug( "Next === " , next_stream )
-	if next_stream == "" {
-		log.Debug( "Empty , Refreshing" )
-		s.TwitchLiveUpdate()
-		next_stream = circular_set.Previous( s.DB , R_KEY_STATE_TWITCH_FOLLOWING_LIVE )
-		if next_stream == "" {
-			log.Debug( "nobody is live ...." )
-			return c.JSON( fiber.Map{
-				"url": "/twitch/live/next" ,
-				"stream": "nobody is live ...." ,
-				"result": false ,
+func ( s *Server ) TwitchLivePrevious( c *fiber.Ctx ) error {
+	log.Debug("TwitchLivePrevious()")
+
+	// Step 1: Get the initial stream from the circular set
+	initial_stream := circular_set.Previous(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+	prevStream := initial_stream
+	refreshed := false
+
+	decision_points := []string{}
+	cached_list, _ := s.DB.ZRange(context.Background(), R_KEY_STATE_TWITCH_FOLLOWING_LIVE, 0, -1).Result()
+	new_live_list := []string{}
+
+	if initial_stream == "" {
+		log.Debug( "The initial stream is empty, no streams are being followed or all are offline." )
+		decision_points = append(decision_points, "Initial stream is empty. Updating the list.")
+		s.TwitchLiveUpdate() // Attempt to update the list of live streams
+		initial_stream = circular_set.Current(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+		prevStream = initial_stream
+		if initial_stream == "" {
+			decision_points = append(decision_points, "No streams are live after update.")
+			return c.JSON(fiber.Map{
+				"url": "/twitch/live/previous",
+				"stream": "nobody is live after initial check and update...",
+				"result": false,
+				"decision_points": decision_points,
+				"cached_list":   cached_list,
+				"new_live_list":  new_live_list,
 			})
 		}
 	}
 
-	// force refresh on last
-	last_in_set_z , _ := s.DB.ZRangeWithScores( context.Background() , R_KEY_STATE_TWITCH_FOLLOWING_LIVE , -1 , -1 ).Result()
-	last_in_set := last_in_set_z[0].Member.(string)
-	if last_in_set == next_stream {
-		log.Debug( "updating list" )
-		s.TwitchLiveUpdate()
+	// Step 2: Check for a live stream
+	for {
+		is_stream_live := s.TwitchIsUserLive(prevStream)
+		if is_stream_live {
+			log.Debug(fmt.Sprintf("prev-check :: %s === live", prevStream))
+			decision_points = append(decision_points, fmt.Sprintf("%s is live", prevStream))
+			break
+		} else {
+			log.Debug(fmt.Sprintf("prev-check :: %s === offline", prevStream))
+			decision_points = append(decision_points, fmt.Sprintf("%s is offline", prevStream))
+			prevStream = circular_set.Previous(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+
+			// Check if we've looped through all streams or the list is empty
+			if prevStream == "" || prevStream == initial_stream {
+				if refreshed {
+					log.Debug("No live streams found after a complete cycle and refresh.")
+					decision_points = append(decision_points, "No live streams found after complete cycle and refresh.")
+					return c.JSON(fiber.Map{
+						"url": "/twitch/live/previous",
+						"stream": "nobody is live after cycling through all options.",
+						"result": false,
+						"decision_points": decision_points,
+						"cached_list":   cached_list,
+						"new_live_list":  new_live_list,
+					})
+				}
+				log.Debug("Attempting to refresh the stream list.")
+				decision_points = append(decision_points, "Refreshing the stream list.")
+				s.TwitchLiveUpdate()
+				new_live_list, _ = s.DB.ZRange(context.Background(), R_KEY_STATE_TWITCH_FOLLOWING_LIVE, 0, -1).Result()
+				prevStream = circular_set.Current(s.DB, R_KEY_STATE_TWITCH_FOLLOWING_LIVE)
+				refreshed = true
+				if prevStream == "" || prevStream == initial_stream {
+					log.Debug("No live streams found after refresh.")
+					decision_points = append(decision_points, "No live streams found after refresh.")
+					return c.JSON(fiber.Map{
+						"url": "/twitch/live/previous",
+						"stream": "nobody is live after refresh.",
+						"result": false,
+						"decision_points": decision_points,
+						"cached_list": cached_list,
+						"new_live_list": new_live_list,
+					})
+				}
+			}
+		}
 	}
-	log.Debug( fmt.Sprintf( "TwitchLivePrevious( %s )" , next_stream ) )
-	uri := fmt.Sprintf( "twitch://stream/%s" , next_stream )
-	s.TwitchOpenID( uri )
-	s.Set( "STATE.TWITCH.LIVE.NOW_PLAYING" , next_stream )
-	s.Set( "active_player_now_playing_id" , next_stream )
-	s.Set( "active_player_now_playing_text" , "" )
-	return c.JSON( fiber.Map{
-		"url": "/twitch/live/next" ,
-		"stream": next_stream ,
-		"result": true ,
+
+	// Step 3: Force refresh when reaching the end of the list
+	first_in_set_z, _ := s.DB.ZRangeWithScores(context.Background(), R_KEY_STATE_TWITCH_FOLLOWING_LIVE, 0, 0).Result()
+	first_in_set := first_in_set_z[0].Member.(string)
+	if first_in_set == prevStream {
+		log.Debug("Recycled list, forcing refresh.")
+		decision_points = append(decision_points, "Recycled list. Forcing refresh.")
+		s.TwitchLiveUpdate()
+		new_live_list, _ = s.DB.ZRange(context.Background(), R_KEY_STATE_TWITCH_FOLLOWING_LIVE, 0, -1).Result()
+	}
+
+	log.Debug(fmt.Sprintf("TwitchLivePrevious( %s )", prevStream))
+	decision_points = append(decision_points, fmt.Sprintf("Selected stream: %s", prevStream))
+	uri := fmt.Sprintf("twitch://stream/%s", prevStream)
+	s.TwitchOpenID(uri)
+	s.Set("STATE.TWITCH.LIVE.NOW_PLAYING", prevStream)
+	s.Set("active_player_now_playing_id", prevStream)
+	s.Set("active_player_now_playing_text", "")
+
+	return c.JSON(fiber.Map{
+		"url":          "/twitch/live/previous",
+		"stream":       prevStream,
+		"result":       true,
+		"decision_points": decision_points,
+		"cached_list":   cached_list,
+		"new_live_list":  new_live_list,
 	})
 }
-
 
 // Auth Option - 1 = Client Credentials
 // curl -X POST 'https://id.twitch.tv/oauth2/token' \

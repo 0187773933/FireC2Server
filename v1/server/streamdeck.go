@@ -56,6 +56,17 @@ func ( s *Server ) StreamDeckTwitchBackground( c *fiber.Ctx ) ( error ) {
 	})
 }
 
+func ( s *Server ) StreamDeckTwitchUser( c *fiber.Ctx ) ( error ) {
+	go s.TV.QuickResetVideo()
+	user_id := c.Params( "user" )
+	s.TwitchOpenID( user_id )
+	return c.JSON( fiber.Map{
+		"url": "/streamdeck/twitch/:user" ,
+		"user": user_id ,
+		"result": true ,
+	})
+}
+
 func ( s *Server ) StreamDeckNetflix( c *fiber.Ctx ) ( error ) {
 	go s.TV.QuickResetVideo()
 	s.NetflixMovieNext( c )

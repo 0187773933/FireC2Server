@@ -38,6 +38,34 @@ func ( s *Server ) generic_get_current_info() ( result GenericInfo ) {
 	return
 }
 
+// https://github.com/JonasBernard/FakeStandby
+// adb shell pm list packages -3
+// adb shell dumpsys package android.jonas.fakestandby | grep -A 1 MAIN
+// adb shell am start -n android.jonas.fakestandby/.settings.SettingsActivity
+// need accessibility permission
+// adb shell settings put secure enabled_accessibility_services android.jonas.fakestandby/.service.AccessibilityOverlayService
+//// adb shell settings put secure accessibility_enabled 1
+// adb shell appops set android.jonas.fakestandby SYSTEM_ALERT_WINDOW allow
+// adb shell am force-stop android.jonas.fakestandby
+
+// adb shell settings put secure enabled_accessibility_services android.jonas.fakestandby/.service.AccessibilityOverlayService && \
+// adb shell settings put secure accessibility_enabled 1 && \
+// adb shell appops set android.jonas.fakestandby SYSTEM_ALERT_WINDOW allow && \
+// adb shell am start -n android.jonas.fakestandby/.actions.StartOverlay
+
+func ( s *Server ) Off( c *fiber.Ctx ) ( error ) {
+	log.Debug( "Off()" )
+	go s.TV.PowerOff()
+	s.ADB.StopAllPackages()
+	s.ADB.ScreenOff()
+	s.ADB.Sleep()
+	s.ADB.PowerOff()
+	return c.JSON( fiber.Map{
+		"url": "/off" ,
+		"result": true ,
+	})
+}
+
 func ( s *Server ) Play( c *fiber.Ctx ) ( error ) {
 	log.Debug( "Play()" )
 	go s.TV.Prepare()

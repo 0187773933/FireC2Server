@@ -17,6 +17,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	streamdeck.Get( "disney" , s.StreamDeckDisney )
 	streamdeck.Get( "twitch" , s.StreamDeckTwitch )
 	streamdeck.Get( "twitch-background" , s.StreamDeckTwitchBackground )
+	streamdeck.Get( "twitch/:user" , s.StreamDeckTwitchUser )
 	streamdeck.Get( "netflix" , s.StreamDeckNetflix )
 	streamdeck.Get( "hulu" , s.StreamDeckHulu )
 	streamdeck.Get( "audio-book" , s.StreamDeckAudioBook )
@@ -48,6 +49,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	adb.Get( "next" , s.ADBNext )
 	adb.Get( "previous" , s.ADBPrevious )
 	adb.Get( "status" , s.GetStatusUrl )
+	adb.Get( "screenshot" , s.ADBGetScreenshot )
 
 	// Responsive Media Buttons
 	s.FiberApp.Get( "play" , s.Play )
@@ -57,6 +59,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	s.FiberApp.Get( "next" , s.Next )
 	s.FiberApp.Get( "previous" , s.Previous )
 	s.FiberApp.Get( "status" , s.GetStatusUrl )
+	s.FiberApp.Get( "off" , s.Off ) // System-Wide Off , TV , ADB
 
 	// Spotify
 	spotify := s.FiberApp.Group( "/spotify" )
