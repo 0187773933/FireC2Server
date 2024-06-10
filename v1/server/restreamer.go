@@ -39,13 +39,15 @@ func ( s *Server ) ReStreamURL( c *fiber.Ctx ) ( error ) {
 
 	s.ADB.OpenPackage( BROWSER_APP_NAME )
 	s.BrowserReopenApp()
-	time.Sleep( 6000 * time.Millisecond )
-	s.ADB.Enter()
-	time.Sleep( 1000 * time.Millisecond )
+	time.Sleep( 10000 * time.Millisecond )
+	// s.ADB.Enter()
+	// time.Sleep( 10000 * time.Millisecond )
 	// s.ADB.Type( x_url )
 	s.ADB.OpenURI( stream_url )
-	// time.Sleep( 4000 * time.Millisecond )
+	// time.Sleep( 1000 * time.Millisecond )
+	// s.ADB.OpenURI( stream_url )
 	// s.ADB.Up()
+
 
 	// 2.) Call VLC Load https://ReStreamURL/hls/stream.m3u8
 	// s.VLCContinuousOpen()
