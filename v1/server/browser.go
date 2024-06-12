@@ -80,8 +80,8 @@ func ( s *Server ) BrowserOpenURL( c *fiber.Ctx ) ( error ) {
 	// s.ADB.Type( x_url )
 	// s.ADB.OpenURI( x_url )
 	s.ADB.Shell( "am" , "start" , "-a" , "android.intent.action.VIEW" , "-d" , fmt.Sprintf( "'%s'" , real_url ) )
-	// time.Sleep( 3000 * time.Millisecond )
-	// s.ADB.Enter()
+	time.Sleep( 1000 * time.Millisecond )
+	s.ADB.Enter()
 	// time.Sleep( 100 * time.Millisecond )
 	// s.ADB.Enter()
 	// time.Sleep( 100 * time.Millisecond )
@@ -197,7 +197,7 @@ func ( s *Server ) BrowserReadyFresh( context *fiber.Ctx ) ( error ) {
 	cooldown := 10 * time.Second
 	now := time.Now()
 	if now.Sub( LAST_BROWSER_READY_FRESH ) < cooldown {
-		log.Debug( "pressed in the last 5 minutes , returning" )
+		log.Debug( "pressed in the last 10 seconds , returning" )
 		return context.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
 			"result": false,
 			"error":  "Cooldown period in effect, try again later.",
