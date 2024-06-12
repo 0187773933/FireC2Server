@@ -70,8 +70,8 @@ func ( s *Server ) BrowserOpenURL( c *fiber.Ctx ) ( error ) {
 	// s.ADB.Type( x_url )
 	// s.ADB.OpenURI( x_url )
 	s.ADB.Shell( "am" , "start" , "-a" , "android.intent.action.VIEW" , "-d" , fmt.Sprintf( "'%s'" , x_url ) )
-	time.Sleep( 1000 * time.Millisecond )
-	// s.ADB.Key( "KEYCODE_ENTER" )
+	time.Sleep( 3000 * time.Millisecond )
+	s.ADB.Key( "KEYCODE_ENTER" )
 	s.Set( "active_player_now_playing_id" , x_url )
 	s.Set( "active_player_now_playing_uri" , "url" )
 	return c.JSON( fiber.Map{
