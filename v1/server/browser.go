@@ -74,12 +74,12 @@ func ( s *Server ) BrowserOpenURL( c *fiber.Ctx ) ( error ) {
 	// s.ADB.Type( x_url )
 	// s.ADB.OpenURI( x_url )
 	s.ADB.Shell( "am" , "start" , "-a" , "android.intent.action.VIEW" , "-d" , fmt.Sprintf( "'%s'" , real_url ) )
-	time.Sleep( 3000 * time.Millisecond )
-	s.ADB.Enter()
-	time.Sleep( 100 * time.Millisecond )
-	s.ADB.Enter()
-	time.Sleep( 100 * time.Millisecond )
-	s.ADB.Enter()
+	// time.Sleep( 3000 * time.Millisecond )
+	// s.ADB.Enter()
+	// time.Sleep( 100 * time.Millisecond )
+	// s.ADB.Enter()
+	// time.Sleep( 100 * time.Millisecond )
+	// s.ADB.Enter()
 	s.Set( "active_player_now_playing_id" , real_url )
 	s.Set( "active_player_now_playing_uri" , "url" )
 	return c.JSON( fiber.Map{
@@ -91,8 +91,6 @@ func ( s *Server ) BrowserOpenURL( c *fiber.Ctx ) ( error ) {
 	})
 }
 
-// http://localhost:5954/firefox-focus/audio/https://files.34353.org/AudioBooks/CarlosCastaneda/01-The-Teachings-of-Don-Juan-A-Yaqui-Way-of-Knowledge.mp3
-// http://192.168.4.23:5954/firefox-focus/audio/https://files.34353.org/AudioBooks/CarlosCastaneda/01-The-Teachings-of-Don-Juan-A-Yaqui-Way-of-Knowledge.mp3
 func ( s *Server ) GetBrowserAudioPlayer( context *fiber.Ctx ) ( error ) {
 	return context.SendFile( "./v1/server/html/browser_audio_player.html" )
 }
@@ -159,6 +157,14 @@ func ( s *Server ) BrowserOpenAudioPlayer( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) BrowserReady( context *fiber.Ctx ) ( error ) {
 	log.Debug( "BrowserReady() , pressing play" )
+	s.ADB.Play()
+	return context.JSON( fiber.Map{
+		"result": true ,
+	})
+}
+
+func ( s *Server ) BrowserReadyFresh( context *fiber.Ctx ) ( error ) {
+	log.Debug( "BrowserReadyFresh() , pressing enter 3 times , then play" )
 	s.ADB.Enter()
 	s.ADB.Enter()
 	s.ADB.Enter()

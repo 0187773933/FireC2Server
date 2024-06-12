@@ -114,19 +114,16 @@ func validate_admin_mw( context *fiber.Ctx ) ( error ) {
 	return context.Status( fiber.StatusUnauthorized ).SendString( "why" )
 }
 
-func validate_browser_mw( context *fiber.Ctx ) ( error ) {
-	browser_api_key_header := context.Get( "key" )
-	if browser_api_key_header != "" {
-		if browser_api_key_header == GlobalServer.Config.BrowserAPIKey {
-			return context.Next()
-		}
+func validate_browser_mw(context *fiber.Ctx) error {
+	browser_api_key := context.Get("key")
+	if browser_api_key == "" {
+		browser_api_key = context.Get("k")
 	}
-	browser_api_key_query := context.Query( "k" )
-	fmt.Println( "browser_api_key_query ===" , browser_api_key_query )
-	if browser_api_key_query != "" {
-		if browser_api_key_query == GlobalServer.Config.BrowserAPIKey {
-			return context.Next()
-		}
+	if browser_api_key == "" {
+		browser_api_key = context.Query("k")
 	}
-	return context.Status( fiber.StatusUnauthorized ).SendString( "why" )
+	if browser_api_key == GlobalServer.Config.BrowserAPIKey {
+		return context.Next()
+	}
+	return context.Status(fiber.StatusUnauthorized).SendString("why")
 }
