@@ -22,6 +22,9 @@
 #export DYLD_LIBRARY_PATH=/usr/local/opt/opencv/lib:/usr/local/opt/ffmpeg@6/lib:$DYLD_LIBRARY_PATH
 #export DYLD_FALLBACK_LIBRARY_PATH=/usr/local/opt/opencv/lib:/usr/local/opt/ffmpeg@6/lib
 
+export DYLD_LIBRARY_PATH=$(brew --prefix opencv)/lib:$DYLD_LIBRARY_PATH
+export PKG_CONFIG_PATH=$(brew --prefix opencv)/lib/pkgconfig:$PKG_CONFIG_PATH
+
 # CGO_ENABLED=1 LOG_LEVEL=debug go run main.go
 LOG_LEVEL=debug go run main.go
 #LOG_LEVEL=debug air

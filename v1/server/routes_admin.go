@@ -161,9 +161,11 @@ func ( s *Server ) SetupAdminRoutes() {
 	s.FiberApp.Get( "/browser/video" , s.GetBrowserVideoPlayer )
 	s.FiberApp.Get( "/browser/audio/set/:hash/position/:position" , validate_browser_mw , s.BrowserAudioPlayerSetPosition )
 	s.FiberApp.Get( "/browser/ws/:id" , validate_browser_mw , websocket.New( s.BrowserWebSocketHandler ) )
+	s.FiberApp.Get( "/browser/ready" , validate_browser_mw , s.BrowserReady )
 	browser := s.FiberApp.Group( "/browser" )
 	browser.Use( validate_admin_mw )
 	browser.Get( "/url/*" , s.BrowserOpenURL )
+	// browser.Get( "/browser/ready" )
 	browser.Get( "/audio/*" , s.BrowserOpenAudioPlayer )
 	browser.Get( "/video/*" , s.BrowserOpenVideoPlayer )
 

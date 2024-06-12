@@ -5,6 +5,7 @@ import (
 	time "time"
 	base64 "encoding/base64"
 	json "encoding/json"
+	"strings"
 	// url "net/url"
 	// "math"
 	// "image/color"
@@ -61,22 +62,27 @@ func ( s *Server ) BrowserReopenApp() {
 // -a android.intent.action.VIEW -d 'https://files.34353.org/AudioBooks/CarlosCastaneda/01-The-Teachings-of-Don-Juan-A-Yaqui-Way-of-Knowledge.mp3'
 
 func ( s *Server ) BrowserOpenURL( c *fiber.Ctx ) ( error ) {
-	x_url := c.Params( "*" )
-	log.Debug( fmt.Sprintf( "BrowserOpenURL( %s )" , x_url ) )
+	// x_url := c.Params( "*" )
+	x_original_url := c.OriginalURL()
+	x_query_params := c.Queries()
+	real_url := strings.Split( x_original_url , "/browser/url/" )[ 1 ]
+	log.Debug( fmt.Sprintf( "BrowserOpenURL( %s )" , real_url ) )
 	s.BrowserReopenApp()
 	time.Sleep( 3000 * time.Millisecond )
 	// s.ADB.Enter()
 	// time.Sleep( 1000 * time.Millisecond )
 	// s.ADB.Type( x_url )
 	// s.ADB.OpenURI( x_url )
-	s.ADB.Shell( "am" , "start" , "-a" , "android.intent.action.VIEW" , "-d" , fmt.Sprintf( "'%s'" , x_url ) )
+	s.ADB.Shell( "am" , "start" , "-a" , "android.intent.action.VIEW" , "-d" , fmt.Sprintf( "'%s'" , real_url ) )
 	time.Sleep( 3000 * time.Millisecond )
 	s.ADB.Key( "KEYCODE_ENTER" )
-	s.Set( "active_player_now_playing_id" , x_url )
+	s.Set( "active_player_now_playing_id" , real_url )
 	s.Set( "active_player_now_playing_uri" , "url" )
 	return c.JSON( fiber.Map{
 		"url": "/browser/url/*" ,
-		"param_url": x_url ,
+		"param_url": real_url ,
+		"original_url": x_original_url ,
+		"query_params": x_query_params ,
 		"result": true ,
 	})
 }
@@ -143,6 +149,17 @@ func ( s *Server ) BrowserOpenAudioPlayer( c *fiber.Ctx ) ( error ) {
 		"param_url": x_url ,
 		"param_url_hash": x_url_hash ,
 		"previous_position": previous_position ,
+		"result": true ,
+	})
+}
+
+// https://6105buttons3.olahmb.com/browser/url/https://msa.olahmb.com/DreamingSpanish/asdf
+// http://localhost:5954/browser/url/http://192.168.4.23:5754/DreamingSpanish/asdf?ready_url=http://192.168.4.23:5954/browser/ready?k=25e893b470d68787a4ae8878f5a26717
+// http://localhost:5754/DreamingSpanish/asdf?ready_url=https://6105buttons3.olahmb.com/browser/ready?k=25e893b470d68787a4ae8878f5a26717
+func ( s *Server ) BrowserReady( context *fiber.Ctx ) ( error ) {
+	log.Debug( "BrowserReady() , pressing play" )
+	s.ADB.Play()
+	return context.JSON( fiber.Map{
 		"result": true ,
 	})
 }

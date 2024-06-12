@@ -121,5 +121,11 @@ func validate_browser_mw( context *fiber.Ctx ) ( error ) {
 			return context.Next()
 		}
 	}
+	browser_api_key_query := context.Query( "k" )
+	if browser_api_key_query != "" {
+		if browser_api_key_query == GlobalServer.Config.BrowserAPIKey {
+			return context.Next()
+		}
+	}
 	return context.Status( fiber.StatusUnauthorized ).SendString( "why" )
 }
