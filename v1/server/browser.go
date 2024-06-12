@@ -167,7 +167,17 @@ func ( s *Server ) BrowserReady( context *fiber.Ctx ) ( error ) {
 	BROWSER_READY_MUTEX.Lock()
 	defer BROWSER_READY_MUTEX.Unlock()
 
+	cooldown := 10 * time.Second
+	now := time.Now()
+	if now.Sub( LAST_BROWSER_READY ) < cooldown {
+		return context.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+			"result": false,
+			"error":  "Cooldown period in effect, try again later.",
+		})
+	}
+
 	s.ADB.Play()
+	LAST_BROWSER_READY = now
 	return context.JSON( fiber.Map{
 		"result": true ,
 	})
@@ -184,9 +194,10 @@ func ( s *Server ) BrowserReadyFresh( context *fiber.Ctx ) ( error ) {
 	BROWSER_READY_FRESH_MUTEX.Lock()
 	defer BROWSER_READY_FRESH_MUTEX.Unlock()
 
-	cooldown := 5 * time.Minute
+	cooldown := 10 * time.Second
 	now := time.Now()
 	if now.Sub( LAST_BROWSER_READY_FRESH ) < cooldown {
+		log.Debug( "pressed in the last 5 minutes , returning" )
 		return context.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
 			"result": false,
 			"error":  "Cooldown period in effect, try again later.",
@@ -194,8 +205,8 @@ func ( s *Server ) BrowserReadyFresh( context *fiber.Ctx ) ( error ) {
 	}
 
 	s.ADB.Enter()
-	time.Sleep( 100 * time.Millisecond )
-	s.ADB.Enter()
+	// time.Sleep( 100 * time.Millisecond )
+	// s.ADB.Enter()
 	// s.ADB.Enter()
 	// s.ADB.Play()
 
