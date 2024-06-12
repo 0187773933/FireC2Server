@@ -122,6 +122,7 @@ func validate_browser_mw( context *fiber.Ctx ) ( error ) {
 		}
 	}
 	browser_api_key_query := context.Query( "k" )
+	fmt.Println( "browser_api_key_query ===" , browser_api_key_query )
 	if browser_api_key_query != "" {
 		if browser_api_key_query == GlobalServer.Config.BrowserAPIKey {
 			return context.Next()
