@@ -86,7 +86,7 @@ func New( db *redis.Client , config types.ConfigFile ) ( server Server ) {
 		Key: server.Config.ServerCookieSecret ,
 	}))
 	server.FiberApp.Use( fiber_cors.New( fiber_cors.Config{
-		AllowOrigins: fmt.Sprintf( "%s, %s" , server.Config.ServerBaseUrl , server.Config.ServerLiveUrl ) ,
+		AllowOrigins: fmt.Sprintf( "%s, %s, %s" , server.Config.ServerBaseUrl , server.Config.ServerLiveUrl , server.Config.MSServerUrl ) ,
 		AllowHeaders:  "Origin, Content-Type, Accept, key",
 	}))
 	server.SetupRoutes()
