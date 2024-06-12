@@ -166,6 +166,7 @@ func ( s *Server ) BrowserReady( context *fiber.Ctx ) ( error ) {
 func ( s *Server ) BrowserReadyFresh( context *fiber.Ctx ) ( error ) {
 	log.Debug( "BrowserReadyFresh() , pressing enter 3 times" )
 	s.ADB.Enter()
+	time.Sleep( 100 * time.Millisecond )
 	s.ADB.Enter()
 	// s.ADB.Enter()
 	// s.ADB.Play()
