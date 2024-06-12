@@ -3,6 +3,7 @@ package server
 import (
 	fmt "fmt"
 	time "time"
+	"sync"
 	base64 "encoding/base64"
 	json "encoding/json"
 	"strings"
@@ -24,6 +25,11 @@ import (
 // const FIREFOX_APP_NAME = "org.mozilla.firefox"
 const BROWSER_ACTIVITY = "com.amazon.cloud9/com.amazon.slate.fire_tv.FireTvSlateActivity"
 const BROWSER_APP_NAME = "com.amazon.cloud9"
+
+var LAST_BROWSER_READY_FRESH time.Time
+var LAST_BROWSER_READY time.Time
+var BROWSER_READY_MUTEX sync.Mutex
+var BROWSER_READY_FRESH_MUTEX sync.Mutex
 
 func ( s *Server ) BrowserReopenApp() {
 	log.Debug( "BrowserReopenApp()" )
@@ -157,19 +163,43 @@ func ( s *Server ) BrowserOpenAudioPlayer( c *fiber.Ctx ) ( error ) {
 
 func ( s *Server ) BrowserReady( context *fiber.Ctx ) ( error ) {
 	log.Debug( "BrowserReady() , pressing play" )
+
+	BROWSER_READY_MUTEX.Lock()
+	defer BROWSER_READY_MUTEX.Unlock()
+
 	s.ADB.Play()
 	return context.JSON( fiber.Map{
 		"result": true ,
 	})
 }
 
+// var LAST_BROWSER_READY_FRESH time.Time
+// var LAST_BROWSER_READY time.Time
+// var BROWSER_READY_MUTEX sync.Mutex
+// var BROWSER_READY_FRESH_MUTEX sync.Mutex
+
 func ( s *Server ) BrowserReadyFresh( context *fiber.Ctx ) ( error ) {
 	log.Debug( "BrowserReadyFresh() , pressing enter 3 times" )
+
+	BROWSER_READY_FRESH_MUTEX.Lock()
+	defer BROWSER_READY_FRESH_MUTEX.Unlock()
+
+	cooldown := 5 * time.Minute
+	now := time.Now()
+	if now.Sub( LAST_BROWSER_READY_FRESH ) < cooldown {
+		return context.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+			"result": false,
+			"error":  "Cooldown period in effect, try again later.",
+		})
+	}
+
 	s.ADB.Enter()
 	time.Sleep( 100 * time.Millisecond )
 	s.ADB.Enter()
 	// s.ADB.Enter()
 	// s.ADB.Play()
+
+	LAST_BROWSER_READY_FRESH = now
 	return context.JSON( fiber.Map{
 		"result": true ,
 	})
