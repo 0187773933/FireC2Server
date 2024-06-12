@@ -164,11 +164,11 @@ func ( s *Server ) BrowserReady( context *fiber.Ctx ) ( error ) {
 }
 
 func ( s *Server ) BrowserReadyFresh( context *fiber.Ctx ) ( error ) {
-	log.Debug( "BrowserReadyFresh() , pressing enter 3 times , then play" )
+	log.Debug( "BrowserReadyFresh() , pressing enter 3 times" )
 	s.ADB.Enter()
 	s.ADB.Enter()
-	s.ADB.Enter()
-	s.ADB.Play()
+	// s.ADB.Enter()
+	// s.ADB.Play()
 	return context.JSON( fiber.Map{
 		"result": true ,
 	})
