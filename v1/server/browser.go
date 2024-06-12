@@ -153,14 +153,11 @@ func ( s *Server ) BrowserOpenAudioPlayer( c *fiber.Ctx ) ( error ) {
 	})
 }
 
-
-// https://msa.olahmb.com/DreamingSpanish/asdf?ready_url=https://6105buttons3.olahmb.com/browser/ready?k=25e893b470d68787a4ae8878f5a26717
-// https://6105buttons3.olahmb.com/browser/url/https://msa.olahmb.com/DreamingSpanish/asdf
-// http://localhost:5954/browser/url/http://192.168.4.23:5754/DreamingSpanish/asdf?ready_url=http://192.168.4.23:5954/browser/ready?k=25e893b470d68787a4ae8878f5a26717
-// https://6105buttons3.olahmb.com/browser/url/https://msa.olahmb.com/DreamingSpanish/asdf?ready_url=https://6105buttons3.olahmb.com/browser/ready?k=25e893b470d68787a4ae8878f5a26717
-// http://localhost:5754/DreamingSpanish/asdf?ready_url=https://6105buttons3.olahmb.com/browser/ready?k=25e893b470d68787a4ae8878f5a26717
 func ( s *Server ) BrowserReady( context *fiber.Ctx ) ( error ) {
 	log.Debug( "BrowserReady() , pressing play" )
+	s.ADB.Enter()
+	s.ADB.Enter()
+	s.ADB.Enter()
 	s.ADB.Play()
 	return context.JSON( fiber.Map{
 		"result": true ,
