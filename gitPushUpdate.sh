@@ -27,11 +27,11 @@ fi
 git add .
 git tag -l | xargs git tag -d
 if [ -n "$1" ]; then
-	git commit -m 99
-	git tag v1.0.99
+	git commit -m "$1"
+	git tag v1.1.$1
 else
-	git commit -m 99
-	git tag v1.0.99
+	git commit -m "$NextCommitNumber"
+	git tag v1.1.$NextCommitNumber
 fi
 git remote add origin git@github.com:0187773933/FireC2Server.git
 
