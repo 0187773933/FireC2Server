@@ -30,8 +30,8 @@ if [ -n "$1" ]; then
 	git commit -m "$1"
 	git tag v1.0.$1
 else
-	git commit -m "$NextCommitNumber"
-	git tag v1.0.$NextCommitNumber
+	git commit -m 14
+	git tag v1.0.14
 fi
 git remote add origin git@github.com:0187773933/FireC2Server.git
 
