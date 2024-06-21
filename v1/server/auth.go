@@ -19,6 +19,7 @@ func validate_login_credentials( context *fiber.Ctx ) ( result bool ) {
 	fmt.Println( "uploaded_password ===" , uploaded_password )
 	password_matches := bcrypt.CompareHashAndPassword( []byte( uploaded_password ) , []byte( GlobalServer.Config.AdminPassword ) )
 	if password_matches != nil { fmt.Println( "bcrypted password doesn't match" ); return }
+	fmt.Println( "password matched" )
 	result = true
 	return
 }

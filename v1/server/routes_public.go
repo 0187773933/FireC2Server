@@ -25,7 +25,7 @@ var public_limiter = rate_limiter.New( rate_limiter.Config{
 
 var auth_limiter = rate_limiter.New( rate_limiter.Config{
 	Max: 1 ,
-	Expiration: 30 * time.Second ,
+	Expiration: 10 * time.Second ,
 	KeyGenerator: func(c *fiber.Ctx) string {
 		return c.Get( "x-forwarded-for" )
 	} ,
