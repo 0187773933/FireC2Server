@@ -2,6 +2,8 @@ module github.com/0187773933/FireC2Server
 
 go 1.18
 
+toolchain go1.22.2
+
 require (
 	github.com/0187773933/ADBWrapper v1.0.57
 	github.com/0187773933/RedisCircular v1.0.7
@@ -12,6 +14,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.2
 	github.com/google/uuid v1.5.0
 	github.com/lucasb-eyer/go-colorful v1.2.0
+	github.com/manucorporat/try v0.0.0-20170609134256-2a0c6b941d52
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/crypto v0.21.0
@@ -30,7 +33,6 @@ require (
 	github.com/google/gousb v1.1.3 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/klauspost/compress v1.17.3 // indirect
-	github.com/manucorporat/try v0.0.0-20170609134256-2a0c6b941d52 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect

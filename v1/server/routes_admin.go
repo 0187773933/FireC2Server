@@ -20,6 +20,7 @@ func ( s *Server ) SetupAdminRoutes() {
 	streamdeck.Get( "twitch/:user" , s.StreamDeckTwitchUser )
 	streamdeck.Get( "netflix" , s.StreamDeckNetflix )
 	streamdeck.Get( "hulu" , s.StreamDeckHulu )
+	streamdeck.Get( "hulu/tv/:series_id" , s.StreamDeckHuluTVSeries )
 	streamdeck.Get( "audio-book" , s.StreamDeckAudioBook )
 	streamdeck.Get( "escape-rope" , s.StreamDeckEscapeRope )
 	streamdeck.Get( "heart" , s.StreamDeckHeart )

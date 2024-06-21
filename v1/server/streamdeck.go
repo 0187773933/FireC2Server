@@ -81,6 +81,21 @@ func ( s *Server ) StreamDeckHulu( c *fiber.Ctx ) ( error ) {
 	s.HuluMovieNext( c )
 	return c.JSON( fiber.Map{
 		"url": "/streamdeck/hulu" ,
+		"type": "movie" ,
+		"result": true ,
+	})
+}
+
+func ( s *Server ) StreamDeckHuluTVSeries( c *fiber.Ctx ) ( error ) {
+	go s.TV.QuickResetVideo()
+	series_id := c.Params( "series_id" )
+	uri := fmt.Sprintf( "https://www.hulu.com/series/%s" , series_id )
+	s.HuluOpenURI( uri )
+	return c.JSON( fiber.Map{
+		"url": "/streamdeck/hulu/tv/:series_id" ,
+		"type": "tv_series" ,
+		"series_id": series_id ,
+		"uri": uri ,
 		"result": true ,
 	})
 }
