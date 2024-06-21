@@ -40,6 +40,8 @@ func HandleLogout( context *fiber.Ctx ) ( error ) {
 func HandleLogin( context *fiber.Ctx ) ( error ) {
 	valid_login := validate_login_credentials( context )
 	if valid_login == false { return serve_failed_attempt( context ) }
+	host := context.Hostname()
+	domain := strings.Split( host , ":" )[ 0 ]
 	context.Cookie(
 		&fiber.Cookie{
 			Name: GlobalServer.Config.ServerCookieName ,
@@ -47,6 +49,7 @@ func HandleLogin( context *fiber.Ctx ) ( error ) {
 			Secure: true ,
 			Path: "/" ,
 			// Domain: "blah.ngrok.io" , // probably should set this for webkit
+			Domain: domain ,
 			HTTPOnly: true ,
 			SameSite: "Lax" ,
 			Expires: time.Now().AddDate( 10 , 0 , 0 ) , // aka 10 years from now
