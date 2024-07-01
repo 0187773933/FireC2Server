@@ -2,8 +2,10 @@ module github.com/0187773933/FireC2Server
 
 go 1.18
 
+toolchain go1.22.2
+
 require (
-	github.com/0187773933/ADBWrapper v1.0.57
+	github.com/0187773933/ADBWrapper v1.0.58
 	github.com/0187773933/RedisCircular v1.0.7
 	github.com/0187773933/TVController v1.0.8
 	github.com/0187773933/encryption v0.0.0-20230921140858-60fe28b9fcc0
@@ -41,7 +43,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
-	gocv.io/x/gocv v0.36.1 // indirect
+	gocv.io/x/gocv v0.37.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 )
